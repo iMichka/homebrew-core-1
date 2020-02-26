@@ -17,9 +17,8 @@ class Pwntools < Formula
   depends_on "python@3.8"
 
   uses_from_macos "libffi"
-  # Has a 4.0 beta release with Python 3 support
+
   depends_on "pkg-config" => :build unless OS.mac? # for libffi
-  depends_on "python@3.8"
 
   conflicts_with "moreutils", :because => "Both install `errno` binaries"
 
@@ -184,6 +183,7 @@ class Pwntools < Formula
   end
 
   def install
+    virtualenv_create(libexec, "python3") if OS.mac?
     virtualenv_install_with_resources
   end
 
