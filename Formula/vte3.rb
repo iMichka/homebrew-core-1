@@ -26,6 +26,13 @@ class Vte3 < Formula
   depends_on "pcre2"
   depends_on "vala"
 
+  unless OS.mac?
+    fails_with gcc: "5"
+    fails_with gcc: "6"
+    depends_on "gcc@7"
+    depends_on "systemd"
+  end
+
   # submitted upstream as https://gitlab.gnome.org/tschoonj/vte/merge_requests/1
   patch :DATA
 
