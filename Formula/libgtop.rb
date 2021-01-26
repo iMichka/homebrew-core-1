@@ -23,6 +23,8 @@ class Libgtop < Formula
   depends_on "gettext"
   depends_on "glib"
 
+  depends_on "libxau" unless OS.mac?
+
   def install
     system "./configure", "--disable-debug", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
