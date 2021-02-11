@@ -29,12 +29,18 @@ class Qwt < Formula
     end
 
     args = ["-config", "release", "-spec"]
-    spec = if ENV.compiler == :clang
-      "macx-clang"
-    else
-      "macx-g++"
+    spec = nil
+    on_macos do
+      spec = if ENV.compiler == :clang
+        "macx-clang"
+      else
+        "macx-g++"
+      end
+      spec << "-arm64" if Hardware::CPU.arm?
     end
-    spec << "-arm64" if Hardware::CPU.arm?
+    on_linux do
+      spec = "linux-g++"
+    end
     args << spec
 
     qt5 = Formula["qt@5"].opt_prefix
@@ -51,13 +57,27 @@ class Qwt < Formula
         return (curve1 == NULL);
       }
     EOS
-    system ENV.cxx, "test.cpp", "-o", "out",
-      "-std=c++11",
-      "-framework", "qwt", "-framework", "QtCore",
-      "-F#{lib}", "-F#{Formula["qt@5"].opt_lib}",
-      "-I#{lib}/qwt.framework/Headers",
-      "-I#{Formula["qt@5"].opt_lib}/QtCore.framework/Versions/5/Headers",
-      "-I#{Formula["qt@5"].opt_lib}/QtGui.framework/Versions/5/Headers"
+    if OS.mac?
+      system ENV.cxx, "test.cpp", "-o", "out",
+        "-std=c++11",
+        "-framework", "qwt", "-framework", "QtCore",
+        "-F#{lib}", "-F#{Formula["qt@5"].opt_lib}",
+        "-I#{lib}/qwt.framework/Headers",
+        "-I#{Formula["qt@5"].opt_lib}/QtCore.framework/Versions/5/Headers",
+        "-I#{Formula["qt@5"].opt_lib}/QtGui.framework/Versions/5/Headers"
+    else
+      system ENV.cxx,
+             "-I#{Formula["qt@5"].opt_include}",
+             "-I#{Formula["qt@5"].opt_include}/QtCore",
+             "-I#{Formula["qt@5"].opt_include}/QtGui",
+             "test.cpp",
+             "-lqwt", "-lQt5Core", "-lQt5Gui",
+             "-L#{Formula["qt@5"].opt_lib}",
+             "-L#{Formula["qwt"].opt_lib}",
+             "-Wl,-rpath=#{Formula["qt@5"].opt_lib}",
+             "-Wl,-rpath=#{Formula["qwt"].opt_lib}",
+             "-o", "out", "-std=c++11", "-fPIC"
+    end
     system "./out"
   end
 end
