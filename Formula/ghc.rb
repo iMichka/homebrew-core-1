@@ -26,9 +26,6 @@ class Ghc < Formula
   unless OS.mac?
     depends_on "m4" => :build
     depends_on "ncurses"
-
-    # This dependency is needed for the bootstrap executables.
-    depends_on "gmp" => :build
   end
 
   resource "gmp" do
@@ -85,34 +82,22 @@ class Ghc < Formula
     # GMP *does not* use PIC by default without shared libs so --with-pic
     # is mandatory or else you'll get "illegal text relocs" errors.
     resource("gmp").stage do
-      args = if OS.mac?
+      args = []
+      if OS.mac?
         cpu = Hardware::CPU.arm? ? "aarch64" : Hardware.oldest_cpu
-        "--build=#{cpu}-apple-darwin#{OS.kernel_version.major}"
+        args << "--build=#{cpu}-apple-darwin#{OS.kernel_version.major}"
+        args << "--disable-shared"
       else
-        "--build=core2-linux-gnu"
+        args << "--build=core2-linux-gnu"
+        args << "--enable-shared"
       end
-      system "./configure", "--prefix=#{gmp}", "--with-pic", "--disable-shared",
-                            *args
+      system "./configure", "--prefix=#{gmp}", "--with-pic", *args
       system "make"
       system "make", "install"
     end
 
     args = ["--with-gmp-includes=#{gmp}/include",
             "--with-gmp-libraries=#{gmp}/lib"]
-
-    unless OS.mac?
-      # Fix error while loading shared libraries: libgmp.so.10
-      ln_s Formula["gmp"].lib/"libgmp.so", gmp/"lib/libgmp.so.10"
-      ENV.prepend_path "LD_LIBRARY_PATH", gmp/"lib"
-      # Fix /usr/bin/ld: cannot find -lgmp
-      ENV.prepend_path "LIBRARY_PATH", gmp/"lib"
-      # Fix ghc-stage2: error while loading shared libraries: libncursesw.so.5
-      ln_s Formula["ncurses"].lib/"libncursesw.so", gmp/"lib/libncursesw.so.5"
-      # Fix ghc-stage2: error while loading shared libraries: libtinfo.so.5
-      ln_s Formula["ncurses"].lib/"libtinfo.so", gmp/"lib/libtinfo.so.5"
-      # Fix ghc-pkg: error while loading shared libraries: libncursesw.so.6
-      ENV.prepend_path "LD_LIBRARY_PATH", Formula["ncurses"].lib
-    end
 
     resource("binary").stage do
       binary = buildpath/"binary"
