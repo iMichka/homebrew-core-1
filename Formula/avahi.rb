@@ -13,6 +13,7 @@ class Avahi < Formula
   depends_on "intltool" => :build
   depends_on "libtool" => :build
   depends_on "m4" => :build
+  depends_on "perl" => :build
   depends_on "pkg-config" => :build
   depends_on "xmltoman" => :build
   depends_on "dbus"
@@ -21,9 +22,6 @@ class Avahi < Formula
   depends_on :linux
 
   def install
-    # Needed by intltool (xml::parser)
-    ENV.prepend_path "PERL5LIB", "#{Formula["intltool"].libexec}/lib/perl5"
-
     system "./bootstrap.sh", "--disable-debug",
                              "--disable-dependency-tracking",
                              "--disable-silent-rules",
