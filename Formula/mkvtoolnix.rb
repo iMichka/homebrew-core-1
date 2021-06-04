@@ -53,8 +53,6 @@ class Mkvtoolnix < Formula
   fails_with gcc: "5"
 
   def install
-    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog" unless OS.mac?
-
     ENV.cxx11
 
     features = %w[flac libebml libmagic libmatroska libogg libvorbis]
