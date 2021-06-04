@@ -37,8 +37,6 @@ class Mysql < Formula
   conflicts_with "mariadb", "percona-server",
     because: "mysql, mariadb, and percona install the same binaries"
 
-  depends_on "patchelf" => :build unless OS.mac?
-
   def datadir
     var/"mysql"
   end
