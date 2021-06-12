@@ -1,21 +1,19 @@
 class MonitoringPlugins < Formula
   desc "Plugins for nagios compatible monitoring systems"
   homepage "https://www.monitoring-plugins.org"
-  url "https://www.monitoring-plugins.org/download/monitoring-plugins-2.2.tar.gz"
-  sha256 "296a538f00a9cbef7f528ff2d43af357a44b384dc98a32389a675b62a6dd3665"
-  revision 1
+  url "https://www.monitoring-plugins.org/download/monitoring-plugins-2.3.1.tar.gz"
+  sha256 "f56eb84871983fd719247249e3532228b37e2efaae657a3979bd14ac1f84a35b"
 
   bottle do
-    cellar :any
-    sha256 "24ba799d36a93d5cde26e1e52616166881164cabddd6c1c14a19316a07eebd6b" => :catalina
-    sha256 "3aa775909751c2a826325b07f0a9b77df5160af6bacfa4f8cb082e635045c620" => :mojave
-    sha256 "81f794e4736584eba6ecfc32b6c79b877579b3841e66b9f70754f98c499a5098" => :high_sierra
-    sha256 "0fa42fdf9687faa06a7566322cf9014d06040338e5a988da6aef130b15e2953a" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "5044511cc0f5a64f3424d4507559b6ca316669121f4b15d58ef6b9cec5bba3f8"
+    sha256 cellar: :any, big_sur:       "a49576ad287d073c67e0da12be686ba737abe34e5f61813a2e308cd44c427017"
+    sha256 cellar: :any, catalina:      "644b33de5338e00a2103c87aa4b55a39b7a16e2ecee49936f2251a0a97756f0f"
+    sha256 cellar: :any, mojave:        "883707c4b2fe29a6d0b8453d4d19005128761d5d6952b9fe21292ec4b4cb2b11"
   end
 
   depends_on "openssl@1.1"
 
-  conflicts_with "nagios-plugins", :because => "nagios-plugins ships their plugins to the same folder."
+  conflicts_with "nagios-plugins", because: "both install their plugins to the same folder"
 
   def install
     args = %W[

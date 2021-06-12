@@ -1,26 +1,30 @@
 class Numpy < Formula
   desc "Package for scientific computing with Python"
   homepage "https://www.numpy.org/"
-  url "https://files.pythonhosted.org/packages/ff/59/d3f6d46aa1fd220d020bdd61e76ca51f6548c6ad6d24ddb614f4037cf49d/numpy-1.17.4.zip"
-  sha256 "f58913e9227400f1395c7b800503ebfdb0772f1c33ff8cb4d6451c06cabdf316"
+  url "https://files.pythonhosted.org/packages/f3/1f/fe9459e39335e7d0e372b5e5dcd60f4381d3d1b42f0b9c8222102ff29ded/numpy-1.20.3.zip"
+  sha256 "e55185e51b18d788e49fe8305fd73ef4470596b33fc2c1ceb304566b99c71a69"
+  license "BSD-3-Clause"
   head "https://github.com/numpy/numpy.git"
 
   bottle do
-    sha256 "7b63631ab91df782aafe5662d11ad15265ff55ddd23647484ea51566e77e4ca1" => :catalina
-    sha256 "0c7b145b0075974fbb3beb4bef585b6c352d71ec470aeb2f3d6c2388c3073f25" => :mojave
-    sha256 "93d3b0d26275214bdd1d359c29e323b7719ac16269dbc98db3b5d80c7dfa8520" => :high_sierra
-    sha256 "418deb9969e9ec0b4c14110f06571fa6526346da4ca2596206316dba2ec279a7" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "dd4a72cbff9757f080f0f137208171dd58d8049e5a7adc16ca282d96ebf28608"
+    sha256 cellar: :any, big_sur:       "a5136e68ef782cbd9bd33be566445a3786b0d6ea474fd916362024753642793b"
+    sha256 cellar: :any, catalina:      "83191f3e14bcd4bdcc66e2ee19beefff2841e134c2acdc3379fef6a6ad5a3c42"
+    sha256 cellar: :any, mojave:        "8454fcdd5d9c9df3c82e3056b721475a3ba737dd85300a8be9cb5034caedc212"
+    sha256               x86_64_linux:  "fa2f417c9d70e46a0be5e2f7937542aa84250ead42ae5a20eb35ce0405c62398"
   end
 
   depends_on "cython" => :build
   depends_on "gcc" => :build # for gfortran
   depends_on "openblas"
-  depends_on "python"
+  depends_on "python@3.9"
+
+  fails_with gcc: "5"
 
   def install
     openblas = Formula["openblas"].opt_prefix
     ENV["ATLAS"] = "None" # avoid linking against Accelerate.framework
-    ENV["BLAS"] = ENV["LAPACK"] = "#{openblas}/lib/libopenblas.dylib"
+    ENV["BLAS"] = ENV["LAPACK"] = "#{openblas}/lib/#{shared_library("libopenblas")}"
 
     config = <<~EOS
       [openblas]
@@ -31,17 +35,16 @@ class Numpy < Formula
 
     Pathname("site.cfg").write config
 
-    version = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", Formula["cython"].opt_libexec/"lib/python#{version}/site-packages"
+    xy = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
+    ENV.prepend_create_path "PYTHONPATH", Formula["cython"].opt_libexec/"lib/python#{xy}/site-packages"
 
-    system "python3", "setup.py",
-      "build", "--fcompiler=gnu95", "--parallel=#{ENV.make_jobs}",
-      "install", "--prefix=#{prefix}",
-      "--single-version-externally-managed", "--record=installed.txt"
+    system Formula["python@3.9"].opt_bin/"python3", "setup.py", "build",
+        "--fcompiler=gfortran", "--parallel=#{ENV.make_jobs}"
+    system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(prefix)
   end
 
   test do
-    system "python3", "-c", <<~EOS
+    system Formula["python@3.9"].opt_bin/"python3", "-c", <<~EOS
       import numpy as np
       t = np.ones((3,3), int)
       assert t.sum() == 9

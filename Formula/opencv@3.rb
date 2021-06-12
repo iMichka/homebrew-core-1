@@ -1,15 +1,16 @@
 class OpencvAT3 < Formula
   desc "Open source computer vision library"
   homepage "https://opencv.org/"
-  url "https://github.com/opencv/opencv/archive/3.4.5.tar.gz"
-  sha256 "0c57d9dd6d30cbffe68a09b03f4bebe773ee44dc8ff5cd6eaeb7f4d5ef3b428e"
-  revision 6
+  url "https://github.com/opencv/opencv/archive/refs/tags/3.4.14.tar.gz"
+  sha256 "dfeb91c93d494be590afbe342ebb61742381f901fe2e0376987b1581f74948d1"
+  license "BSD-3-Clause"
+  revision 3
 
   bottle do
-    sha256 "7460fa876f5d1a8b9b5ac08f74b8e69468141ae793b8e3dbdf835627318e656d" => :catalina
-    sha256 "69c61e101739083a8d812a92761d7a5123ede956b1178991cbfa299b539d01dd" => :mojave
-    sha256 "29480517515710bbcdb8cfd6f6ad89fe11bfc8c7995005dee0efe5d2b6722df4" => :high_sierra
-    sha256 "f234b5a7bc3a1eeeff60dbc83b90c05b47235712b30787550321ed0dfd750b5f" => :sierra
+    sha256 arm64_big_sur: "384848fdeaa1840c9a4466de415d51976b3a0880082707db1d3a51d48d8c75c5"
+    sha256 big_sur:       "df1ce3ce64bbd0e8b790d0932876dc6a790280092ec7c6ca614b9d25ef8f3cab"
+    sha256 catalina:      "cc67ea4247db82ae722367f4270ebe9471ae0d1161930e29967bfac4e192d481"
+    sha256 mojave:        "8a17a24dd94d203f5f4a7e8da30a67cdd44785250fe254143ae578d624c5dd34"
   end
 
   keg_only :versioned_formula
@@ -26,17 +27,19 @@ class OpencvAT3 < Formula
   depends_on "libtiff"
   depends_on "numpy"
   depends_on "openexr"
-  depends_on "python"
+  depends_on "python@3.9"
   depends_on "tbb"
 
   resource "contrib" do
-    url "https://github.com/opencv/opencv_contrib/archive/3.4.5.tar.gz"
-    sha256 "8f73d029887c726fed89c69a2b0fcb1d098099fcd81c1070e1af3b452669fbe2"
+    url "https://github.com/opencv/opencv_contrib/archive/3.4.14.tar.gz"
+    sha256 "f8394bc68b70c57e54fc7706a4d2b7ef33e514c385f338c4cb470fe37d0dc243"
   end
 
+  # tbb 2021 support. Backport of
+  # https://github.com/opencv/opencv/pull/19384
   patch do
-    url "https://github.com/opencv/opencv/pull/14308.patch?full_index=1"
-    sha256 "c48a6a769f364e6f61bc99cf47a6e664c85246c9fcd4a201afc408158fc4f1ef"
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/ec823c01d3275b13b527e4860ae542fac11da24c/opencv%403/tbb2021.patch"
+    sha256 "a125f962ea07f0656869cbd97433f0e465013effc13c97a414752e0d25ed9a7d"
   end
 
   def install
@@ -46,10 +49,6 @@ class OpencvAT3 < Formula
 
     # Reset PYTHONPATH, workaround for https://github.com/Homebrew/homebrew-science/pull/4885
     ENV.delete("PYTHONPATH")
-
-    py3_config = `python3-config --configdir`.chomp
-    py3_include = `python3 -c "import distutils.sysconfig as s; print(s.get_python_inc())"`.chomp
-    py3_version = Language::Python.major_minor_version "python3"
 
     args = std_cmake_args + %W[
       -DCMAKE_OSX_DEPLOYMENT_TARGET=
@@ -80,22 +79,26 @@ class OpencvAT3 < Formula
       -DWITH_VTK=OFF
       -DBUILD_opencv_python2=OFF
       -DBUILD_opencv_python3=ON
-      -DPYTHON3_EXECUTABLE=#{which "python3"}
-      -DPYTHON3_LIBRARY=#{py3_config}/libpython#{py3_version}.dylib
-      -DPYTHON3_INCLUDE_DIR=#{py3_include}
+      -DPYTHON3_EXECUTABLE=#{Formula["python@3.9"].opt_bin}/python3
     ]
 
-    args << "-DENABLE_AVX=OFF" << "-DENABLE_AVX2=OFF"
-    unless MacOS.version.requires_sse42?
-      args << "-DENABLE_SSE41=OFF" << "-DENABLE_SSE42=OFF"
+    if Hardware::CPU.intel?
+      args << "-DENABLE_AVX=OFF" << "-DENABLE_AVX2=OFF"
+      args << "-DENABLE_SSE41=OFF" << "-DENABLE_SSE42=OFF" unless MacOS.version.requires_sse42?
     end
 
     mkdir "build" do
+      os = "mac"
+      on_linux do
+        os = "linux"
+      end
       system "cmake", "..", *args
+      inreplace "modules/core/version_string.inc", "#{HOMEBREW_SHIMS_PATH}/#{os}/super/", ""
       system "make"
       system "make", "install"
       system "make", "clean"
       system "cmake", "..", "-DBUILD_SHARED_LIBS=OFF", *args
+      inreplace "modules/core/version_string.inc", "#{HOMEBREW_SHIMS_PATH}/#{os}/super/", ""
       system "make"
       lib.install Dir["lib/*.a"]
       lib.install Dir["3rdparty/**/*.a"]
@@ -114,9 +117,9 @@ class OpencvAT3 < Formula
     system ENV.cxx, "test.cpp", "-I#{include}", "-L#{lib}", "-o", "test"
     assert_equal `./test`.strip, version.to_s
 
-    py3_version = Language::Python.major_minor_version "python3"
+    py3_version = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
     ENV["PYTHONPATH"] = lib/"python#{py3_version}/site-packages"
-    output = shell_output("python3 -c 'import cv2; print(cv2.__version__)'")
+    output = shell_output(Formula["python@3.9"].opt_bin/"python3 -c 'import cv2; print(cv2.__version__)'")
     assert_equal version.to_s, output.chomp
   end
 end

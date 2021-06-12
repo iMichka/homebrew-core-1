@@ -1,19 +1,25 @@
 class Gnupg < Formula
   desc "GNU Pretty Good Privacy (PGP) package"
   homepage "https://gnupg.org/"
-  url "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.19.tar.bz2"
-  sha256 "242554c0e06f3a83c420b052f750b65ead711cc3fddddb5e7274fcdbb4e9dec0"
+  url "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.3.1.tar.bz2"
+  sha256 "c498db346a9b9a4b399e514c8f56dfc0a888ce8f327f10376ff984452cd154ec"
+  license "GPL-3.0-or-later"
+  revision 1
+
+  livecheck do
+    url "https://gnupg.org/ftp/gcrypt/gnupg/"
+    regex(/href=.*?gnupg[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "db2ff50cbb6d0c9da3ce2f692c96f776ba7043c8ba7bbbc5d026f1a11a008eba" => :catalina
-    sha256 "5e23d28a490125c271558817155b80d8f3d762afcb9391d47ded71db6b17b306" => :mojave
-    sha256 "f35cd016d9734dc5f4dcd5d43939570f3b61f4aa7b61ade1e0cd970d0916ed16" => :high_sierra
-    sha256 "811c289fea694c52e9a9bd62d4730696fce58e79b301e30f12d6437fc4cf2dee" => :x86_64_linux
+    sha256 arm64_big_sur: "fd27ef93bf469e8f5689c372f6b6dba70f2fb777b8056b22e5688b67a146b902"
+    sha256 big_sur:       "d1459dc52e4360dd6d812a833218e5ced1f08c10b131981a3ec2aab9fc5d7f9c"
+    sha256 catalina:      "fbdc50f45c45b3444b7d4dd48334e91b8a0c9dbf84da85f379981bbb2ee1a5a3"
+    sha256 mojave:        "bbbcdf26abc4cb46557b59ba60320317d457e7f794ed3092891df29153b5d807"
+    sha256 x86_64_linux:  "90088bef0d60fe9291535796765ec93a77ce634fb26aed40971a8003865a714d"
   end
 
   depends_on "pkg-config" => :build
-  depends_on "sqlite" => :build if !OS.mac? || MacOS.version == :mavericks
-  depends_on "adns"
   depends_on "gettext"
   depends_on "gnutls"
   depends_on "libassuan"
@@ -23,7 +29,16 @@ class Gnupg < Formula
   depends_on "libusb"
   depends_on "npth"
   depends_on "pinentry"
-  uses_from_macos "libidn"
+
+  uses_from_macos "sqlite", since: :catalina
+
+  on_linux do
+    depends_on "libidn"
+  end
+
+  # Fix tests for gnupg 2.3.1, remove in the next release
+  # Patch ref: https://dev.gnupg.org/rGd36c4dc95b72b780375d57311bdf4ae842fd54fa
+  patch :DATA
 
   def install
     system "./configure", "--disable-dependency-tracking",
@@ -32,16 +47,25 @@ class Gnupg < Formula
                           "--sbindir=#{bin}",
                           "--sysconfdir=#{etc}",
                           "--enable-all-tests",
-                          "--enable-symcryptrun",
                           "--with-pinentry-pgm=#{Formula["pinentry"].opt_bin}/pinentry"
     system "make"
     system "make", "check"
     system "make", "install"
+
+    # Configure scdaemon as recommended by upstream developers
+    # https://dev.gnupg.org/T5415#145864
+    on_macos do
+      # write to buildpath then install to ensure existing files are not clobbered
+      (buildpath/"scdaemon.conf").write <<~EOS
+        disable-ccid
+      EOS
+      pkgetc.install "scdaemon.conf"
+    end
   end
 
   def post_install
     (var/"run").mkpath
-    quiet_system "killall", "gpg-agent"
+    quiet_system "gpgconf", "--reload", "all"
   end
 
   test do
@@ -66,3 +90,17 @@ class Gnupg < Formula
     end
   end
 end
+
+__END__
+diff --git a/tests/openpgp/defs.scm b/tests/openpgp/defs.scm
+index 768d479aa..86d312f82 100644
+--- a/tests/openpgp/defs.scm
++++ b/tests/openpgp/defs.scm
+@@ -338,6 +338,7 @@
+   (create-file "common.conf"
+ 	       (if (flag "--use-keyboxd" *args*)
+ 		   "use-keyboxd" "#use-keyboxd")
++	       (string-append "keyboxd-program " (tool 'keyboxd))
+ 	       )
+
+   (create-file "gpg.conf"

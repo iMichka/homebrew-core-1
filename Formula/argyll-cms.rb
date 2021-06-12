@@ -1,15 +1,20 @@
 class ArgyllCms < Formula
   desc "ICC compatible color management system"
   homepage "https://www.argyllcms.com/"
-  url "https://www.argyllcms.com/Argyll_V2.1.1_src.zip"
-  version "2.1.1"
-  sha256 "51269bcafc4d95679354b796685c3f0a41b44b78443cbe360cda4a2d72f32acb"
+  url "https://www.argyllcms.com/Argyll_V2.2.0_src.zip"
+  sha256 "c612a2e49fd51e089616cd27b6d4717d0f20fc8edbd906462f0d0dbbabbc711c"
+  license "AGPL-3.0-only"
+
+  livecheck do
+    url "https://www.argyllcms.com/downloadsrc.html"
+    regex(/href=.*?Argyll[._-]v?(\d+(?:\.\d+)+)[._-]src\.zip/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "1051f72544cc48ef2a7ddda49b4dd610000eadeb59a0e06fbdb578fcc212e519" => :mojave
-    sha256 "f6a8c6a464f1293d4e50001824009d932269469e9a262c624e87779ba9c69290" => :high_sierra
-    sha256 "e7ab5c574f61c660626f10c862d865bf19f3d385428e18a0f4a4375f9e811b2f" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "3ae919d00b2a8977c21692d8b5a473982085a05a5718f9f15fa8647f2111362a"
+    sha256 cellar: :any, big_sur:       "a33f069f86d63448d1f2b8d04465ea84d902300a1ecb656cbf0808a3b8776791"
+    sha256 cellar: :any, catalina:      "d7fd1d597134461887b6477b4460fcc8fb2143d9c97e49b5dcc7ecf53758fe9a"
+    sha256 cellar: :any, mojave:        "941603de5eacbc65d306339aef0c955cf111679247b710fa8c099ffe82ea5db4"
   end
 
   depends_on "jam" => :build
@@ -17,7 +22,13 @@ class ArgyllCms < Formula
   depends_on "libpng"
   depends_on "libtiff"
 
-  conflicts_with "num-utils", :because => "both install `average` binaries"
+  conflicts_with "num-utils", because: "both install `average` binaries"
+
+  # Fixes a missing header, which is an error by default on arm64 but not x86_64
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/f6ede0dff06c2d9e3383416dc57c5157704b6f3a/argyll-cms/unistd_import.diff"
+    sha256 "5ce1e66daf86bcd43a0d2a14181b5e04574757bcbf21c5f27b1f1d22f82a8a6e"
+  end
 
   def install
     # dyld: lazy symbol binding failed: Symbol not found: _clock_gettime
@@ -26,6 +37,10 @@ class ArgyllCms < Formula
       inreplace "numlib/numsup.c", "CLOCK_MONOTONIC", "UNDEFINED_GIBBERISH"
     end
 
+    # These two inreplaces make sure /opt/homebrew can be found by the
+    # Jamfile, which otherwise fails to locate system libraries
+    inreplace "Jamtop", "/usr/include/x86_64-linux-gnu$(subd)", "#{HOMEBREW_PREFIX}/include$(subd)"
+    inreplace "Jamtop", "/usr/lib/x86_64-linux-gnu", "#{HOMEBREW_PREFIX}/lib"
     system "sh", "makeall.sh"
     system "./makeinstall.sh"
     rm "bin/License.txt"

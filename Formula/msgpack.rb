@@ -1,16 +1,18 @@
 class Msgpack < Formula
   desc "Library for a binary-based efficient data interchange format"
   homepage "https://msgpack.org/"
-  url "https://github.com/msgpack/msgpack-c/releases/download/cpp-3.2.1/msgpack-3.2.1.tar.gz"
-  sha256 "433cbcd741e1813db9ae4b2e192b83ac7b1d2dd7968a3e11470eacc6f4ab58d2"
+  url "https://github.com/msgpack/msgpack-c/releases/download/cpp-3.3.0/msgpack-3.3.0.tar.gz"
+  sha256 "6e114d12a5ddb8cb11f669f83f32246e484a8addd0ce93f274996f1941c1f07b"
+  license "BSL-1.0"
   head "https://github.com/msgpack/msgpack-c.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "096ec799c036e133005a99e95fc2c16d69ba5c12e6d42cb22aa4cd13d45b53c7" => :catalina
-    sha256 "3b801b0f1ff7467f3d9c5613b43f8caf326a399a18f039a85075edb599abd704" => :mojave
-    sha256 "37747bceccf59ae6041667c52765c424fba6363aef6326c032d35b3b59bf3d14" => :high_sierra
-    sha256 "531f50461faeb85dfa1ab2ebf110d8ab725c4182108275c17efb8c0049773149" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c66ea6e1ec61f9fa18e8146c9aa8306e39adcb0b31d2d6c6784ddd3d17a479f7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "434fdf5aea4bdee584755531889cbbe40a093a4a85dbb993dcca60516a6aaeab"
+    sha256 cellar: :any_skip_relocation, catalina:      "bb3e3af7ce4994911518db90db9ff4747e72492832b3aa98ff7c82fd3d5990b2"
+    sha256 cellar: :any_skip_relocation, mojave:        "f418d11d056dd08160b27088d19ee12d4a9e36dbd913ffae8d2c9838a1449475"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "7424d6d9dee3edd0f07c4ea6f11567255dea4f1bbffbb6c41f20c5412952028d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8ffc795917ab21985beeb23e6940c197a3ee483eb767fa393c05ed4a74619331"
   end
 
   depends_on "cmake" => :build
@@ -21,7 +23,7 @@ class Msgpack < Formula
   end
 
   test do
-    # Reference: https://github.com/msgpack/msgpack-c/blob/master/QUICKSTART-C.md
+    # Reference: https://github.com/msgpack/msgpack-c/blob/HEAD/QUICKSTART-C.md
     (testpath/"test.c").write <<~EOS
       #include <msgpack.h>
       #include <stdio.h>

@@ -3,13 +3,19 @@ class Dvdauthor < Formula
   homepage "https://dvdauthor.sourceforge.io/"
   url "https://downloads.sourceforge.net/project/dvdauthor/dvdauthor-0.7.2.tar.gz"
   sha256 "3020a92de9f78eb36f48b6f22d5a001c47107826634a785a62dfcd080f612eb7"
-  revision 1
+  revision 3
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/dvdauthor[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "b28cf71e6dec0467f9e87a1a1b4af0d06eb616f5748eadf52979d9e3fdf12c95" => :catalina
-    sha256 "dd1e5474d6c92c842a0314b1359942f0e300902691babbf654750715dda95325" => :mojave
-    sha256 "8ae1553ccb62320baa2aebc1bab814def0b96f7efeaa47743bcce80c7a65aed8" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "a0b0c601eb1ec9de60de448cab11217c63febd18afd7a9ee6207fdb1427593f5"
+    sha256 cellar: :any,                 big_sur:       "c6405e471ac402f1b0ec1e2fbbb2ee3eb4be9dd82f0ef5b8991339928ff2fdb0"
+    sha256 cellar: :any,                 catalina:      "7ebcd748eb4eba1876bd1cb181fa6ec679773dbf753be805845904b69685ee11"
+    sha256 cellar: :any,                 mojave:        "5da2d90859c186ea0795b18210ef2722f96bfbb16f53d3a0cb0aa89084026ce0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "afdfb291b73b40769bace04dc4c172729aeee6dad5f8e4c3efdb1e298af857ee"
   end
 
   # Dvdauthor will optionally detect ImageMagick or GraphicsMagick, too.

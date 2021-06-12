@@ -5,17 +5,19 @@ class Jinja2Cli < Formula
   homepage "https://github.com/mattrobenolt/jinja2-cli"
   url "https://files.pythonhosted.org/packages/23/67/6f05f5f8a9fc108c58e4eac9b9b7876b400985d33149fe2faa87a9ca502b/jinja2-cli-0.7.0.tar.gz"
   sha256 "9ccd8d530dad5d031230afd968cf54637b49842a13ececa6e17c2f67f6e9336e"
+  license "BSD-2-Clause"
+  revision OS.mac? ? 3 : 4
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "7d2501ec5a05dd6a491c2900df9c51e834e1a584530224c4d4c47707da4f5424" => :catalina
-    sha256 "5b5aaccddf9b6c0c41800d2dbb9f8891a51b5e258e9c99f97ac65bd19ee2c4c9" => :mojave
-    sha256 "1ca18e3fa85ad192c8bb96dd1b0d060fb9a2cbbdaf12875fe66196eab077aee5" => :high_sierra
-    sha256 "bae549938d2954d8ffb3de7add885df8dbfcd020f65356fdc08cf2bd029c409e" => :sierra
-    sha256 "ea20290c93b29a102d1ea6081aff6b5da70f57fca781a0a674994245a3481cf2" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "68e2f4bba1d27a5a75eaabdaf84684ad26867d7281d705e23bc6ed8d96f7da29"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7dd9ea3c9d12a0a9d1d3be2d521d3c7fcefb10843bf62dd7914e35e66a387d63"
+    sha256 cellar: :any_skip_relocation, catalina:      "f87af5f900907686304e0937303eadeb5050d48e3ae85c340ec39e8918177d1e"
+    sha256 cellar: :any_skip_relocation, mojave:        "a64bc73445720cf2a272854643c6f66aa0dfec769bd96f292b134054d5b1f84a"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "6ae50d5282b186cbf0a8b46b44a173a685a8798fec0606efc6d15bccae9b6a92"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "815e04d4d0a41e12add189de22318fef1c1484a02f9f43b3398f7faa509f66e2"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   resource "jinja2" do
     url "https://files.pythonhosted.org/packages/93/ea/d884a06f8c7f9b7afbc8138b762e80479fb17aedbbe2b06515a12de9378d/Jinja2-2.10.1.tar.gz"
@@ -32,7 +34,12 @@ class Jinja2Cli < Formula
   end
 
   test do
-    assert_match version.to_s, shell_output("script -q /dev/null #{bin}/jinja2 --version")
+    on_macos do
+      assert_match version.to_s, shell_output("script -q /dev/null #{bin}/jinja2 --version")
+    end
+    on_linux do
+      assert_match version.to_s, shell_output("script -q /dev/null -e -c \"#{bin}/jinja2 --version\"")
+    end
     expected_result = <<~EOS
       The Beatles:
       - Ringo Starr

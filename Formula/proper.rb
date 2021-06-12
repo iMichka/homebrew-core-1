@@ -1,26 +1,27 @@
 class Proper < Formula
   desc "QuickCheck-inspired property-based testing tool for Erlang"
   homepage "https://proper-testing.github.io"
-  url "https://github.com/proper-testing/proper/archive/v1.3.tar.gz"
-  sha256 "7e59eeaef12c07b1e42b0891238052cd05cbead58096efdffa3413b602cd8939"
+  url "https://github.com/proper-testing/proper/archive/v1.4.tar.gz"
+  sha256 "38b14926f974c849fad74b031c25e32bf581974103e7a30ec2b325990fc32334"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "34011621b0cd440a49ee2c13d0bd968b7cf8ed8b0b817fbd6793082de5d4728c" => :catalina
-    sha256 "a93bfdd9a7558b9ad0cc013f3aca0cadfe86535948730ab6861c10931cae4b92" => :mojave
-    sha256 "f9f6404b3c025d06fb1b6ab0155716fe5f59f337ac6884b92d4ac01d6677b4c7" => :high_sierra
-    sha256 "a80e754b0bb2ce17d223034734cd1aa473532ba743cf45cbff89fa154af18220" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "51b1bd82ce6b28f81a21d3dd4fc8e451cc1a11f2434d9e8f55121d233414d43a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "61e21e04eaa32a05b64b00906c02ebe92b561d5eb087ca044e95cc529b500fc3"
+    sha256 cellar: :any_skip_relocation, catalina:      "06c64fa31d6e5adcf99fee3f9ed8351adb563404eb8c47bed79e6ba1bf4196f4"
+    sha256 cellar: :any_skip_relocation, mojave:        "b658a49385aabd1ee1c7a081873367a5b2aeb12c9ea0804804cedc38b2731c96"
   end
 
+  depends_on "rebar3" => :build
   depends_on "erlang"
 
   def install
     system "make"
-    prefix.install Dir["ebin", "include"]
+    prefix.install Dir["_build/default/lib/proper/ebin", "include"]
   end
 
   test do
     output = shell_output("erl -noshell -pa #{opt_prefix}/ebin -eval 'io:write(code:which(proper))' -s init stop")
-    assert_not_equal "non_existing", output
+    refute_equal "non_existing", output
   end
 end

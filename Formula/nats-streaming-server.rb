@@ -1,16 +1,17 @@
 class NatsStreamingServer < Formula
   desc "Lightweight cloud messaging system"
   homepage "https://nats.io"
-  url "https://github.com/nats-io/nats-streaming-server/archive/v0.16.2.tar.gz"
-  sha256 "af39a9269bba110dc61cfa1bf6114efdba79e88ecd31639be43e5ca724afdf58"
+  url "https://github.com/nats-io/nats-streaming-server/archive/refs/tags/v0.22.0.tar.gz"
+  sha256 "adbb4a51536f9baabf42788c9e87bef029bc861cc5376e679098f2bc2dce181e"
+  license "Apache-2.0"
   head "https://github.com/nats-io/nats-streaming-server.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "96891cdad9b8c43b06295e8becc5d8b84d2024b1a2e6f298e7fd80ba354cd89b" => :catalina
-    sha256 "0ab74f6fa1e2147c1b794570a24190468312f99dfd73c1fa28c72cb18121179e" => :mojave
-    sha256 "a23985559dbe2d570712406a571efcd56b84997152ca2b0f85684caf833db368" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "3d4602a3cda6e52f30f19b7f2f77fa7ba991b2f8823c81ca0babb753d74609b3"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9ddcbd4a6828e27b1a95e72c60459c984504457fd91e9bfb421eb65a31d66706"
+    sha256 cellar: :any_skip_relocation, catalina:      "8338994ba6e7900bd7c1a7037a7c83cac35b79ce5c1090ce62aba1c22b65c493"
+    sha256 cellar: :any_skip_relocation, mojave:        "0ab63e58ea6d7130a687b38c1d67f2917121828ec75605d8a7f06ab1db471638"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8b0d8be453bf9eaf2e93a57a2cabf3b98c22bad7d691ecd810a8a782b2f532d9"
   end
 
   depends_on "go" => :build
@@ -20,24 +21,25 @@ class NatsStreamingServer < Formula
     prefix.install_metafiles
   end
 
-  plist_options :manual => "nats-streaming-server"
+  plist_options manual: "nats-streaming-server"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/nats-streaming-server</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/nats-streaming-server</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do

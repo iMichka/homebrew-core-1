@@ -1,25 +1,34 @@
 class MysqlClient < Formula
   desc "Open source relational database management system"
   homepage "https://dev.mysql.com/doc/refman/8.0/en/"
-  url "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-boost-8.0.18.tar.gz"
-  sha256 "0eccd9d79c04ba0ca661136bb29085e3833d9c48ed022d0b9aba12236994186b"
+  url "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-boost-8.0.25.tar.gz"
+  sha256 "93c5f57cbd69573a8d9798725edec52e92830f70c398a1afaaea2227db331728"
+  license "GPL-2.0-only" => { with: "Universal-FOSS-exception-1.0" }
+
+  livecheck do
+    url "https://github.com/mysql/mysql-server.git"
+    regex(/^mysql[._-]v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    sha256 "6aeb496213d40f45bc44123703753012ea889468b7f37101a42772da237ab4ad" => :catalina
-    sha256 "9729c80a49ac7b808bbc26a93130c3ea16797da3824ed9450df53974958de066" => :mojave
-    sha256 "98ae3bb78d4044053cba6acc3cd3e4737cc71df2cd2afb68e0cbccfd27488de7" => :high_sierra
-    sha256 "5581165298d2b6c50b70b2ce755d9f771ba30929f5e12b3bb08b8e1d5c1be475" => :x86_64_linux
+    sha256 arm64_big_sur: "0a0869ca642cde40c30e34546709866dffca6f8572357be1b0eaf6addae98a5b"
+    sha256 big_sur:       "b142f4a32fa04b62d4742a91b0e6b9322e709af367d692769012994e963f35c1"
+    sha256 catalina:      "a2ff68b37407c8d189792925c7bb6dbbcdd2c78021a9121946bbfa9c8f37ec99"
+    sha256 mojave:        "2a0463370835a04d6270113c31d6a4a6f2dd6fc8a845f9fa4c092c0f4c2ac49e"
+    sha256 x86_64_linux:  "8c6fadf8a259822ac8978b48b1f340045400783dc314826120879e2cabde4de0"
   end
 
   keg_only "it conflicts with mysql (which contains client libraries)"
 
   depends_on "cmake" => :build
-
+  depends_on "libevent"
   # GCC is not supported either, so exclude for El Capitan.
-  depends_on :macos => :sierra if DevelopmentTools.clang_build_version < 900
-
+  depends_on macos: :sierra if DevelopmentTools.clang_build_version < 900
   depends_on "openssl@1.1"
+  depends_on "zstd"
+
   uses_from_macos "libedit"
+  uses_from_macos "zlib"
 
   def install
     # -DINSTALL_* are relative to `CMAKE_INSTALL_PREFIX` (`prefix`)
@@ -35,6 +44,9 @@ class MysqlClient < Formula
       -DINSTALL_MYSQLSHAREDIR=share/mysql
       -DWITH_BOOST=boost
       -DWITH_EDITLINE=system
+      -DWITH_LIBEVENT=system
+      -DWITH_ZLIB=system
+      -DWITH_ZSTD=system
       -DWITH_SSL=yes
       -DWITH_UNIT_TESTS=OFF
       -DWITHOUT_SERVER=ON

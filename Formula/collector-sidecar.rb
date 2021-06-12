@@ -1,61 +1,52 @@
 class CollectorSidecar < Formula
   desc "Manage log collectors through Graylog"
-  homepage "https://github.com/Graylog2/collector-sidecar"
-  url "https://github.com/Graylog2/collector-sidecar/archive/1.0.2.tar.gz"
-  sha256 "ee7ddb725d3475656df0bb08476e64c7f919acfc011a338b4532249363778130"
+  homepage "https://www.graylog.org/"
+  url "https://github.com/Graylog2/collector-sidecar.git",
+    tag:      "1.1.0",
+    revision: "89c722567033ea48b42678d2303693aa6ddee775"
+  license "GPL-3.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a246ba4b742f4813ea11488b1b958806d0852af192381b686326d28339651014" => :catalina
-    sha256 "c5df7e3fe89d27da283cba2d44c8d9bfd4edd686167b8d4acf0c6f0387154fef" => :mojave
-    sha256 "267c985605ca057bff286bc111fc6ac84dfc0d4bb391da19c044ddef381c7a74" => :high_sierra
-    sha256 "6e09f805d30b96d2650a6541fddbda8a55d6ef74d7de7e96c642df5d2cd7d18b" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "24494acc03245693ab94d61f3aa8903b1006243713fa3fac91e499c7de885b44"
+    sha256 cellar: :any_skip_relocation, big_sur:       "689ede327bbf176b9c4f3d544f90f5940b1d026151b91c50a0100edd268c48ec"
+    sha256 cellar: :any_skip_relocation, catalina:      "30f35fc66f276071c2126fbe77f7bb7b3a7852a1c45adc2d5532a8340b421902"
+    sha256 cellar: :any_skip_relocation, mojave:        "193227a80963772b7a480713f3d104fe9e3a1dc7e1c7122a26292fd5bf5c0708"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "431341635759a5a933deb0ba737ef4338804caff98ad40af25938f9d78621d5c"
   end
 
-  depends_on "glide" => :build
   depends_on "go" => :build
   depends_on "mercurial" => :build
   depends_on "filebeat"
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["GLIDE_HOME"] = HOMEBREW_CACHE/"glide_home/#{name}"
-    (buildpath/"src/github.com/Graylog2/collector-sidecar").install buildpath.children
+    ldflags = %W[
+      -s -w
+      -X github.com/Graylog2/collector-sidecar/common.GitRevision=#{Utils.git_head}
+      -X github.com/Graylog2/collector-sidecar/common.CollectorVersion=#{version}
+    ]
 
-    cd "src/github.com/Graylog2/collector-sidecar" do
-      inreplace "main.go", "/etc", etc
-
-      inreplace "sidecar-example.yml" do |s|
-        s.gsub! "/usr", HOMEBREW_PREFIX
-        s.gsub! "/etc", etc
-        s.gsub! "/var", var
-      end
-
-      system "glide", "install"
-      system "make", "build"
-      (etc/"graylog/sidecar/sidecar.yml").install "sidecar-example.yml"
-      bin.install "graylog-sidecar"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args(ldflags: ldflags.join(" ")), "-o", bin/"graylog-sidecar"
+    (etc/"graylog/sidecar/sidecar.yml").install "sidecar-example.yml"
   end
 
-  plist_options :manual => "graylog-sidecar"
+  plist_options manual: "graylog-sidecar"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
-    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>Program</key>
-        <string>#{opt_bin}/graylog-sidecar</string>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN"
+      "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>Program</key>
+          <string>#{opt_bin}/graylog-sidecar</string>
+          <key>RunAtLoad</key>
+          <true/>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do

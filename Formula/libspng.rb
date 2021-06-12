@@ -1,24 +1,27 @@
 class Libspng < Formula
   desc "C library for reading and writing PNG format files"
   homepage "https://libspng.org/"
-  url "https://gitlab.com/randy408/libspng/uploads/3d980bac86c51368f40af2f1ac79a057/libspng-0.5.0.tar.xz"
-  sha256 "220a653802559943ae43fd48f03ba6ff3935a5243766d9ee5ff905240d4399a7"
+  url "https://github.com/randy408/libspng/archive/v0.6.3.tar.gz"
+  sha256 "381e4073221a8fbdb54b3022ac7ede6a62ec944dcf30599e4565ebb52b311dd8"
+  license "BSD-2-Clause"
 
   bottle do
-    cellar :any
-    sha256 "05d22f51215ebc9b77e5155d7b7d209d50eefaa7b4d287634bd6d09922f05679" => :catalina
-    sha256 "c01b660f652c77917df28b6b651c00458822c0ccf1b1947be4c6f334bf414944" => :mojave
-    sha256 "c3da9d3ca4b66eec6a0ed1c5510444653935976d942b678bbeeeff9c3ef522c9" => :high_sierra
-    sha256 "0ca546539595f727222b1c5e21cd24735d2213f29e3ab3d344f269f2f11a084b" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "6d41eb3e6c1938743b2214d4a18c7bb13a4908582380cf7583e7cfd74ab0f038"
+    sha256 cellar: :any,                 big_sur:       "8cba8c9454c2d9892b39cd4b4dff9e32974f82ea5c220dc1e0aa90eb19406711"
+    sha256 cellar: :any,                 catalina:      "9b5f9ce7f8e56210f9cce38d641517f5bf43dc5d9f45b75c6be9bc5ad76c1f1f"
+    sha256 cellar: :any,                 mojave:        "8c2f036cc0b40a540d0aab26486f8f66b03b075fa78c7b39e912321115007bfd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a18861271fe4cc30bad7965701dcb37e8ea03897eeb188e34718a5357b7c60f1"
   end
 
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
 
+  uses_from_macos "zlib"
+
   def install
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
     end
@@ -29,7 +32,9 @@ class Libspng < Formula
     fixture = test_fixtures("test.png")
     cp pkgshare/"example.c", testpath/"example.c"
     system ENV.cc, "example.c", "-L#{lib}", "-I#{include}", "-lspng", "-o", "example"
+
     output = shell_output("./example #{fixture}")
-    assert_match "width: 8\nheight: 8\nbit depth: 1\ncolor type: 3 - indexed color\ncompression method: 0\nfilter method: 0\ninterlace method: 0", output
+    assert_match "width: 8\nheight: 8\nbit depth: 1\ncolor type: 3 - indexed color\n" \
+                 "compression method: 0\nfilter method: 0\ninterlace method: 0", output
   end
 end

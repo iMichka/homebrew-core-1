@@ -1,16 +1,18 @@
 class Docker < Formula
   desc "Pack, ship and run any application as a lightweight container"
   homepage "https://www.docker.com/"
-  url "https://github.com/docker/docker-ce.git",
-      :tag      => "v19.03.5",
-      :revision => "633a0ea838f10e000b7c6d6eed1623e6e988b5bb"
+  url "https://github.com/docker/cli.git",
+      tag:      "v20.10.7",
+      revision: "f0df35096d5f5e6b559b42c7fde6c65a2909f7c5"
+  license "Apache-2.0"
+  head "https://github.com/docker/cli.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a48d13d286269ad1295ee05fd8e1d10f8c8603aecb45d5e0e3262226bc1a8398" => :catalina
-    sha256 "99bfeaa39dfe7b1ee02bbe37b7433176d7f17266575bfa565ca94e0f1a3d204d" => :mojave
-    sha256 "5ea5486072e8a1c74268c40ff8dd82625d20983959bfb7269cdaf5ba69667f52" => :high_sierra
-    sha256 "d2b8f8ff63c70d7e9ce1d07fda9148fee7d40ae6d45f83dd30a089c43cb8ea9f" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c4ada3bfb0b5e0915079f5a26ea28e46b506e6bc1ad859e609272de7296416c7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "626a28393a8e833b5848a52c1fbe2b71d63e1540c4c689216c3d2b27d2a871b4"
+    sha256 cellar: :any_skip_relocation, catalina:      "4d09b76ce85c651cb4454ddf2ed8b3f680231793747f5d997a1a41111e92e997"
+    sha256 cellar: :any_skip_relocation, mojave:        "7f947fa8659c8b81daf5fdf3fe065d97d7443db9653fdfbcb5e91de724635d22"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d98465cf783e58b3a6840e3882d93243cd2005f51bf107f02fcbff4b37274568"
   end
 
   depends_on "go" => :build
@@ -18,11 +20,12 @@ class Docker < Formula
 
   def install
     ENV["GOPATH"] = buildpath
+    ENV["GO111MODULE"] = "auto"
     dir = buildpath/"src/github.com/docker/cli"
-    dir.install (buildpath/"components/cli").children
+    dir.install (buildpath/"").children
     cd dir do
-      commit = Utils.popen_read("git rev-parse --short HEAD").chomp
-      build_time = Utils.popen_read("date -u +'%Y-%m-%dT%H:%M:%SZ' 2> /dev/null").chomp
+      commit = Utils.git_short_head
+      build_time = Time.now.utc.strftime("%Y-%m-%dT%H:%M:%SZ")
       ldflags = ["-X \"github.com/docker/cli/cli/version.BuildTime=#{build_time}\"",
                  "-X github.com/docker/cli/cli/version.GitCommit=#{commit}",
                  "-X github.com/docker/cli/cli/version.Version=#{version}",

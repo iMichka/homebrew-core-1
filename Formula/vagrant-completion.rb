@@ -1,14 +1,14 @@
 class VagrantCompletion < Formula
   desc "Bash completion for Vagrant"
   homepage "https://github.com/hashicorp/vagrant"
-  url "https://github.com/hashicorp/vagrant/archive/v2.2.6.tar.gz"
-  sha256 "1bdafbce594cb17b9b4a7d85ba3dc35093d6693b1717280e062ec64ca2c05a5b"
+  url "https://github.com/hashicorp/vagrant/archive/v2.2.16.tar.gz"
+  sha256 "ab3c60bb12b2da916fd073192849f2b5d3f224f95febf3538212247c4cde28d6"
+  license "MIT"
   head "https://github.com/hashicorp/vagrant.git"
-
-  bottle :unneeded
 
   def install
     bash_completion.install "contrib/bash/completion.sh" => "vagrant"
+    zsh_completion.install "contrib/zsh/_vagrant"
   end
 
   test do

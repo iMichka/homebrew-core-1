@@ -1,36 +1,35 @@
-require "language/haskell"
-
 class Elm < Formula
-  include Language::Haskell::Cabal
-
   desc "Functional programming language for building browser-based GUIs"
   homepage "https://elm-lang.org"
   url "https://github.com/elm/compiler/archive/0.19.1.tar.gz"
   sha256 "aa161caca775cef1bbb04bcdeb4471d3aabcf87b6d9d9d5b0d62d3052e8250b1"
+  license "BSD-3-Clause"
 
   bottle do
-    sha256 "e1bbfe4ff7deba3ed60eb55b81b86b6d3346325bea584802ca1212369f0fa0bb" => :catalina
-    sha256 "288eeb47caccfaa9bae220492cee8de7206d40b7760e1e309a139a2398f9710d" => :mojave
-    sha256 "7fb65ff925701c39bbc7d9a5099cd88f10a56949ae019bc8817035ed1d56edbd" => :high_sierra
-    sha256 "1e9cbf0cacc21654787824f241af953966ff9f6df2d8218413962ded9bbfa139" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, big_sur:      "04efe8b2f66b7904b05578e59a07300e8f070521a87ab0733433609da531f29d"
+    sha256 cellar: :any_skip_relocation, catalina:     "bb6cd6a1bd9b3a7f280791b2ffba6631efa784f9068f48c4d6f9e64d756a4b2a"
+    sha256 cellar: :any_skip_relocation, mojave:       "03d2874b915186af4361360b5a3f3d9a9734046b97d46607b34a4e8f0d5228c2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "0f72256bd128162b16d8bcb53284c52a9ce0ac52a63896f641a72e0ab097674c"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc@8.6" => :build
-  unless OS.mac?
-    depends_on "ncurses"
-    depends_on "zlib"
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
+  patch do
+    # elm's tarball is not a proper cabal tarball, it contains multiple cabal files.
+    # Add `cabal.project` lets cabal-install treat this tarball as cabal project correctly.
+    # https://github.com/elm/compiler/pull/2159
+    url "https://github.com/elm/compiler/commit/eb566e901a419a6620e43c18faf89f57f0827124.patch?full_index=1"
+    sha256 "556ff15fb4d8e5ca6e853280e35389c8875fa31a543204b315b55ec2ac967624"
   end
 
   def install
-    # elm-compiler needs to be staged in a subdirectory for the build process to succeed
-    (buildpath/"elm-compiler").install Dir["*"]
-
-    cabal_sandbox do
-      cabal_sandbox_add_source "elm-compiler"
-      cabal_install "--only-dependencies", "--force-reinstalls", "elm"
-      cabal_install "--prefix=#{prefix}", "elm"
-    end
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do

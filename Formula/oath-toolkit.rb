@@ -1,17 +1,22 @@
 class OathToolkit < Formula
   desc "Tools for one-time password authentication systems"
   homepage "https://www.nongnu.org/oath-toolkit/"
-  url "https://download.savannah.gnu.org/releases/oath-toolkit/oath-toolkit-2.6.2.tar.gz"
-  mirror "https://fossies.org/linux/privat/oath-toolkit-2.6.2.tar.gz"
-  sha256 "b03446fa4b549af5ebe4d35d7aba51163442d255660558cd861ebce536824aa0"
-  revision 1
+  url "https://download.savannah.gnu.org/releases/oath-toolkit/oath-toolkit-2.6.6.tar.gz"
+  mirror "https://fossies.org/linux/privat/oath-toolkit-2.6.6.tar.gz"
+  sha256 "fd68b315c71ba1db47bcc6e67f598568db4131afc33abd23ed682170e3cb946c"
+  license all_of: ["GPL-3.0-or-later", "LGPL-2.1-or-later"]
+
+  livecheck do
+    url "https://download.savannah.gnu.org/releases/oath-toolkit/"
+    regex(/href=.*?oath-toolkit[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    rebuild 1
-    sha256 "24a65399ed4b462a3291c542616e1a5dad4df008dcb116fd12c34030f05135b0" => :catalina
-    sha256 "ab9cbc2e7e8c7004c5a3db7fbc4b6a0cbc9560a353a306cba0fa4d1174a46f68" => :mojave
-    sha256 "a7fbff2831b4c6a61896c65b482b3db50d2e070e1e74772e7fb929bbd4a586f0" => :high_sierra
-    sha256 "e1ec14a3c3c6941c6af6fa9e81a6dffb27d07f3593e79ef865ee8edbd20f5be0" => :x86_64_linux
+    sha256 arm64_big_sur: "3e54014feda461a1aa6f68f71570c8be14076aac4a6823345b76b10feba0cf94"
+    sha256 big_sur:       "ed6ceb54edc0b0bea449a75c756b604c6204f6fd80c9e280ce57b1e3d7140ac7"
+    sha256 catalina:      "04c85d25d9c1e8cac2164a4b538344f95181346fd3170e65e43173aca6770b6d"
+    sha256 mojave:        "136fc9c533486f31645fdd6594d96fc8f17487439248b78a8c42a868ce7aaacb"
+    sha256 x86_64_linux:  "6c8d61f34d34082fb448fcb520c1dffc18e157adffcf18d8b447a925cb6aa0c3"
   end
 
   depends_on "pkg-config" => :build

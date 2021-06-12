@@ -4,26 +4,26 @@ class CmarkGfm < Formula
   url "https://github.com/github/cmark-gfm/archive/0.29.0.gfm.0.tar.gz"
   version "0.29.0.gfm.0"
   sha256 "6a94aeaa59a583fadcbf28de81dea8641b3f56d935dda5b2447a3c8df6c95fea"
+  license "BSD-2-Clause"
+  revision 2
 
   bottle do
-    cellar :any
-    sha256 "f318b456ed27ff10c495df41c9aed0208761e9fb10b43905d37a39ae30321cf0" => :catalina
-    sha256 "82cf0b26777bb839ace2b833e5390c17f5e4da1e91f61c8729f084e3bac4063c" => :mojave
-    sha256 "b816bbd9cf54cca8146e55cb9920fe8bb182599d4e0157582d39f6ab3b16d999" => :high_sierra
-    sha256 "2f5538c985404d43a128b7ae61ae93c4c4a9c9d277fa14e28cf1f729c0337221" => :sierra
-    sha256 "cf753cfd645fefa9654cb6e900773589717341b2297a1c312f5c1a528c3b1b13" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "5704adaff97225f3119dc9249b6d0fd6655c323aa6389473066435ad0a6b1e40"
+    sha256 cellar: :any,                 big_sur:       "718e29fe5b922ee5c55dae56a8614832bd6dccb974bd83bb0aee39f02f20db31"
+    sha256 cellar: :any,                 catalina:      "c5a339c14cee2d08621b8ce8913462e24193b3bb9247a5a207c6b60c0b9a28de"
+    sha256 cellar: :any,                 mojave:        "27144ced3954fbd19c2f7a12ce91c86cc1d8b91425109457b06a87fded64741d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "756129a589ddf773c0d10145a8a9f83fded689f6b6b720d12dd981c2ddd9f1f9"
   end
 
   depends_on "cmake" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
 
-  conflicts_with "cmark", :because => "both install a `cmark.h` header"
+  conflicts_with "cmark", because: "both install a `cmark.h` header"
 
   def install
     mkdir "build" do
-      system "cmake", "..", *std_cmake_args
-      system "make"
-      system "make", "test"
+      system "cmake", "..", *std_cmake_args, "-DCMAKE_INSTALL_RPATH=#{rpath}"
       system "make", "install"
     end
   end

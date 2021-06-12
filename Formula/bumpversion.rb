@@ -5,27 +5,31 @@ class Bumpversion < Formula
   homepage "https://pypi.python.org/pypi/bumpversion"
   # maintained fork for the project
   # Ongoing maintenance discussion for the project, https://github.com/c4urself/bump2version/issues/86
-  url "https://github.com/c4urself/bump2version/archive/v0.5.11.tar.gz"
-  sha256 "f06c943b320033b3aa07958c99920474a54f1d0d76b12299fa67d59cdb17ab00"
+  url "https://files.pythonhosted.org/packages/29/2a/688aca6eeebfe8941235be53f4da780c6edee05dbbea5d7abaa3aab6fad2/bump2version-1.0.1.tar.gz"
+  sha256 "762cb2bfad61f4ec8e2bdf452c7c267416f8c70dd9ecb1653fd0bbb01fa936e6"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "12e99c24dbc2104191bfe9b21d19ce955e13fb456ab0cb3eb7f2bab9d77e2e4d" => :catalina
-    sha256 "b11228119eac36538c4fcaaca83fdb83c516ea43391f9291e6935ef66db8b966" => :mojave
-    sha256 "d7873c668cb0394e15652059d67466faae74a422cf3f1da275782f31b3c492e5" => :high_sierra
-    sha256 "79a611595b30a955958e04be1b2dcd982365687a5bc82e576f843bd08a11928a" => :x86_64_linux
+    rebuild 2
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1d69dd65cfe24eae5ab087a4d8907f1e7ac8437911d31c34b5881700fc5ce69e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9fefa3665413e3241a1c796d8363abf903c9c157177dba7277f5dc8d9532a327"
+    sha256 cellar: :any_skip_relocation, catalina:      "a56efe7440a9495e9b4f2d6ef82a2f56e088db459aa680c3ab5368b1b47c17db"
+    sha256 cellar: :any_skip_relocation, mojave:        "18141d47aa00efccaa7e0de803a190abe09549d485e82db5f7af57a40b79aa3f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c1e47b0fbdd2f446e1e8e9b368f644b1cdfe4126769e62900fd9b628d36317d8"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
     virtualenv_install_with_resources
   end
 
   test do
-    if OS.mac?
+    ENV["COLUMNS"] = "80"
+    on_macos do
       assert_includes shell_output("script -q /dev/null #{bin}/bumpversion --help"), "bumpversion: v#{version}"
-    else
+    end
+    on_linux do
       assert_includes shell_output("script -q /dev/null -c \"#{bin}/bumpversion --help\""), "bumpversion: v#{version}"
     end
     version_file = testpath/"VERSION"

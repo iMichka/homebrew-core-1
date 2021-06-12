@@ -1,26 +1,40 @@
 class NodeAT12 < Formula
   desc "Platform built on V8 to build network applications"
   homepage "https://nodejs.org/"
-  url "https://nodejs.org/dist/v12.14.0/node-v12.14.0.tar.gz"
-  sha256 "5c1939867228f3845c808ef84a89c8ee93cc35f857bf7587ecee1b5a6d9da67b"
+  url "https://nodejs.org/dist/v12.22.1/node-v12.22.1.tar.gz"
+  sha256 "6023f1f8f03f9780c75e6eca9d372b8411a83757c0389c51baee1c7242afd702"
+  license "MIT"
+  revision 1
+
+  livecheck do
+    url "https://nodejs.org/dist/"
+    regex(%r{href=["']?v?(12(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "7166a754812aecb38c4eaa806d6fef437d3f616bfa954cadc7a2859af0214c1e" => :catalina
-    sha256 "b26d20e7f67b35f3b30a20b4b16cb8c4f7881bde49363920efa6f9b9b3e5546e" => :mojave
-    sha256 "6f3b5363899eae42c103113168dedd53d4dc928401dba9ee7e520d41b5209c92" => :high_sierra
-    sha256 "2dd50988f5fbb5405d6f49a3e64fd939cf62349f135f272825c9dc563aa56db9" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "07e3b8bcfb13fdeaffb78005217547d8e306e2b8eb2b7df1dca6ac426945d190"
+    sha256 cellar: :any,                 big_sur:       "c45a5cf6332bf0d95801aa7d934ddc658eaaa4a904490183d5637ed03d440891"
+    sha256 cellar: :any,                 catalina:      "b7abc525b8c061e6543e8631907f89ee56f62a517a8a08c3a33aa2aec1e2f0ce"
+    sha256 cellar: :any,                 mojave:        "46331633475eda013a40673692e9a45e307eed0e6fbe0605dbdeb9843e680756"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "671ba52c6a54297041d4b0a69f3cbc2db01d8e62314e3ff37a08399171f2170e"
   end
 
   keg_only :versioned_formula
 
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
   depends_on "icu4c"
+
+  # Patch for compatibility with ICU 69. Backported from
+  # https://github.com/v8/v8/commit/035c305ce7761f51328b45f1bd83e26aef267c9d
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/9eb96c36ff61c76c809c975f3b4463e826eae73c/node%4012/node%4012-icu69.patch"
+    sha256 "c23163cc26c784479471f904fb47f1c16ec4177c687fd9c3988a8208a3faa583"
+  end
 
   def install
     # make sure subprocesses spawned by make are using our Python 3
-    ENV["PYTHON"] = Formula["python"].opt_bin/"python3"
+    ENV["PYTHON"] = Formula["python@3.9"].opt_bin/"python3"
 
     system "python3", "configure.py", "--prefix=#{prefix}", "--with-intl=system-icu"
     system "make", "install"
@@ -49,8 +63,10 @@ class NodeAT12 < Formula
     assert_predicate bin/"npm", :exist?, "npm must exist"
     assert_predicate bin/"npm", :executable?, "npm must be executable"
     npm_args = ["-ddd", "--cache=#{HOMEBREW_CACHE}/npm_cache", "--build-from-source"]
-    system "#{bin}/npm", *npm_args, "install", "npm@latest"
-    system "#{bin}/npm", *npm_args, "install", "bufferutil"
+    system "#{bin}/npm", *npm_args, "install", ("--unsafe-perm" if Process.uid.zero?), "npm@latest"
+    unless head?
+      system "#{bin}/npm", *npm_args, "install", ("--unsafe-perm" if Process.uid.zero?), "bufferutil"
+    end
     assert_predicate bin/"npx", :exist?, "npx must exist"
     assert_predicate bin/"npx", :executable?, "npx must be executable"
     assert_match "< hello >", shell_output("#{bin}/npx cowsay hello")

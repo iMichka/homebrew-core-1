@@ -1,15 +1,23 @@
 class Saxon < Formula
   desc "XSLT and XQuery processor"
   homepage "https://saxon.sourceforge.io"
-  url "https://downloads.sourceforge.net/project/saxon/Saxon-HE/9.9/SaxonHE9-9-1-5J.zip"
-  version "9.9.1.5"
-  sha256 "380a14ebaa12c7a26befa9e8e0f2ebd8a83c76ca8da4501e7fc9b523d57e364e"
+  url "https://downloads.sourceforge.net/project/saxon/Saxon-HE/10/Java/SaxonHE10-5J.zip"
+  version "10.5"
+  sha256 "2e400e33facc77eb6a31aae93f68525e3203be8639685c0d6e55507605709b1d"
 
-  bottle :unneeded
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/SaxonHE(\d+(?:[.-]\d+)+)J?\.(?:t|zip)}i)
+    strategy :sourceforge do |page, regex|
+      page.scan(regex).map { |match| match&.first&.gsub("-", ".") }
+    end
+  end
+
+  depends_on "openjdk"
 
   def install
     libexec.install Dir["*.jar", "doc", "notices"]
-    bin.write_jar_script libexec/"saxon9he.jar", "saxon"
+    bin.write_jar_script libexec/"saxon-he-#{version.major_minor}.jar", "saxon"
   end
 
   test do
@@ -28,7 +36,7 @@ class Saxon < Formula
       </xsl:stylesheet>
     EOS
     assert_equal <<~EOS.chop, shell_output("#{bin}/saxon test.xml test.xsl")
-      <html>
+      <!DOCTYPE HTML><html>
          <body>
             <p>It works!</p>
          </body>

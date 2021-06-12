@@ -1,18 +1,20 @@
 class Libheif < Formula
   desc "ISO/IEC 23008-12:2017 HEIF file format decoder and encoder"
   homepage "https://www.libde265.org/"
-  url "https://github.com/strukturag/libheif/releases/download/v1.6.0/libheif-1.6.0.tar.gz"
-  sha256 "f00ad182cb21aa57218cb7ba222163376e74e3b7de1723fd789508a296c9e868"
+  url "https://github.com/strukturag/libheif/releases/download/v1.12.0/libheif-1.12.0.tar.gz"
+  sha256 "e1ac2abb354fdc8ccdca71363ebad7503ad731c84022cf460837f0839e171718"
+  license "LGPL-3.0-only"
 
   bottle do
-    cellar :any
-    sha256 "0fc77c14dc4528aab60296ca21e215202d1d5bb8eede62e9230d25ea956561a2" => :catalina
-    sha256 "6a4a3ff9c1a9b85437866afd831f6287bc430b018b7b2ee1c5dcfdb3efcb4fe8" => :mojave
-    sha256 "d9b96ad39ceb88a37b061a8588e9e6d434099b3d93d9a02104667b675e1c71c0" => :high_sierra
-    sha256 "1d3f2bca40c98d64faed4fdaa67e48bc6c9d83265373d7a66f3dbeb08960b1d1" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "3963465a6971ee520138cd03749c8117f5c804e2631c326d765ee49f7a044517"
+    sha256 cellar: :any,                 big_sur:       "446b22420364f8914e39777b3c99a7a94035287e0d881e4ca3b0682093f6f2fe"
+    sha256 cellar: :any,                 catalina:      "3e852c84854a7beb0dc3e4ece0c5b161e35271c0eb68c1a1f86f2a3f019c2aa7"
+    sha256 cellar: :any,                 mojave:        "a03dba57d45f433a2ab7ae145641aea1ef7b1838aeb49c60847be2e529513079"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ea4e278752f6f6747d8e4e3aeb22cc5dd2b04c7e5447ba1336cfcee686e27877"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "aom"
   depends_on "jpeg"
   depends_on "libde265"
   depends_on "libpng"
@@ -25,6 +27,7 @@ class Libheif < Formula
                           "--prefix=#{prefix}"
     system "make", "install"
     pkgshare.install "examples/example.heic"
+    pkgshare.install "examples/example.avif"
   end
 
   def post_install
@@ -34,10 +37,17 @@ class Libheif < Formula
   test do
     output = "File contains 2 images"
     example = pkgshare/"example.heic"
-    exout = testpath/"example.jpg"
+    exout = testpath/"exampleheic.jpg"
 
     assert_match output, shell_output("#{bin}/heif-convert #{example} #{exout}")
-    assert_predicate testpath/"example-1.jpg", :exist?
-    assert_predicate testpath/"example-2.jpg", :exist?
+    assert_predicate testpath/"exampleheic-1.jpg", :exist?
+    assert_predicate testpath/"exampleheic-2.jpg", :exist?
+
+    output = "File contains 1 images"
+    example = pkgshare/"example.avif"
+    exout = testpath/"exampleavif.jpg"
+
+    assert_match output, shell_output("#{bin}/heif-convert #{example} #{exout}")
+    assert_predicate testpath/"exampleavif.jpg", :exist?
   end
 end

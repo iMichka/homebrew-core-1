@@ -1,15 +1,22 @@
 class ShairportSync < Formula
   desc "AirTunes emulator that adds multi-room capability"
   homepage "https://github.com/mikebrady/shairport-sync"
-  url "https://github.com/mikebrady/shairport-sync/archive/3.3.5.tar.gz"
-  sha256 "9757dd7f19c0bc28cb06a6753305c3ed89da2d271d069b36d1b12173309c1459"
-  head "https://github.com/mikebrady/shairport-sync.git", :branch => "development"
+  url "https://github.com/mikebrady/shairport-sync/archive/3.3.8.tar.gz"
+  sha256 "c92f9a2d86dd1138673abc66e0010c94412ad6a46da8f36c3d538f4fa6b9faca"
+  license "MIT"
+  head "https://github.com/mikebrady/shairport-sync.git", branch: "development"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "9f5d751be1792a249b4c52d68ddca6e2680235f3e076902993aef5f916954b6b" => :catalina
-    sha256 "c74ebdc84786fb9d1d07a079c34a96c30c6dcdfd315e7335bc0686b4c736291c" => :mojave
-    sha256 "b905286034c6bf40d77b1267b4fd8eae1af2158e7b11c91e46d1ffbc43dcf65b" => :high_sierra
-    sha256 "aadc772376ae48137de8a2a244d7ddc34e951c1cadcf1f8544b8cd5d51efd264" => :x86_64_linux
+    sha256 arm64_big_sur: "69aca6973958639950c913bc230b93bf23f200ca4ad4031a2e23f400ae9d9468"
+    sha256 big_sur:       "d789905a7d6a4c93b28b5a5ed07d6b1b5a32ccecdf47c41268525404d406dcb2"
+    sha256 catalina:      "1e284d58843c0bb34a421bb5259b3e81759c77eecd992b0f9e4b66976155bb55"
+    sha256 mojave:        "202eeb58dfed5376c7be58ed53eab101ee9d829d142e374056984db25ce77aa0"
+    sha256 x86_64_linux:  "d362cd3bd554c0363de7ca89ce87d75e88fa61f1761bc5971701e211ca9732a9"
   end
 
   depends_on "autoconf" => :build
@@ -46,6 +53,35 @@ class ShairportSync < Formula
 
   def post_install
     (var/"run").mkpath
+  end
+
+  plist_options manual: "shairport-sync"
+
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/shairport-sync</string>
+          <string>--use-stderr</string>
+          <string>--verbose</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>KeepAlive</key>
+        <true/>
+        <key>StandardErrorPath</key>
+        <string>#{var}/log/#{name}.log</string>
+        <key>StandardOutPath</key>
+        <string>#{var}/log/#{name}.log</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do

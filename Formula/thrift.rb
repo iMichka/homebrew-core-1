@@ -1,15 +1,17 @@
 class Thrift < Formula
   desc "Framework for scalable cross-language services development"
   homepage "https://thrift.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=/thrift/0.13.0/thrift-0.13.0.tar.gz"
-  sha256 "7ad348b88033af46ce49148097afe354d513c1fca7c607b59c33ebb6064b5179"
+  url "https://www.apache.org/dyn/closer.lua?path=thrift/0.14.1/thrift-0.14.1.tar.gz"
+  mirror "https://archive.apache.org/dist/thrift/0.14.1/thrift-0.14.1.tar.gz"
+  sha256 "13da5e1cd9c8a3bb89778c0337cc57eb0c29b08f3090b41cf6ab78594b410ca5"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "3a6dccee60ca25d75f99245cc46a7d84351c87c654b77837c3370c5247c80c49" => :catalina
-    sha256 "385c454b28a354be187de75d67c0133bca17cd1341f1e1abd10cba368e29a80d" => :mojave
-    sha256 "cb82d3f651ae5cb00a37713a050127a746358320e579d2fe55e08c4b9cd139bd" => :high_sierra
-    sha256 "e50023ab05171856aaccb3a820a4a3482a7e31e00e988565c86a9f2f486229d3" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "fd86b3329477abd74446f29de5b1c3b84705390b8d878b55f3ab2a83ef6511bc"
+    sha256 cellar: :any,                 big_sur:       "b408f5d8714788cb4d5ffa575718b78fa63233663b33d6932e3611e577a087eb"
+    sha256 cellar: :any,                 catalina:      "16d575e5eb6ed75e1fa0951ba708762fc6dd430522330bb36a50adcf47ffa835"
+    sha256 cellar: :any,                 mojave:        "0d8063ec5f3e3c2074749cc02826fb19331bf522d52e4439980d776c0e594392"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0af6dbc2d7183e2f4967c515b0acaa5dba55c534281068cb8a902d0844767e9c"
   end
 
   head do
@@ -22,7 +24,7 @@ class Thrift < Formula
   end
 
   depends_on "bison" => :build
-  depends_on "boost"
+  depends_on "boost" => [:build, :test]
   depends_on "openssl@1.1"
 
   def install
@@ -59,6 +61,17 @@ class Thrift < Formula
   end
 
   test do
-    system "#{bin}/thrift", "--version"
+    (testpath/"test.thrift").write <<~'EOS'
+      service MultiplicationService {
+        i32 multiply(1:i32 x, 2:i32 y),
+      }
+    EOS
+
+    system "#{bin}/thrift", "-r", "--gen", "cpp", "test.thrift"
+
+    system ENV.cxx, "-std=c++11", "gen-cpp/MultiplicationService.cpp",
+      "gen-cpp/MultiplicationService_server.skeleton.cpp",
+      "-I#{include}/include",
+      "-L#{lib}", "-lthrift"
   end
 end

@@ -1,23 +1,33 @@
 class Varnish < Formula
   desc "High-performance HTTP accelerator"
   homepage "https://www.varnish-cache.org/"
-  url "https://varnish-cache.org/_downloads/varnish-6.3.1.tgz"
-  sha256 "d1a26c7dad43b842c97e48f1c6422bb0b24c02cd6a74c53a2cf17e64da254175"
+  url "https://varnish-cache.org/_downloads/varnish-6.6.0.tgz"
+  mirror "https://fossies.org/linux/www/varnish-6.6.0.tgz"
+  sha256 "d5ff82f2041276dfaeb9a652a88b6d7287cfcf7ca345bb02c438fb65d2bca2e5"
+  license "BSD-2-Clause"
+
+  livecheck do
+    url "https://varnish-cache.org/releases/"
+    regex(/href=.*?varnish[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "79ef87ddb0c271dd42b0729b4b79ffd6942e9b23fbdccfc423dcb9a302fbdce4" => :catalina
-    sha256 "2ace791451ccfd648f0aabe1cc5db7c4adfabd35da5d920ffdad496ae278e9d6" => :mojave
-    sha256 "16c112011697adab08a0d668a01ab64e9f1cc1ddee06a28974dbe4d3c74e60b2" => :high_sierra
+    sha256 arm64_big_sur: "f7f9fbe170b82b63e47a6357e9ccc66af7a89571b3e96b61d1b87b6a0b37dac3"
+    sha256 big_sur:       "83994fe56e798d944b1d216ecf91e1474f2d254b34f79af531b0bf2d4f2e0b21"
+    sha256 catalina:      "07b78fb097f6d78bb92d1915a71d8bd91ec1c6519166e6e2c960aebe97c41fab"
+    sha256 mojave:        "05757e6f285bc5180ff096b2c3c91105b75cd179ba7b6946d58c3a1ff63c481d"
   end
 
   depends_on "docutils" => :build
   depends_on "graphviz" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
   depends_on "sphinx-doc" => :build
   depends_on "pcre"
 
   def install
+    ENV["PYTHON"] = Formula["python@3.9"].opt_bin/"python3"
+
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--localstatedir=#{var}"
@@ -26,7 +36,7 @@ class Varnish < Formula
     (var/"varnish").mkpath
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/sbin/varnishd -n #{HOMEBREW_PREFIX}/var/varnish -f #{HOMEBREW_PREFIX}/etc/varnish/default.vcl -s malloc,1G -T 127.0.0.1:2000 -a 0.0.0.0:8080 -F"
+  plist_options manual: "#{HOMEBREW_PREFIX}/sbin/varnishd -n #{HOMEBREW_PREFIX}/var/varnish -f #{HOMEBREW_PREFIX}/etc/varnish/default.vcl -s malloc,1G -T 127.0.0.1:2000 -a 0.0.0.0:8080 -F"
 
   def plist
     <<~EOS

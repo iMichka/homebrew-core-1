@@ -1,25 +1,28 @@
 class Fluxctl < Formula
   desc "Command-line tool to access Weave Flux, the Kubernetes GitOps operator"
-  homepage "https://github.com/weaveworks/flux"
-  url "https://github.com/weaveworks/flux.git",
-      :tag      => "1.17.0",
-      :revision => "ab466af1ca98e8ad99ee016d8cdf666171a948bd"
+  homepage "https://github.com/fluxcd/flux"
+  url "https://github.com/fluxcd/flux.git",
+      tag:      "1.22.2",
+      revision: "cf97726492f4b2d9585ded3bd83823ba4e65b272"
+  license "Apache-2.0"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "eed74a9b7c911168070bead2d3c9dc32830a2ea95e915e484f016776f31d892c" => :catalina
-    sha256 "9d2dbf45a01be8d04e614c26f244e1c098e9f90b52f918f792e7549174d6f9bb" => :mojave
-    sha256 "0f3ac192b591acdd07ca4d8395d17406a5f9cb6224ab2a4c11421633b44096bb" => :high_sierra
-    sha256 "e722b30416147dc522e95da6d28a05f67bf9a5dd96481550d97e7bd124574ebb" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "0a5b853711aab8890160b2d29f9460b4274154331abe2dc2ab9d6eef3383c1f0"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7fb226fef1a99a861f5ca5e4d0e2740076ef3fd96d5353f42429cafebdfc474c"
+    sha256 cellar: :any_skip_relocation, catalina:      "a5d5ec6aef86b4ef13afd05e3575db6dcdc47f2eb9368a18cf16b588d14f49cb"
+    sha256 cellar: :any_skip_relocation, mojave:        "a754f8206d5ef9a7247db6d5a0caa78065dfe350ece33d4549d2999df751e69b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7994704c518f61f37efb4d202b61edfac9fd17aa50192331fd42d5e690a973ee"
   end
 
   depends_on "go" => :build
 
   def install
-    cd buildpath/"cmd/fluxctl" do
-      system "go", "build", "-ldflags", "-s -w -X main.version=#{version}", "-trimpath", "-o", bin/"fluxctl"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-s -w -X main.version=#{version}", "./cmd/fluxctl"
   end
 
   test do
@@ -34,10 +37,10 @@ class Fluxctl < Formula
     # about a missing .kube/config file.
     require "pty"
     require "timeout"
-    r, _w, pid = PTY.spawn("#{bin}/fluxctl sync", :err=>:out)
+    r, _w, pid = PTY.spawn("#{bin}/fluxctl sync", err: :out)
     begin
       Timeout.timeout(5) do
-        assert_match r.gets.chomp, "Error: Could not load kubernetes configuration file: invalid configuration: no configuration has been provided"
+        assert_match "Error: Could not load kubernetes configuration file", r.gets.chomp
         Process.wait pid
         assert_equal 1, $CHILD_STATUS.exitstatus
       end

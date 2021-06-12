@@ -1,26 +1,33 @@
 class Lmdb < Formula
   desc "Lightning memory-mapped database: key-value data store"
-  homepage "https://symas.com/mdb-and-sqlite/"
-  url "https://github.com/LMDB/lmdb/archive/LMDB_0.9.24.tar.gz"
-  sha256 "44602436c52c29d4f301f55f6fd8115f945469b868348e3cddaf91ab2473ea26"
+  homepage "https://symas.com/lmdb/"
+  url "https://git.openldap.org/openldap/openldap/-/archive/LMDB_0.9.29/openldap-LMDB_0.9.29.tar.bz2"
+  sha256 "182e69af99788b445585b8075bbca89ae8101069fbeee25b2756fb9590e833f8"
+  license "OLDAP-2.8"
   version_scheme 1
-  head "https://github.com/LMDB/lmdb.git", :branch => "mdb.master"
+  head "https://git.openldap.org/openldap/openldap.git", branch: "mdb.master"
+
+  livecheck do
+    url :stable
+    regex(/^LMDB[._-]v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "5bf964c9e9151652929e829c12079531b458d48233462a42707a2dcf5d0e0ef2" => :catalina
-    sha256 "61a2b64ab56431e08dc823fe6381efe8ee6a9d04fcfd90b8c77071442ad02788" => :mojave
-    sha256 "19eedd30c27a46e0ec434be2f004e7e82f3541d338bb04d147d98924bb18f66d" => :high_sierra
-    sha256 "c8b92ad93c7712f7d45604146b6f3ea848b6c3fd7db21f977971ea74e9a94a90" => :sierra
-    sha256 "410b600f80cc3a11727ecd88bc72064ba9b49815535a112787a6b660d580118e" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "9f0fb7ee716181ea0197b4cd2731e1a7b68077168065cf40753fdeed7ad25b70"
+    sha256 cellar: :any,                 big_sur:       "df699787f64959d4990f90e2e5cd873b01038387f5bcda6a9a2e6dbc73d0262f"
+    sha256 cellar: :any,                 catalina:      "41941922c4e5f8367887ac21f632f132dd3b7eb19d749a61580364595cf1ccb4"
+    sha256 cellar: :any,                 mojave:        "6d59993e9a2ff698c7c658a2a6fd90e5f6afebd43bc155a70b2691991e1eb67b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "20ef0d009416898c7071fc213e3877907d04fc496301fe7ff1b2d4f526079f22"
   end
 
   def install
     cd "libraries/liblmdb" do
-      args = *("SOEXT=.dylib" if OS.mac?)
-      system "make", *args
-      system "make", "test", *args
-      system "make", "install", "prefix=#{prefix}", *args
+      ext = ""
+      on_macos do
+        ext = "SOEXT=.dylib"
+      end
+      system "make", ext
+      system "make", "install", ext, "prefix=#{prefix}"
     end
   end
 

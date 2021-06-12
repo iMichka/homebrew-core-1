@@ -1,25 +1,34 @@
 class Armadillo < Formula
   desc "C++ linear algebra library"
   homepage "https://arma.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/arma/armadillo-9.800.3.tar.xz"
-  sha256 "a481e1dc880b7cb352f8a28b67fe005dc1117d4341277f12999a2355d40d7599"
+  url "https://downloads.sourceforge.net/project/arma/armadillo-10.5.1.tar.xz"
+  sha256 "96ad6e1cbcf28f3d1c1ff972de2c40dadddbd7683256bad502d3c463d2f64cdf"
+  license "Apache-2.0"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/armadillo[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "d5f22edc7e95bc8b2571d36448d3b324b006c38a18d6c4fae6c7b663bc359bf2" => :catalina
-    sha256 "9a2e05eb13649d63d8b562f9ced506c721185270339334530fcfc54e33c873de" => :mojave
-    sha256 "5d0977074c32f4b96f0f3806f9539b5318c17d0807d08664c636bdc7c9115e38" => :high_sierra
-    sha256 "ce944daa29721883e6e09299bd9eb1a50c857db5cf578277e89d58d14a6fbedf" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "65c08793eaa8977ad49a89d4fe8e984ef89336d9b776e8c43013fbba2fd8aa80"
+    sha256 cellar: :any, big_sur:       "2248d94978753cf6ce63c5539c09efa05ad647599d2463f26f626b39575e3368"
+    sha256 cellar: :any, catalina:      "23f60d6397278c6e761ef56dd0f50696869025f0debc872767a1da3f42aba9b2"
+    sha256 cellar: :any, mojave:        "12367696acd74302c0acb3584ef53bab689c2fb8a24923186b21b4c6c8624dd9"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "arpack"
   depends_on "hdf5"
+  depends_on "openblas"
+  depends_on "superlu"
   depends_on "szip"
 
   def install
-    system "cmake", ".", "-DDETECT_HDF5=ON", *std_cmake_args
+    ENV.prepend "CXXFLAGS", "-DH5_USE_110_API -DH5Ovisit_vers=1"
+
+    system "cmake", ".", "-DDETECT_HDF5=ON", "-DALLOW_OPENBLAS_MACOS=ON", *std_cmake_args
     system "make", "install"
   end
 
@@ -32,7 +41,7 @@ class Armadillo < Formula
         std::cout << arma::arma_version::as_string() << std::endl;
       }
     EOS
-    system ENV.cxx, "test.cpp", "-I#{include}", "-L#{lib}", "-larmadillo", "-o", "test"
-    assert_equal Utils.popen_read("./test").to_i, version.to_s.to_i
+    system ENV.cxx, "-std=c++11", "test.cpp", "-I#{include}", "-L#{lib}", "-larmadillo", "-o", "test"
+    assert_equal shell_output("./test").to_i, version.to_s.to_i
   end
 end

@@ -1,14 +1,18 @@
 class Ncmpc < Formula
   desc "Curses Music Player Daemon (MPD) client"
   homepage "https://www.musicpd.org/clients/ncmpc/"
-  url "https://www.musicpd.org/download/ncmpc/0/ncmpc-0.36.tar.xz"
-  sha256 "4632873dfc8efe61e501dc9184a5b921b482be2ddbedd3d23d05241d477a3e2c"
+  url "https://www.musicpd.org/download/ncmpc/0/ncmpc-0.45.tar.xz"
+  sha256 "17ff446447e002f2ed4342b7324263a830df7d76bcf177dce928f7d3a6f1f785"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://www.musicpd.org/download/ncmpc/0/"
+    regex(/href=.*?ncmpc[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "eb296eef08ee1bd8be2b0037f39479123301cb6454fed7f32e63f37e32da9b4f" => :catalina
-    sha256 "2e240f225487cfd1b07b0bd196c05d152fb421a5dcd8ee9b6686f2f3dbeb1948" => :mojave
-    sha256 "a16f92c342b7189b5c6b934a532a7fae6e48f4cd7486cc14b868a3a58434c191" => :high_sierra
-    sha256 "63442a47bf490133fd450efa2bf04518b0eb60d9e736b56edffce24c830159c3" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "9da923ffb4400c42a20a1540e0070d530b7870bd4c15491bb1dbd6e211b9645c"
   end
 
   depends_on "boost" => :build
@@ -18,21 +22,18 @@ class Ncmpc < Formula
   depends_on "gettext"
   depends_on "libmpdclient"
   depends_on "pcre"
+
   if OS.mac?
     depends_on "gcc" if DevelopmentTools.clang_build_version <= 800
   else
-    fails_with :gcc => "5"
-    depends_on "gcc@6" => :build
+    depends_on "gcc"
   end
 
-  fails_with :clang do
-    build 800
-    cause "error: no matching constructor for initialization of 'value_type'"
-  end
+  fails_with gcc: "5"
 
   def install
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", "-Dcolors=false", "-Dnls=disabled", ".."
+      system "meson", *std_meson_args, "-Dcolors=false", "-Dnls=disabled", ".."
       system "ninja", "install"
     end
   end

@@ -1,15 +1,23 @@
 class Openimageio < Formula
   desc "Library for reading, processing and writing images"
   homepage "https://openimageio.org/"
-  url "https://github.com/OpenImageIO/oiio/archive/Release-2.0.13.tar.gz"
-  sha256 "83d9f9b3923a1ceda838fd7f41a136129886dd7973f40953fd7fb376fad949cc"
+  url "https://github.com/OpenImageIO/oiio/archive/Release-2.2.15.1.tar.gz"
+  sha256 "f222c6b51a40aabbc80ddf4055535be9af1ffa907452fa6d1ffa7674854aab17"
+  license "BSD-3-Clause"
   head "https://github.com/OpenImageIO/oiio.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/(?:Release[._-])?v?(\d+(?:\.\d+)+)["' >]}i)
+  end
+
   bottle do
-    sha256 "8316c20f8caffc0adae56c3c9a1368285c865db261cfb68a101efc59013e0c85" => :catalina
-    sha256 "cdcbc31b75bb6c90bf5fbccd1bdf6cfc01a33453332cb8f9b4bd5e83521f3212" => :mojave
-    sha256 "5527d2a52f0bc451e83c294618a075b051cfcdf7133e6e2d2792b119421a290d" => :high_sierra
-    sha256 "598e0a67710e441e7ac6af6bb1e8fb9ce8a1d40c4052b4db7ff5586a29963b6c" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "234df6f7b3eda72c108f81838a5541e7e3a69f04328e502c62a64ac2a93f621d"
+    sha256 cellar: :any,                 big_sur:       "a0807afc887f880005465c91d0ed6c37801ff316dda04c81a1c1432243b75588"
+    sha256 cellar: :any,                 catalina:      "62b267f53517973e8c018057eba39c751553fa1839362c8b95aede135b669bd2"
+    sha256 cellar: :any,                 mojave:        "cdd0daa342392f8de170d30443731a31d40c9c338a8758d80130e3c9c951eb11"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2eeced7b83b80b32396077f6f7d2d77d2d578f0526f108bf5427ad6bd153e56c"
   end
 
   depends_on "cmake" => :build
@@ -19,14 +27,16 @@ class Openimageio < Formula
   depends_on "ffmpeg"
   depends_on "freetype"
   depends_on "giflib"
-  depends_on "ilmbase"
+  depends_on "imath"
   depends_on "jpeg"
+  depends_on "libheif"
   depends_on "libpng"
   depends_on "libraw"
   depends_on "libtiff"
   depends_on "opencolorio"
   depends_on "openexr"
-  depends_on "python"
+  depends_on "pybind11"
+  depends_on "python@3.9"
   depends_on "webp"
 
   def install
@@ -43,24 +53,18 @@ class Openimageio < Formula
       -DUSE_QT=OFF
     ]
 
-    # CMake picks up the system's python dylib, even if we have a brewed one.
-    ext = OS.mac? ? "dylib" : "so"
-    py3ver = Language::Python.major_minor_version "python3"
-    py3prefix = OS.mac? ? Formula["python3"].opt_frameworks/"Python.framework/Versions/#{py3ver}" : Formula["python3"].opt_prefix
+    # CMake picks up the system's python shared library, even if we have a brewed one.
+    py3ver = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
+    py3prefix = Formula["python@3.9"].opt_frameworks/"Python.framework/Versions/#{py3ver}"
+    on_linux do
+      py3prefix = Formula["python@3.9"].opt_prefix
+    end
 
     ENV["PYTHONPATH"] = lib/"python#{py3ver}/site-packages"
 
     args << "-DPYTHON_EXECUTABLE=#{py3prefix}/bin/python3"
-    args << "-DPYTHON_LIBRARY=#{py3prefix}/lib/libpython#{py3ver}#{OS.mac? ? "" : "m"}.#{ext}"
-    args << "-DPYTHON_INCLUDE_DIR=#{py3prefix}/include/python#{py3ver}m"
-
-    # CMake picks up boost-python instead of boost-python3
-    args << "-DBOOST_ROOT=#{Formula["boost"].opt_prefix}"
-    args << "-DBoost_PYTHON_LIBRARIES=#{Formula["boost-python3"].opt_lib}/libboost_python#{py3ver.to_s.delete(".")}-mt.#{ext}"
-
-    # This is strange, but must be set to make the hack above work
-    args << "-DBoost_PYTHON_LIBRARY_DEBUG=''"
-    args << "-DBoost_PYTHON_LIBRARY_RELEASE=''"
+    args << "-DPYTHON_LIBRARY=#{py3prefix}/lib/#{shared_library("libpython#{py3ver}")}"
+    args << "-DPYTHON_INCLUDE_DIR=#{py3prefix}/include/python#{py3ver}"
 
     mkdir "build" do
       system "cmake", "..", *args
@@ -78,6 +82,6 @@ class Openimageio < Formula
       import OpenImageIO
       print(OpenImageIO.VERSION_STRING)
     EOS
-    assert_match version.to_s, pipe_output("python3", output, 0)
+    assert_match version.major_minor_patch.to_s, pipe_output(Formula["python@3.9"].opt_bin/"python3", output, 0)
   end
 end

@@ -1,19 +1,19 @@
 class Solarus < Formula
   desc "Action-RPG game engine"
   homepage "https://www.solarus-games.org/"
-  url "https://www.solarus-games.org/downloads/solarus/solarus-1.6.0-src.tar.gz"
-  sha256 "d800fdf388f860732f2d40c8dd635c34fd1c452857f75bf9b3a421e3ef5ee751"
-  head "https://github.com/christopho/solarus.git"
+  url "https://gitlab.com/solarus-games/solarus.git",
+      tag:      "v1.6.5",
+      revision: "3aec70b0556a8d7aed7903d1a3e4d9a18c5d1649"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "0592ec07de500a8922d5cc0aa76a27176ba8c8a8b18b8638321ab44b7b89c60c" => :catalina
-    sha256 "c1b94329afeaa61e682257922b64f422218f1f2e3a048d95258852cd91042509" => :mojave
-    sha256 "1f788bc2c2918ea0b996a45c80f7a7522c8d67df7182e6184483be2f1665c8b1" => :high_sierra
+    sha256 cellar: :any, big_sur:  "8432227fe84cb749c77d45a9349c6d65793f0bff13fd77640266bcd51d564b95"
+    sha256 cellar: :any, catalina: "f50e6c02f9ca2a9a01314605b017e90cf6102b9b3d97e48f4fbd104a86cf37b6"
+    sha256 cellar: :any, mojave:   "df3043713901b3a842e612c3da8204e3fc830d2cbaa42f1f7f04b6a26b479c6b"
   end
 
   depends_on "cmake" => :build
+  depends_on "glm"
   depends_on "libmodplug"
   depends_on "libogg"
   depends_on "libvorbis"
@@ -25,6 +25,7 @@ class Solarus < Formula
 
   def install
     mkdir "build" do
+      ENV.append_to_cflags "-I#{Formula["glm"].opt_include}"
       ENV.append_to_cflags "-I#{Formula["physfs"].opt_include}"
       system "cmake", "..",
                       "-DSOLARUS_GUI=OFF",

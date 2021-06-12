@@ -1,18 +1,26 @@
 class Parallelstl < Formula
   desc "C++ standard library algorithms with support for execution policies"
   homepage "https://github.com/intel/parallelstl"
-  url "https://github.com/intel/parallelstl/archive/20190522.tar.gz"
-  sha256 "37a83f26299c66a9988e85f06149487cfb2d69fb41568c64b7ad7c7903bcaac1"
+  url "https://github.com/intel/parallelstl/archive/20201111.tar.gz"
+  sha256 "c5ca7e0a618df8d28087be2e23ae38713ab1bcff0107562b935fbb5ba072fbf6"
+  # Apache License Version 2.0 with LLVM exceptions
+  license "Apache-2.0" => { with: "LLVM-exception" }
+  revision 1
 
-  bottle :unneeded
-
-  depends_on "tbb"
+  depends_on "cmake" => :build
+  depends_on "tbb@2020"
 
   def install
-    include.install Dir["include/*"]
+    mkdir "build" do
+      system "cmake", "..", *std_cmake_args
+      system "make", "install"
+    end
+    prefix.install "stdlib"
   end
 
   test do
+    tbb = Formula["tbb@2020"]
+
     (testpath/"test.cpp").write <<~EOS
       #include <pstl/execution>
       #include <pstl/algorithm>
@@ -27,8 +35,8 @@ class Parallelstl < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "-std=c++11", "-L#{Formula["tbb"].opt_lib}", "-ltbb",
-                    "-I#{include}", "test.cpp", "-o", "test"
+    system ENV.cxx, "-std=c++11", "-L#{tbb.opt_lib}", "-ltbb", "-I#{tbb.opt_include}",
+                    "-I#{prefix}/stdlib", "-I#{include}", "test.cpp", "-o", "test"
     system "./test"
   end
 end

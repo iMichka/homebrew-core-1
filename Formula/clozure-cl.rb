@@ -1,47 +1,83 @@
 class ClozureCl < Formula
   desc "Common Lisp implementation with a long history"
   homepage "https://ccl.clozure.com"
-  url "https://github.com/Clozure/ccl/archive/v1.11.6.tar.gz"
-  sha256 "6a496d35e05dc3e6e7637884552b1f14c82296525546f28337b222e4c3d7d50b"
+  url "https://github.com/Clozure/ccl/archive/v1.12.1.tar.gz"
+  sha256 "bd005fdb24cee2f7b20077cbca5e9174c10a82d98013df5cc3eabc7f31ccd933"
+  license "Apache-2.0"
   head "https://github.com/Clozure/ccl.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "8725b08fc19b2330d25b78d56d06564b01f8c70ec09763a5a6823db05b81d928" => :mojave
-    sha256 "06426d4b5d6f5875734eac8d6bac1e1a99e37b6ca26696d458274eb36b23e8b0" => :high_sierra
-    sha256 "f4bbb8190f307cfc272e80879e88c51e1ca8bf9382fcf93b0cc628e7169fe522" => :sierra
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on :xcode => :build if OS.mac?
+  bottle do
+    sha256 cellar: :any_skip_relocation, big_sur:      "2e8a3a3d80b28ab52584b2b6314f4739e7b2747d4efb1fead8b66e18045826c8"
+    sha256 cellar: :any_skip_relocation, catalina:     "1a61c4c36d12ea0707ddffb61456a65a7b585e009f900daafa9745b292384fd5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "f29d363fc4c3b7e4356701b7758ece73fb6d3b2b8e243d1c6c81d3de7774d2be"
+  end
+
+  depends_on xcode: :build
+  depends_on macos: :catalina # The GNU assembler frontend which ships macOS 10.14 is incompatible with clozure-ccl: https://github.com/Clozure/ccl/issues/271
+
+  on_linux do
+    depends_on "m4"
+  end
 
   resource "bootstrap" do
-    url "https://github.com/Clozure/ccl/releases/download/v1.11.5/ccl-1.11.5-darwinx86.tar.gz"
-    sha256 "5adbea3d8b4a2e29af30d141f781c6613844f468c0ccfa11bae908c3e9641939"
+    on_macos do
+      url "https://github.com/Clozure/ccl/releases/download/v1.12.1/darwinx86.tar.gz"
+      sha256 "92c5776ba1ba8548361669b50ae1655d7f127ff01d6e2107d8dccb97f2a585cd"
+    end
+
+    on_linux do
+      url "https://github.com/Clozure/ccl/releases/download/v1.12.1/linuxx86.tar.gz"
+      sha256 "ec98d881abc3826b7fd5ec811f01f9bb77e4491ac4eb7f1cea5e3b26d5098052"
+    end
   end
 
   def install
     tmpdir = Pathname.new(Dir.mktmpdir)
     tmpdir.install resource("bootstrap")
-    buildpath.install tmpdir/"dx86cl64.image"
-    buildpath.install tmpdir/"darwin-x86-headers64"
-    cd "lisp-kernel/darwinx8664" do
-      system "make"
+
+    on_macos do
+      buildpath.install tmpdir/"dx86cl64.image"
+      buildpath.install tmpdir/"darwin-x86-headers64"
+      cd "lisp-kernel/darwinx8664" do
+        system "make"
+      end
+    end
+
+    on_linux do
+      buildpath.install tmpdir/"lx86cl64"
+      buildpath.install tmpdir/"lx86cl64.image"
+      buildpath.install tmpdir/"x86-headers64"
     end
 
     ENV["CCL_DEFAULT_DIRECTORY"] = buildpath
 
-    system "./dx86cl64", "-n", "-l", "lib/x8664env.lisp",
-                         "-e", "(ccl:xload-level-0)",
-                         "-e", "(ccl:compile-ccl)",
-                         "-e", "(quit)"
-    (buildpath/"image").write('(ccl:save-application "dx86cl64.image")\n(quit)\n')
-    system "cat image | ./dx86cl64 -n --image-name x86-boot64.image"
+    on_macos do
+      system "./dx86cl64", "-n", "-l", "lib/x8664env.lisp",
+            "-e", "(ccl:xload-level-0)",
+            "-e", "(ccl:compile-ccl)",
+            "-e", "(quit)"
+      (buildpath/"image").write('(ccl:save-application "dx86cl64.image")\n(quit)\n')
+      system "cat image | ./dx86cl64 -n --image-name x86-boot64.image"
+    end
+
+    on_linux do
+      system "./lx86cl64", "-n", "-l", "lib/x8664env.lisp",
+            "-e", "(ccl:rebuild-ccl :full t)",
+            "-e", "(quit)"
+      (buildpath/"image").write('(ccl:save-application "lx86cl64.image")\n(quit)\n')
+      system "cat image | ./lx86cl64 -n --image-name x86-boot64"
+    end
 
     prefix.install "doc/README"
     doc.install Dir["doc/*"]
     libexec.install Dir["*"]
     bin.install Dir["#{libexec}/scripts/ccl64"]
-    bin.env_script_all_files(libexec/"bin", :CCL_DEFAULT_DIRECTORY => libexec)
+    bin.env_script_all_files(libexec/"bin", CCL_DEFAULT_DIRECTORY: libexec)
   end
 
   test do

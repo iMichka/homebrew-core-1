@@ -1,14 +1,19 @@
 class OpenkimModels < Formula
   desc "All OpenKIM Models compatible with kim-api"
   homepage "https://openkim.org"
-  url "https://s3.openkim.org/archives/collection/openkim-models-2019-07-25.txz"
-  sha256 "50338084ece92ec0fb13b0bbdf357b5d7450e26068ba501f23c315f814befc26"
+  url "https://s3.openkim.org/archives/collection/openkim-models-2021-01-28.txz"
+  sha256 "8824adee02ae4583bd378cc81140fbb49515c5965708ee98d856d122d48dd95f"
+  revision 1
+
+  livecheck do
+    url "https://s3.openkim.org/archives/collection/"
+    regex(/href=.*?openkim-models[._-]v?(\d+(?:-\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "29c9f2b6d004af82525b5a543c3b11c5c80eb7d3135427dfa179acc34390a785" => :catalina
-    sha256 "b722a8aa05f31f23d32f46381f20a3a3353dadd1f993f2a3c1b4b43739b55acf" => :mojave
-    sha256 "c146912a215949046161e5a54176aa45c66bf5babf3774b1af5a5084b0b4de77" => :high_sierra
-    sha256 "2a5b50566f16c975c9933ec6af6e3517f2f5ddb4a06265cd1369679077e6db4c" => :sierra
+    sha256 cellar: :any, big_sur:  "acf19d2bbfb541de82b65b432ab325ef184d59337d29294ac7e92199b13733e7"
+    sha256 cellar: :any, catalina: "fac77a3d80f5a7a3a7729f7dc2d8ec033cc443e8b88134ed1da35fbc57eccc67"
+    sha256 cellar: :any, mojave:   "d7248765fbc3c62c1073767d2ab0a9fe1b4cc4117d101aee9c8a8e8e6cd6cb15"
   end
 
   depends_on "cmake" => :build

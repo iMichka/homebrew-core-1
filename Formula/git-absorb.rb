@@ -1,23 +1,30 @@
 class GitAbsorb < Formula
   desc "Automatic git commit --fixup"
   homepage "https://github.com/tummychow/git-absorb"
-  url "https://github.com/tummychow/git-absorb/archive/0.5.0.tar.gz"
-  sha256 "c4ef4fa28222773d695aab7711abbfac7e81c35a37eafe45f79d045516df28b1"
+  url "https://github.com/tummychow/git-absorb/archive/0.6.6.tar.gz"
+  sha256 "955069cc70a34816e6f4b6a6bd1892cfc0ae3d83d053232293366eb65599af2f"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
     rebuild 1
-    sha256 "a4c692c6a939cb32c74a9a0d307a6c7b724ba6119893261b0b8d0805d1ac18c8" => :catalina
-    sha256 "d09dccdcb396edabf3238f73b92f5f9f389c91cfd7cd1a45702984db67229b69" => :mojave
-    sha256 "ba2a3614b72b498ed571d8cccbe9ecdfd6874a960eb0d4b466d3086fa4c10142" => :high_sierra
-    sha256 "193a34a8682508df94e492b93ac597b1f7eb0ca2555f9f40ab5ec182229814d9" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "50ec784cd0089d5840025d2b108ac75b9b87b4ec786e9e4766304fc012cb3507"
+    sha256 cellar: :any_skip_relocation, big_sur:       "5c90abd3d3058854758851749660bab97f06a9b60b01e6eb75da29c3c6fa3941"
+    sha256 cellar: :any_skip_relocation, catalina:      "0d9b836c7c18d1284e31fe6d354cbfae95c513fae6855d7d8897dbaab3eacf0e"
+    sha256 cellar: :any_skip_relocation, mojave:        "d5f13b0f733d6c2d1cd8c98008fcf51faccd3bd4312dd7742dc6a2cc695d0a34"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6b85569fe1ff485b10cec0ef00c9af375ab1a1982e23708aee6cccc5431abe88"
   end
 
   depends_on "rust" => :build
+
   uses_from_macos "zlib"
 
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
+    man1.install "Documentation/git-absorb.1"
+
+    (zsh_completion/"_git-absorb").write Utils.safe_popen_read("#{bin}/git-absorb", "--gen-completions", "zsh")
+    (bash_completion/"git-absorb").write Utils.safe_popen_read("#{bin}/git-absorb", "--gen-completions", "bash")
+    (fish_completion/"git-absorb.fish").write Utils.safe_popen_read("#{bin}/git-absorb", "--gen-completions", "fish")
   end
 
   test do

@@ -3,15 +3,16 @@ class Jabba < Formula
   homepage "https://github.com/shyiko/jabba"
   url "https://github.com/shyiko/jabba/archive/0.11.2.tar.gz"
   sha256 "33874c81387f03fe1a27c64cb6fb585a458c1a2c1548b4b86694da5f81164355"
+  license "Apache-2.0"
   head "https://github.com/shyiko/jabba.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "0774ce652abc4e4a0e57bc8f4bbad5ecdae16b86ce28be04711bc48bba488e3d" => :catalina
-    sha256 "d3bcd841125639c3eb01e5cce60667c2f2c914d61a2f3f21d68e75ec10cf793c" => :mojave
-    sha256 "5d99c5f42d31a63c0019dbb1b16460553c91136ebbf2000f85a299c8aa8d0c15" => :high_sierra
-    sha256 "5616b37ab949db9fbbdc5d030ae6f18649f2f5e8c35b6108bd359d51d820db0a" => :x86_64_linux
+    rebuild 2
+    sha256 cellar: :any_skip_relocation, big_sur:      "a730868e347cb89b50393f96062b2c076f1d501b137ead1a795aa39e54ad4611"
+    sha256 cellar: :any_skip_relocation, catalina:     "7eddb409c7bb2784db21756e624a18b19977bb4df53ab547eaedd8abe876651e"
+    sha256 cellar: :any_skip_relocation, mojave:       "3101ea25ce49c3ed96b3c8595a5441fec3aeb536b56eca21c1dea56f6c1fd86b"
+    sha256 cellar: :any_skip_relocation, high_sierra:  "8454f5aa9b8832908b1c889531118ea058b2e675ef7f7f37eeb282f454aeec1e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "237bab11bbcc4434a0b48c8d03a6f8634d12ec011f9357f26d8965f523fedad2"
   end
 
   depends_on "glide" => :build
@@ -19,6 +20,7 @@ class Jabba < Formula
 
   def install
     ENV["GOPATH"] = buildpath
+    ENV["GO111MODULE"] = "auto"
     ENV["GLIDE_HOME"] = HOMEBREW_CACHE/"glide_home/#{name}"
     dir = buildpath/"src/github.com/shyiko/jabba"
     dir.install buildpath.children
@@ -32,9 +34,9 @@ class Jabba < Formula
 
   test do
     ENV["JABBA_HOME"] = testpath/"jabba_home"
-    system bin/"jabba", "install", "1.13.0"
-    jdk_path = Utils.popen_read("#{bin}/jabba which 1.13.0").strip
-    assert_match 'java version "13.0',
+    system bin/"jabba", "install", "openjdk@1.14.0"
+    jdk_path = shell_output("#{bin}/jabba which openjdk@1.14.0").strip
+    assert_match 'openjdk version "14',
       shell_output("#{jdk_path}#{OS.mac? ? "/Contents/Home/" : "/"}bin/java -version 2>&1")
   end
 end

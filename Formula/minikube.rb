@@ -2,16 +2,17 @@ class Minikube < Formula
   desc "Run a Kubernetes cluster locally"
   homepage "https://minikube.sigs.k8s.io/"
   url "https://github.com/kubernetes/minikube.git",
-      :tag      => "v1.6.2",
-      :revision => "54f28ac5d3a815d1196cd5d57d707439ee4bb392"
+      tag:      "v1.21.0",
+      revision: "76d74191d82c47883dc7e1319ef7cebd3e00ee11"
+  license "Apache-2.0"
   head "https://github.com/kubernetes/minikube.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "56aefe2d8de9c83559bc3ff540b3c2ac4e3c452d3f0715bb8cf570a741ab7158" => :catalina
-    sha256 "4af6de02024bd7d3f0d73e1620dbc3f75f9d74ada020bb20a34048bc58b6dc91" => :mojave
-    sha256 "ffc150f88d9a986053427939ee2af10ca757b20b32a3edd1dabb2dd9931a058d" => :high_sierra
-    sha256 "d835d339c43ae004af549b4b1574f9d697c7d70e12cb51d418cea4e12a147da4" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "771f87cd33cea144340252f06615b4d7fbbe2a24cf8650422f92980dc750ed52"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ee8a9463cfba15edeb279dad222091c22999b0163456c949a00739aac7ac24ff"
+    sha256 cellar: :any_skip_relocation, catalina:      "32ff0622ea10902be0d68057e3d4a61e7cff7eecdd0e3a3a61fb48a4637c635c"
+    sha256 cellar: :any_skip_relocation, mojave:        "0cdc4efab315f963cf7957626597025c0599caf300831ce32d32d03dcc3fe4fd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a30505e97bce915bf8ccaed3673cbef9fa249b6755921cb4471cd1f365ec8c46"
   end
 
   depends_on "go" => :build
@@ -22,11 +23,14 @@ class Minikube < Formula
     system "make"
     bin.install "out/minikube"
 
-    output = Utils.popen_read("#{bin}/minikube completion bash")
+    output = Utils.safe_popen_read("#{bin}/minikube", "completion", "bash")
     (bash_completion/"minikube").write output
 
-    output = Utils.popen_read("#{bin}/minikube completion zsh")
+    output = Utils.safe_popen_read("#{bin}/minikube", "completion", "zsh")
     (zsh_completion/"_minikube").write output
+
+    output = Utils.safe_popen_read("#{bin}/minikube", "completion", "fish")
+    (fish_completion/"minikube.fish").write output
   end
 
   test do

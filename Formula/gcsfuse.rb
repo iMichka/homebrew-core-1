@@ -1,23 +1,25 @@
 class Gcsfuse < Formula
   desc "User-space file system for interacting with Google Cloud"
   homepage "https://github.com/googlecloudplatform/gcsfuse"
-  url "https://github.com/GoogleCloudPlatform/gcsfuse/archive/v0.28.1.tar.gz"
-  sha256 "26a468622e5a0450a6bfbb4853f1c0df3b031e5f8fe5b0c147c1200a1a8ee137"
+  url "https://github.com/GoogleCloudPlatform/gcsfuse/archive/v0.32.0.tar.gz"
+  sha256 "b509f55de799aba6bbc1f81d6e4c1495b09644872211e5fd8805b5e0e174ed84"
+  license "Apache-2.0"
   head "https://github.com/GoogleCloudPlatform/gcsfuse.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a035c82776f016a0c193e23cb6b568ee1bc7d0c5397651f754c778850114cd69" => :catalina
-    sha256 "aa49fbe598db8eb7ef274008954e72f237255d97bb65fbc68a2492d4c040a8b6" => :mojave
-    sha256 "91ff3a7ec412eb76dadc39ca79ce16b85594ae3d5e171ba43a40f6357264cb30" => :high_sierra
-    sha256 "f871bb6047f5761bfa369d9a578c9512d6e47675be7aeb2f9855de98f08bc6e3" => :sierra
-    sha256 "09fae2f6f422092ab51d8c51ed1cb0ce4ff058d4932957aa17c31fb89b6a4c0c" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, catalina:     "59df52ee1b44a532d2ebe8c83d0c9d2d3706da8510c9daf0b53d46c3aa156664"
+    sha256 cellar: :any_skip_relocation, mojave:       "a97edf4dbfa9e41d2e9d4de092507c9d5199de2324b0d95f454c50893d977889"
+    sha256 cellar: :any_skip_relocation, high_sierra:  "e0f04b45a7fe6583e424fc81a7c34dace7b01e215739758930b6baab14d3d50c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "b629482617acea1454f3d4878e2d00092250aea89012b5aa0afe920a33dd8172"
   end
 
   depends_on "go" => :build
-  if OS.mac?
-    depends_on :osxfuse
-  else
+
+  on_macos do
+    disable! date: "2021-04-08", because: "requires FUSE"
+  end
+
+  on_linux do
     depends_on "libfuse"
   end
 
@@ -28,17 +30,12 @@ class Gcsfuse < Formula
     system "go", "build", "./tools/build_gcsfuse"
 
     # Use that tool to build gcsfuse itself.
-    if build.head?
-      gcsfuse_version = `git rev-parse --short HEAD`.strip
-    else
-      gcsfuse_version = version
-    end
-
+    gcsfuse_version = build.head? ? Utils.git_short_head : version
     system "./build_gcsfuse", buildpath, prefix, gcsfuse_version
   end
 
   test do
     system "#{bin}/gcsfuse", "--help"
-    system "#{sbin}/mount_gcsfuse", "--help"
+    system "#{sbin}/mount#{OS.mac? ? "_" : "."}gcsfuse", "--help"
   end
 end

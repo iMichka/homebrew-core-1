@@ -1,16 +1,14 @@
 class Dungeon < Formula
-  desc "The classic text adventure"
+  desc "Classic text adventure game"
   homepage "https://github.com/GOFAI/dungeon"
-  url "https://github.com/GOFAI/dungeon/archive/4.0.tar.gz"
-  sha256 "be2217be9e23861f22c14c4395da272fca5fb08a1741f52fd393792908279bea"
-  revision 4
+  url "https://github.com/GOFAI/dungeon/archive/4.1.tar.gz"
+  sha256 "b88c49ef60e908e8611257fbb5a6a41860e1058760df2dfcb7eb141eb34e198b"
+  revision 2
 
   bottle do
-    cellar :any
-    sha256 "f3430523323ddfc9c13f0040cfdb4ca2c89669c04abd9ff5beb224f34cb69273" => :catalina
-    sha256 "cfac4e3fa4aa3c2e110bc59f6ebe90969b269a276e21a0e068ab645d3c72aae3" => :mojave
-    sha256 "c2647f1348a819bd2ea493dc9655188cec00648aa897fc9d67211c7890e016b8" => :high_sierra
-    sha256 "97f4cd4a4f424ca0469e34a0f0aa0c0a218c9d339c12160a749cb63f4ba4ce2d" => :sierra
+    sha256 cellar: :any, big_sur:  "23739a563a06cb0d42b43fd034b423cd9218ec99919c4ac1bb0869d71f1bf89a"
+    sha256 cellar: :any, catalina: "aa2177395fa3363eb9bc0de0de2da7d93ac3b78b5ce86c14daff6f19c69a9e4f"
+    sha256 cellar: :any, mojave:   "f5dd94642da0883ada9e1ac9f93e91a0c47b02b48226d2318be67028b97402f9"
   end
 
   depends_on "gcc" # for gfortran

@@ -1,30 +1,29 @@
 class Dnscontrol < Formula
   desc "It is system for maintaining DNS zones"
   homepage "https://github.com/StackExchange/dnscontrol"
-  url "https://github.com/StackExchange/dnscontrol/archive/v2.9.tar.gz"
-  sha256 "6c3e739b56c64e2e41a0cb23f4debc3db6889aca0a78016c730ef8d1e42709e8"
+  url "https://github.com/StackExchange/dnscontrol/archive/v3.9.0.tar.gz"
+  sha256 "439fcdf683c4660930986eaf387c85612111a8c40d15d860f1f6706e44cf95fc"
+  license "MIT"
+  version_scheme 1
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "01e6fcbd2b3447ba107ec54f3b716c12bf79b8e183c0a74eb40a0e2717673fc9" => :catalina
-    sha256 "98e5230bf0b1ea268e30c79567231d9fdeb9ead2afab1d66d3a6a225dbaca365" => :mojave
-    sha256 "fd72608a2ba25ded69086be111de8712ca2815252bc1706a4371b1c37e70cd54" => :high_sierra
-    sha256 "0895b13b50fec182649a62617a29b9084d05aa38f8f6013b9847a76a174b4b48" => :sierra
-    sha256 "6f660eba2f4df45cf599c8d5e362ca9e1348132567681f81b95a9ae3f279b928" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f97bce34833e31eff42e94301a7412052c6b9f965b410320a207ef58a09109ed"
+    sha256 cellar: :any_skip_relocation, big_sur:       "dc113a15d6cb60307fc1e5c181b47cccbcf664d26e90bf3d9c4d2d4d616575a8"
+    sha256 cellar: :any_skip_relocation, catalina:      "7292ecff37f7ad67a091a9c6e2ca58eebd212e44ae73261b803f0f77b6f60f30"
+    sha256 cellar: :any_skip_relocation, mojave:        "13c1fb3a2ff2df3fd8a24e14e06430b9d8c1c27502c88b5ef9ceac0d9dbbeba9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d90928a60e1d01c8a7f52b62a9145480d0108ff49612ff4faf6ccb6ba20e7abb"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    srcpath = buildpath/"src/github.com/StackExchange/dnscontrol"
-    srcpath.install buildpath.children
-
-    cd srcpath do
-      system "go", "build", "-o", bin/"dnscontrol"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args
+    prefix.install_metafiles
   end
 
   test do

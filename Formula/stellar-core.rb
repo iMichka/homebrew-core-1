@@ -1,18 +1,17 @@
 class StellarCore < Formula
-  desc "The backbone of the Stellar (XLM) network"
+  desc "Backbone of the Stellar (XLM) network"
   homepage "https://www.stellar.org/"
   url "https://github.com/stellar/stellar-core.git",
-      :tag      => "v12.1.0",
-      :revision => "8afe57913a08deffa247d7b5f837e0b28a54b864"
-  revision 1
+      tag:      "v17.1.0",
+      revision: "fbc0325759ff75dd250cb5e175978669cdb4e90a"
+  license "Apache-2.0"
   head "https://github.com/stellar/stellar-core.git"
 
   bottle do
-    cellar :any
-    sha256 "80d5d3074c6d8acd381119d26c84afa286b6930b22eb1646866441f4ce9d5b97" => :catalina
-    sha256 "ebdfca363f2e1fa339bed6f5117b944f6b8e1d5f51dc4e0e441837207e212521" => :mojave
-    sha256 "266c266b48419e47794760e7825edc7cbbdd8e5f2a6b76179a929076828911b1" => :high_sierra
-    sha256 "cbe9f59de32fcadd46ecf3a3cc775310ee4bab68239fc5f3cde79c394fd735dd" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "c72f92f94fc7e1ee0595501024d12716dd72c93c8313ed45f8d2cd400f0d1daa"
+    sha256 cellar: :any, big_sur:       "5513cb2162bd6b3022a5a73d02bd29c777990ea4b399a34d30df96438734ef2c"
+    sha256 cellar: :any, catalina:      "5e985581748fbbdc299a8f4e6e99116b19cd71d5047e21060d61fcf7f61a03bb"
+    sha256 cellar: :any, mojave:        "b581b4584522263215991bef051f745715a34ff892db8072999bd6d0eb5c38f1"
   end
 
   depends_on "autoconf" => :build
@@ -25,14 +24,17 @@ class StellarCore < Formula
   depends_on "libpqxx"
   depends_on "libsodium"
 
-  unless OS.mac?
-    depends_on "bison" => :build
-    depends_on "flex" => :build
-    # Needs libraries at runtime:
-    # /usr/lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.22' not found
-    depends_on "gcc@6"
-    fails_with :gcc => "5"
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+
+  on_linux do
+    depends_on "gcc"
   end
+
+  # Needs libraries at runtime:
+  # /usr/lib/x86_64-linux-gnu/libstdc++.so.6: version `GLIBCXX_3.4.22' not found
+  # Upstream has explicitly stated gcc-5 is too old: https://github.com/stellar/stellar-core/issues/1903
+  fails_with gcc: "5"
 
   def install
     system "./autogen.sh"
@@ -45,6 +47,8 @@ class StellarCore < Formula
   end
 
   test do
-    system "#{bin}/stellar-core", "test", "'[bucket],[crypto],[herder],[upgrades],[accountsubentriescount],[bucketlistconsistent],[cacheisconsistent],[fs]'"
+    system "#{bin}/stellar-core", "test",
+      "'[bucket],[crypto],[herder],[upgrades],[accountsubentriescount]," \
+      "[bucketlistconsistent],[cacheisconsistent],[fs]'"
   end
 end

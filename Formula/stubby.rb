@@ -1,55 +1,53 @@
 class Stubby < Formula
   desc "DNS privacy enabled stub resolver service based on getdns"
   homepage "https://dnsprivacy.org/wiki/display/DP/DNS+Privacy+Daemon+-+Stubby"
-  url "https://github.com/getdnsapi/stubby/archive/v0.2.6.tar.gz"
-  sha256 "634b0b9fb8f36416e210fa65800a6c1672bcf9f4f276a042ccf89567ad8ef781"
-  head "https://github.com/getdnsapi/stubby.git", :branch => "develop"
+  url "https://github.com/getdnsapi/stubby/archive/v0.4.0.tar.gz"
+  sha256 "8e6a4ba76f04b23612d58813c4998141b0cc6194432d87f8653f3ba5cf64152a"
+  license "BSD-3-Clause"
+  head "https://github.com/getdnsapi/stubby.git", branch: "develop"
 
   bottle do
-    rebuild 1
-    sha256 "c7e9b790cdc0cdafba63e1856369698182d028b0e050879b47451100ba7974cf" => :catalina
-    sha256 "ab22feeb762899b728ae55a2c702fd622ebdb2edaf776e11c0af2c9f2cddba0c" => :mojave
-    sha256 "02913e7695ae6ff3120a4f676490f6cdeeb10b92192537718ac2a23742d43276" => :high_sierra
-    sha256 "9d3624be99961bf27119e2390129a382a28dc466dc66f902637f2d485c73009c" => :x86_64_linux
+    sha256 arm64_big_sur: "f2df8ba554f68e3624bacf30a8ed767975a768e723b653ec120382ec9e442737"
+    sha256 big_sur:       "a02d951dfa4c022685c11f3e9e43cb382ea12411fba226ae552b55cfaaf92e23"
+    sha256 catalina:      "66ef743ee60c426ca0b4108787a8b05df9456da7ab5e9dc48616c4ac3b8cd4e0"
+    sha256 mojave:        "13a42fa05c297dbd0f5c058836f7b59651b87d69a1071b36845c8710d84fc4c5"
+    sha256 x86_64_linux:  "8762af1aad1c83d2ef5c9eb79660d17b3fa7c8c5e2738eb651eee886dd5f308c"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
+  depends_on "cmake" => :build
   depends_on "libtool" => :build
   depends_on "getdns"
   depends_on "libyaml"
 
   def install
-    system "autoreconf", "-fiv"
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}",
-                          "--sysconfdir=#{etc}"
+    system "cmake", "-DCMAKE_INSTALL_RUNSTATEDIR=#{HOMEBREW_PREFIX}/var/run/", \
+                    "-DCMAKE_INSTALL_SYSCONFDIR=#{HOMEBREW_PREFIX}/etc", ".", *std_cmake_args
     system "make", "install"
   end
 
-  plist_options :startup => true, :manual => "sudo stubby -C #{HOMEBREW_PREFIX}/etc/stubby/stubby.yml"
+  plist_options startup: true, manual: "sudo stubby -C #{HOMEBREW_PREFIX}/etc/stubby/stubby.yml"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>KeepAlive</key>
-        <true/>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/stubby</string>
-          <string>-C</string>
-          <string>#{etc}/stubby/stubby.yml</string>
-        </array>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>KeepAlive</key>
+          <true/>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/stubby</string>
+            <string>-C</string>
+            <string>#{etc}/stubby/stubby.yml</string>
+          </array>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
@@ -70,16 +68,13 @@ class Stubby < Formula
     EOS
     output = shell_output("#{bin}/stubby -i -C stubby_test.yml")
     assert_match "bindata for 145.100.185.15", output
-    pid = fork do
+
+    fork do
       exec "#{bin}/stubby", "-C", testpath/"stubby_test.yml"
     end
-    begin
-      sleep 2
-      output = shell_output("dig @127.0.0.1 -p 5553 getdnsapi.net") if OS.mac?
-      assert_match "status: NOERROR", output if OS.mac?
-    ensure
-      Process.kill 9, pid
-      Process.wait pid
-    end
+    sleep 2
+
+    output = shell_output("dig @127.0.0.1 -p 5553 getdnsapi.net") if OS.mac?
+    assert_match "status: NOERROR", output if OS.mac?
   end
 end

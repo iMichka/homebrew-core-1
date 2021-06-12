@@ -1,33 +1,30 @@
 class GitTown < Formula
   desc "High-level command-line interface for Git"
   homepage "https://www.git-town.com/"
-  url "https://github.com/Originate/git-town/archive/v7.3.0.tar.gz"
-  sha256 "dcfb61266f2f1fcbc609a52a97d3975ac9bc8860dce90fc98a76f5b1b0bd2142"
+  url "https://github.com/git-town/git-town/archive/v7.5.0.tar.gz"
+  sha256 "4f35a2b4d01bea909161722ee1d5d893d5c676e6f3cf9305a864a01c55038be3"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1b0264cc230c3b3ccc7c45ddc933b6e295edb6ffb3211472da78d1677aa220b2" => :catalina
-    sha256 "69cebc1178ee59ff060e306577396c760320e285e7fcbe3ae2367bea5a90da10" => :mojave
-    sha256 "0e30581afbe2b9ef24fbb0f9ab655d4e8ab0590e0870cf197fa61d9012bc0a51" => :high_sierra
-    sha256 "6f7834a8ed272ea70a2d43fbb2be29eccbd8afdbff8424adf91b4cef99514bfc" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7dff43547bc7bccf0aa299b64bd238b32750c260f6a549ffe794c3ccc24f7967"
+    sha256 cellar: :any_skip_relocation, big_sur:       "87d70a3cdbee842e1395da79b38de127234541c1bdade78a7b20148037af45d5"
+    sha256 cellar: :any_skip_relocation, catalina:      "385eb3fecf752f8685c9ed0707ba0d960fe814cb486f5a6c078fdc8bcee89a07"
+    sha256 cellar: :any_skip_relocation, mojave:        "279e89fd331b94bbe3f97b51d8a2015d03a72b1efef5934676d4220f69610778"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5b9c177cf5be4d883a67d1e41db72aae80eef3f05d050f2005414f2fc004b4a8"
   end
 
   depends_on "go" => :build
-  depends_on :macos => :el_capitan
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/Originate").mkpath
-    ln_sf buildpath, buildpath/"src/github.com/Originate/git-town"
-    system "go", "build", "-o", bin/"git-town"
+    system "go", "build", *std_go_args, "-ldflags",
+           "-X github.com/git-town/git-town/src/cmd.version=v#{version} "\
+           "-X github.com/git-town/git-town/src/cmd.buildDate=#{Time.new.strftime("%Y/%m/%d")}"
   end
 
   test do
+    assert_match version.to_s, shell_output("#{bin}/git-town version")
+
     system "git", "init"
-    unless OS.mac?
-      system "git", "config", "user.email", "you@example.com"
-      system "git", "config", "user.name", "Your Name"
-    end
     touch "testing.txt"
     system "git", "add", "testing.txt"
     system "git", "commit", "-m", "Testing!"

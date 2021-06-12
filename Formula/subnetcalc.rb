@@ -1,17 +1,17 @@
 class Subnetcalc < Formula
   desc "IPv4/IPv6 subnet calculator"
   homepage "https://www.uni-due.de/~be0001/subnetcalc/"
-  url "https://www.uni-due.de/~be0001/subnetcalc/download/subnetcalc-2.4.14.tar.xz"
-  sha256 "a602cdc8f79fcfcf053c57a0747d0aeda156afeeac1b0facfdac1d0acbae469c"
+  url "https://www.uni-due.de/~be0001/subnetcalc/download/subnetcalc-2.4.18.tar.xz"
+  sha256 "71c0ad72eb31dde3cdcfb76f9fe752eb2d137a49d5d49ee8e2ee80bbeac42c67"
+  license "GPL-3.0-or-later"
   head "https://github.com/dreibh/subnetcalc.git"
 
   bottle do
-    cellar :any
-    sha256 "5a8ee90e354ce39bd02d8ad7baa4ef0575d26c1a78cc16264c61e3da6a6da5ca" => :catalina
-    sha256 "cb1f6dd2854ca7d6049d8c7336ba4ac5537b3927057753f2ca36a58f8bee842f" => :mojave
-    sha256 "ff67b614cd174896b3ad818df3b98aedd8741bb7d9345c12fec9946f1c3ad022" => :high_sierra
-    sha256 "43aa559cbf9c1253bc95a0fda1a9036b2c7b334b38a0bfae95091f1502f61a35" => :sierra
-    sha256 "46640988bd7a4db83d9a1b887020c957eb357e9f217a6ba86a1f1bd501edaeaa" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "71be3468fb96a18bdc21468d75473e8b2058a96c17aa2fdfd9a094e0a3d11bd7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "bc64b5a8c222bb22e5f3319835b3128fcfc61d3fde5e192b8171b0c212233e10"
+    sha256 cellar: :any_skip_relocation, catalina:      "7af71ce1b492802a1fc88484d6ae8eb95c924dc4363f354dad1693984d60ddd2"
+    sha256 cellar: :any_skip_relocation, mojave:        "f136d2f2959574e52b0431b4c4fe8ebe88724a52911fea8ffe103b915012ed71"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "be403abb8275e238eb2ad60cfd2aff173b237e0ca31b139d6b61ca8b858ffe28"
   end
 
   depends_on "cmake" => :build

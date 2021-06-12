@@ -1,10 +1,12 @@
 class Fuseki < Formula
   desc "SPARQL server"
   homepage "https://jena.apache.org/documentation/fuseki2/"
-  url "https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-3.13.1.tar.gz"
-  sha256 "fe3003941ded224edeab9e9dc3221b46b3cfa2743d1b0218210dcacde2010b05"
+  url "https://www.apache.org/dyn/closer.lua?path=jena/binaries/apache-jena-fuseki-4.1.0.tar.gz"
+  mirror "https://archive.apache.org/dist/jena/binaries/apache-jena-fuseki-4.1.0.tar.gz"
+  sha256 "a3fe94b1f4cc4b15fcb11f2984aefd2499e797c6f53fcc71b5cb3731b1518a43"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  depends_on "openjdk"
 
   def install
     prefix.install "bin"
@@ -12,10 +14,12 @@ class Fuseki < Formula
     %w[fuseki-server fuseki].each do |exe|
       libexec.install exe
       (bin/exe).write_env_script(libexec/exe,
-                                 :FUSEKI_BASE => var/"fuseki",
-                                 :FUSEKI_HOME => libexec,
-                                 :FUSEKI_LOGS => var/"log/fuseki",
-                                 :FUSEKI_RUN  => var/"run")
+                                 JAVA_HOME:   Formula["openjdk"].opt_prefix,
+                                 FUSEKI_BASE: var/"fuseki",
+                                 FUSEKI_HOME: libexec,
+                                 FUSEKI_LOGS: var/"log/fuseki",
+                                 FUSEKI_RUN:  var/"run")
+      (libexec/exe).chmod 0755
     end
 
     # Non-symlinked binaries and application files
@@ -31,26 +35,27 @@ class Fuseki < Formula
     (var/"log/fuseki").mkpath
   end
 
-  plist_options :manual => "fuseki start"
+  plist_options manual: "fuseki start"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <false/>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/fuseki-server</string>
-        </array>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <false/>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/fuseki-server</string>
+          </array>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do

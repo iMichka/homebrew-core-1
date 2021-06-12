@@ -1,16 +1,16 @@
 class Fn < Formula
   desc "Command-line tool for the fn project"
   homepage "https://fnproject.io"
-  url "https://github.com/fnproject/cli/archive/0.5.91.tar.gz"
-  sha256 "66f470d50fdb43b33bba1ec2c82d773adc109baadf417e7673bb4098f975fbd8"
+  url "https://github.com/fnproject/cli/archive/0.6.7.tar.gz"
+  sha256 "04be78eef18e8f70a808a3c1eb4f7d78b043b7f725a0dcad55c4fb46275dbecc"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "a1b85cd457cdd8313464d2fe0c1de2958eb395f8002caf4eae1a2ba7fb2a1074" => :catalina
-    sha256 "9ac868d2ad2671618f32077b6390e6f4d90c05af74d1b52ba9f683d968235d1f" => :mojave
-    sha256 "7bcd165245b02a75a00645661996f75622d445bbff5ffe257bfd66686d85a9b8" => :high_sierra
-    sha256 "74a8338e0b4ebfaecdc672f701c95931c457f91137c9fae2f10012030ef7607c" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "cdece231a93d918679aff4365e28abf13eff116ee213692568daa40d95bd3e99"
+    sha256 cellar: :any_skip_relocation, big_sur:       "05f4afa0bbd454765bfdd652a31ee80b8064fe57c7d1812a1f9c7ac2da990e73"
+    sha256 cellar: :any_skip_relocation, catalina:      "8fa84327394e057c668906bf33d799f59510410e49da51b218e88e09820a3607"
+    sha256 cellar: :any_skip_relocation, mojave:        "df350eb2238e4ec8a17a446639ebdca3fc2275678f72702db8c3795527bc6ca4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7a2d03ec6eb476611961f97abc22271036e2101fae7657f482fb0c9aaae77fe7"
   end
 
   depends_on "go" => :build
@@ -21,17 +21,18 @@ class Fn < Formula
   end
 
   test do
-    require "socket"
     assert_match version.to_s, shell_output("#{bin}/fn --version")
     system "#{bin}/fn", "init", "--runtime", "go", "--name", "myfunc"
     assert_predicate testpath/"func.go", :exist?, "expected file func.go doesn't exist"
     assert_predicate testpath/"func.yaml", :exist?, "expected file func.yaml doesn't exist"
-    server = TCPServer.new("localhost", 0)
-    port = server.addr[1]
+    port = free_port
+    server = TCPServer.new("localhost", port)
     pid = fork do
       loop do
         socket = server.accept
-        response = '{"id":"01CQNY9PADNG8G00GZJ000000A","name":"myapp","created_at":"2018-09-18T08:56:08.269Z","updated_at":"2018-09-18T08:56:08.269Z"}'
+        response =
+          '{"id":"01CQNY9PADNG8G00GZJ000000A","name":"myapp",' \
+           '"created_at":"2018-09-18T08:56:08.269Z","updated_at":"2018-09-18T08:56:08.269Z"}'
         socket.print "HTTP/1.1 200 OK\r\n" \
                     "Content-Length: #{response.bytesize}\r\n" \
                     "Connection: close\r\n"
@@ -40,6 +41,7 @@ class Fn < Formula
         socket.close
       end
     end
+    sleep 1
     begin
       ENV["FN_API_URL"] = "http://localhost:#{port}"
       ENV["FN_REGISTRY"] = "fnproject"

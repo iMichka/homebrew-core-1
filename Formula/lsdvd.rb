@@ -3,13 +3,14 @@ class Lsdvd < Formula
   homepage "https://sourceforge.net/projects/lsdvd"
   url "https://downloads.sourceforge.net/project/lsdvd/lsdvd/lsdvd-0.17.tar.gz"
   sha256 "7d2c5bd964acd266b99a61d9054ea64e01204e8e3e1a107abe41b1274969e488"
-  revision 2
+  revision 4
 
   bottle do
-    cellar :any
-    sha256 "cf5b1b4f5291edca2f210f74f391a625c06ef930a00b769aee3cf46e8f2c217c" => :catalina
-    sha256 "0db26707f1960dd5354f14e4ad779ad4a29e3066b124e0b11af0a179b3a36256" => :mojave
-    sha256 "c106839fc9f9378eb0d72ada198a13e279d7ef5afd73bc8bcafd1e99566bf50e" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "d581725cf2628d8c123d3f6f54d1baf06cb33362d9f6dc7d033a4f7768729474"
+    sha256 cellar: :any,                 big_sur:       "0d5d1a272ba88ff70ce68ddc35fca9811e2ca5222696373aaf3d2ffc0126a471"
+    sha256 cellar: :any,                 catalina:      "986e89fe0980a78d7d7ef18fd646d3176edbaa7fd6531c38f698d3bdf2aed5dd"
+    sha256 cellar: :any,                 mojave:        "66cbfc0e273fc63813c4948638ab849357ef9d3f72ce5b6322a27f5f614507f9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "13f70bd346583cfb8d8f28758cd3cc5c33c917144103dc75db8e2dd8eeedb279"
   end
 
   depends_on "pkg-config" => :build

@@ -1,15 +1,22 @@
 class Elektra < Formula
   desc "Framework to access config settings in a global key database"
   homepage "https://libelektra.org/"
-  url "https://www.libelektra.org/ftp/elektra/releases/elektra-0.9.1.tar.gz"
-  sha256 "df1d2ec1b4db9c89c216772f0998581a1cbb665e295ff9a418549360bb42f758"
+  url "https://www.libelektra.org/ftp/elektra/releases/elektra-0.9.6.tar.gz"
+  sha256 "c8e75f4d21bf3bd6b1028e776af9ff644a17a7dfbb1f2052f50392767deea197"
+  license "BSD-3-Clause"
   head "https://github.com/ElektraInitiative/libelektra.git"
 
+  livecheck do
+    url "https://www.libelektra.org/ftp/elektra/releases/"
+    regex(/href=.*?elektra[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    sha256 "a365f031dffd695ded3f1b1aa64320791caf134002f8d7ee89beea4469a5de00" => :catalina
-    sha256 "c2964e938a38c91b3d0322af3eef8ffc397f92b9d2de5365133f50f8142ed532" => :mojave
-    sha256 "6db5a9e59b9db54069636ed12fd73d405447703512717847e4839875c30fe586" => :high_sierra
-    sha256 "e45edd22e2a841019e841ce7d7dde6c8fae46f73007d3262ca372bb58a6727e5" => :x86_64_linux
+    sha256 arm64_big_sur: "b246eb7351b10188c76762094e9e6bd08a8a6119cb8589fd244b304c54355608"
+    sha256 big_sur:       "4bcef10484817f1cad4335703c2714f6e5dac109766bb7f403fc3ed16103b5f9"
+    sha256 catalina:      "be7504905eaae104e3f59fc90adad96c2ea845d8f4f95ca0fbb261760afe45f1"
+    sha256 mojave:        "18dc59bc3c7dbbea60eae22d88f89157413c35fe285ea46fe0cbd884e5d3535d"
+    sha256 x86_64_linux:  "06ee4adbb138a1ac38bf225010784e10bb25a058ddb61af9d09594084ec047d0"
   end
 
   depends_on "cmake" => :build
@@ -28,9 +35,9 @@ class Elektra < Formula
   end
 
   test do
-    output = shell_output("#{bin}/kdb get system/elektra/version/infos/licence")
+    output = shell_output("#{bin}/kdb get system:/elektra/version/infos/licence")
     assert_match "BSD", output
-    Utils.popen_read("#{bin}/kdb", "plugin-list").split.each do |plugin|
+    shell_output("#{bin}/kdb plugin-list").split.each do |plugin|
       system "#{bin}/kdb", "plugin-check", plugin
     end
   end

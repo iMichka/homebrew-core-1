@@ -1,24 +1,25 @@
 class Pypy < Formula
   desc "Highly performant implementation of Python 2 in Python"
   homepage "https://pypy.org/"
-  url "https://bitbucket.org/pypy/pypy/downloads/pypy2.7-v7.2.0-src.tar.bz2"
-  sha256 "55cb7757784fbe3952102447f65b27d80e6c885a464a7af1a9ce264492439dcc"
-  head "https://bitbucket.org/pypy/pypy", :using => :hg
+  url "https://downloads.python.org/pypy/pypy2.7-v7.3.4-src.tar.bz2"
+  sha256 "ff9b928237767efe08ccfba79dae489519b3c768fb6e3af52d39c2a8a1c21ca4"
+  license "MIT"
+  head "https://foss.heptapod.net/pypy/pypy", using: :hg
+
+  livecheck do
+    url "https://downloads.python.org/pypy/"
+    regex(/href=.*?pypy2(?:\.\d+)*[._-]v?(\d+(?:\.\d+)+)-src\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "ae97f3007fcb482c5c0b39f37b444f84771a697bf36f7f3fdf8c22c8b653eda8" => :catalina
-    sha256 "d0b2bae0b56b6439aec9e2fef89c4225258c736ed53896d73095205785afc633" => :mojave
-    sha256 "99e670825a05a82433ec6de3a8d0639b9d88b238552e39c7e4ca3bcf8ee5fdf1" => :high_sierra
-    sha256 "e0b0c0ac229d9098eea3ad2c8c9f3fae7f7119ba50757d515b2355dbdbc6ed7c" => :x86_64_linux
+    sha256 big_sur:  "c92e910215c9d44708ce97f360851ff4878ce7a0f494bdef1c601a78596f4c41"
+    sha256 catalina: "c7da4bd5c5908efb24d85305d5f818392fad38a2a41de5e7e35d93dfbfd8f048"
+    sha256 mojave:   "12ad92759cd93a3994d7542b9717d904c77139596bea5d579ffe4ed24586a4cb"
   end
 
   depends_on "pkg-config" => :build
-  depends_on :arch => :x86_64
+  depends_on arch: :x86_64
   depends_on "gdbm"
-  # pypy does not find system libffi, and its location cannot be given
-  # as a build option
-  depends_on "libffi" if OS.mac? && DevelopmentTools.clang_build_version >= 1000
   depends_on "openssl@1.1"
   depends_on "sqlite"
   depends_on "tcl-tk"
@@ -29,49 +30,35 @@ class Pypy < Formula
   uses_from_macos "zlib"
 
   resource "bootstrap" do
-    if OS.mac?
-      url "https://bitbucket.org/pypy/pypy/downloads/pypy2.7-v7.1.1-osx64.tar.bz2"
-      sha256 "31a17294dec96c2191885c776b4ee02112957dc874f7ba03e570537a77b78c35"
-    else
-      url "https://bitbucket.org/pypy/pypy/downloads/pypy2.7-v7.1.1-linux64.tar.bz2"
-      sha256 "73b09ef0860eb9ad7997af3030b22909806a273d90786d78420926df53279d66"
+    on_macos do
+      url "https://downloads.python.org/pypy/pypy2.7-v7.3.4-osx64.tar.bz2"
+      sha256 "ee7bf42ce843596521e02c763408a5164d18f23c9617f1b8e032ce0675686582"
+    end
+
+    on_linux do
+      url "https://downloads.python.org/pypy/pypy2.7-v7.3.4-linux64.tar.bz2"
+      sha256 "d3f7b0625e770d9be62201765d7d2316febc463372fba9c93a12969d26ae03dd"
     end
   end
 
+  # > Setuptools as a project continues to support Python 2 with bugfixes and important features on Setuptools 44.x.
+  # See https://setuptools.readthedocs.io/en/latest/python%202%20sunset.html#python-2-sunset
   resource "setuptools" do
-    url "https://files.pythonhosted.org/packages/11/0a/7f13ef5cd932a107cd4c0f3ebc9d831d9b78e1a0e8c98a098ca17b1d7d97/setuptools-41.6.0.zip"
-    sha256 "6afa61b391dcd16cb8890ec9f66cc4015a8a31a6e1c2b4e0c464514be1a3d722"
+    url "https://files.pythonhosted.org/packages/b2/40/4e00501c204b457f10fe410da0c97537214b2265247bc9a5bc6edd55b9e4/setuptools-44.1.1.zip"
+    sha256 "c67aa55db532a0dadc4d2e20ba9961cbd3ccc84d544e9029699822542b5a476b"
   end
 
+  # > pip 20.3 was the last version of pip that supported Python 2.
+  # See https://pip.pypa.io/en/stable/development/release-process/#python-2-support
   resource "pip" do
-    url "https://files.pythonhosted.org/packages/ce/ea/9b445176a65ae4ba22dce1d93e4b5fe182f953df71a145f557cffaffc1bf/pip-19.3.1.tar.gz"
-    sha256 "21207d76c1031e517668898a6b46a9fb1501c7a4710ef5dfd6a40ad9e6757ea7"
+    url "https://files.pythonhosted.org/packages/53/7f/55721ad0501a9076dbc354cc8c63ffc2d6f1ef360f49ad0fbcce19d68538/pip-20.3.4.tar.gz"
+    sha256 "6773934e5f5fc3eaa8c5a44949b5b924fc122daa0a8aa9f80c835b4ca2a543fc"
   end
 
   def install
-    if OS.mac?
-      ENV.prepend_path "PKG_CONFIG_PATH", "#{prefix}/opt/tcl-tk/lib/pkgconfig"
-      ENV.prepend "LDFLAGS", "-L#{prefix}/opt/tcl-tk/lib"
-      ENV.prepend "CPPFLAGS", "-I#{prefix}/opt/tcl-tk/include"
-    end
-    # Having PYTHONPATH set can cause the build to fail if another
-    # Python is present, e.g. a Homebrew-provided Python 2.x
     # See https://github.com/Homebrew/homebrew/issues/24364
     ENV["PYTHONPATH"] = ""
     ENV["PYPY_USESSION_DIR"] = buildpath
-
-    # Fix build on High Sierra
-    inreplace "lib_pypy/_tkinter/tklib_build.py" do |s|
-      if OS.mac?
-        s.gsub! "/System/Library/Frameworks/Tk.framework/Versions/Current/Headers/",
-                "#{prefix}/opt/tcl-tk/include"
-        s.gsub! "libdirs = []",
-                "libdirs = ['#{prefix}/opt/tcl-tk/lib']"
-      else
-        s.gsub! "/usr/include/tcl", Formula["tcl-tk"].opt_include.to_s
-        s.gsub! "'tcl' + _ver, 'tk' + _ver", "'tcl8.6', 'tk8.6'"
-      end
-    end
 
     resource("bootstrap").stage buildpath/"bootstrap"
     python = buildpath/"bootstrap/bin/pypy"
@@ -89,9 +76,8 @@ class Pypy < Formula
       system "tar", "-C", libexec.to_s, "--strip-components", "1", "-xf", "pypy.tar.bz2"
     end
 
-    dylib = OS.mac? ? "dylib" : "so"
-    (libexec/"lib").install libexec/"bin/libpypy-c.#{dylib}"
-    if OS.mac?
+    (libexec/"lib").install libexec/"bin/#{shared_library("libpypy-c")}"
+    on_macos do
       MachO::Tools.change_install_name("#{libexec}/bin/pypy",
                                        "@rpath/libpypy-c.dylib",
                                        "#{libexec}/lib/libpypy-c.dylib")
@@ -102,11 +88,11 @@ class Pypy < Formula
     # we want to avoid putting PyPy's Python.h somewhere that configure
     # scripts will find it.
     bin.install_symlink libexec/"bin/pypy"
-    lib.install_symlink libexec/"lib/libpypy-c.#{dylib}"
+    lib.install_symlink libexec/"lib/#{shared_library("libpypy-c")}"
 
     # Delete two files shipped which we do not want to deliver
     # These files make patchelf fail
-    unless OS.mac?
+    on_linux do
       rm_f libexec/"bin/libpypy-c.so.debug"
       rm_f libexec/"bin/pypy.debug"
     end
@@ -131,15 +117,14 @@ class Pypy < Formula
 
     # Tell distutils-based installers where to put scripts
     scripts_folder.mkpath
-    (distutils+"distutils.cfg").atomic_write <<~EOS
+    (distutils/"distutils.cfg").atomic_write <<~EOS
       [install]
       install-scripts=#{scripts_folder}
     EOS
 
     %w[setuptools pip].each do |pkg|
       resource(pkg).stage do
-        system bin/"pypy", "-s", "setup.py", "--no-user-cfg", "install",
-               "--force"
+        system bin/"pypy", "-s", "setup.py", "--no-user-cfg", "install", "--force", "--verbose"
       end
     end
 
@@ -151,39 +136,40 @@ class Pypy < Formula
     %w[easy_install_pypy pip_pypy].each { |e| (HOMEBREW_PREFIX/"bin").install_symlink bin/e }
   end
 
-  def caveats; <<~EOS
-    A "distutils.cfg" has been written to:
-      #{distutils}
-    specifying the install-scripts folder as:
-      #{scripts_folder}
+  def caveats
+    <<~EOS
+      A "distutils.cfg" has been written to:
+        #{distutils}
+      specifying the install-scripts folder as:
+        #{scripts_folder}
 
-    If you install Python packages via "pypy setup.py install", easy_install_pypy,
-    or pip_pypy, any provided scripts will go into the install-scripts folder
-    above, so you may want to add it to your PATH *after* #{HOMEBREW_PREFIX}/bin
-    so you don't overwrite tools from CPython.
+      If you install Python packages via "pypy setup.py install", easy_install_pypy,
+      or pip_pypy, any provided scripts will go into the install-scripts folder
+      above, so you may want to add it to your PATH *after* #{HOMEBREW_PREFIX}/bin
+      so you don't overwrite tools from CPython.
 
-    Setuptools and pip have been installed, so you can use easy_install_pypy and
-    pip_pypy.
-    To update setuptools and pip between pypy releases, run:
-        pip_pypy install --upgrade pip setuptools
+      Setuptools and pip have been installed, so you can use easy_install_pypy and
+      pip_pypy.
+      To update setuptools and pip between pypy releases, run:
+          pip_pypy install --upgrade pip setuptools
 
-    See: https://docs.brew.sh/Homebrew-and-Python
-  EOS
+      See: https://docs.brew.sh/Homebrew-and-Python
+    EOS
   end
 
   # The HOMEBREW_PREFIX location of site-packages
   def prefix_site_packages
-    HOMEBREW_PREFIX+"lib/pypy/site-packages"
+    HOMEBREW_PREFIX/"lib/pypy/site-packages"
   end
 
   # Where setuptools will install executable scripts
   def scripts_folder
-    HOMEBREW_PREFIX+"share/pypy"
+    HOMEBREW_PREFIX/"share/pypy"
   end
 
   # The Cellar location of distutils
   def distutils
-    libexec+"lib-python/2.7/distutils"
+    libexec/"lib-python/2.7/distutils"
   end
 
   test do

@@ -1,71 +1,58 @@
 class Mysql < Formula
   desc "Open source relational database management system"
   homepage "https://dev.mysql.com/doc/refman/8.0/en/"
-  url "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-boost-8.0.18.tar.gz"
-  sha256 "0eccd9d79c04ba0ca661136bb29085e3833d9c48ed022d0b9aba12236994186b"
+  url "https://cdn.mysql.com/Downloads/MySQL-8.0/mysql-boost-8.0.25.tar.gz"
+  sha256 "93c5f57cbd69573a8d9798725edec52e92830f70c398a1afaaea2227db331728"
+  license "GPL-2.0-only" => { with: "Universal-FOSS-exception-1.0" }
   revision 1
+
+  livecheck do
+    url "https://dev.mysql.com/downloads/mysql/?tpl=files&os=src"
+    regex(/href=.*?mysql[._-](?:boost[._-])?v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
     rebuild 1
-    sha256 "48885b9bdbee8475973b8610b6088ed0e47b8a628ad1822b7b7e63df4f99a77a" => :catalina
-    sha256 "fb790b94534ffa9f0393d33b27e4a3fb8876ab3818882a305d1a6fba653c3ab3" => :mojave
-    sha256 "83237573cd7aa72103b3cda406079805a5a8fbe292c2ca460e1b8c1c3802cd83" => :high_sierra
-    sha256 "ddeb3fe0cb78659493d0910d6af3d919956b2a5907b10449f9e3b69c2fc49d80" => :x86_64_linux
+    sha256 x86_64_linux: "fbe65cc2fd6af29ef16a0d67573981148e7515cd5b0115016c129d916ae06dc4"
   end
 
   depends_on "cmake" => :build
-
-  # GCC is not supported either, so exclude for El Capitan.
-  depends_on :macos => :sierra if OS.mac? && DevelopmentTools.clang_build_version == 800
-
-  # https://github.com/Homebrew/homebrew-core/issues/1475
-  # Needs at least Clang 3.6, which shipped alongside Yosemite.
-  # Note: MySQL themselves don't support anything below Sierra.
-  depends_on :macos => :yosemite if OS.mac?
-
+  depends_on "pkg-config" => :build
+  depends_on "icu4c"
+  depends_on "libevent"
+  depends_on "lz4"
   depends_on "openssl@1.1"
-  depends_on "protobuf@3.7" # MySQL 8.0.19 will support the latest version
+  depends_on "protobuf"
+  depends_on "zstd"
 
-  # Fix error: Cannot find system editline libraries.
+  uses_from_macos "curl"
+  uses_from_macos "cyrus-sasl"
   uses_from_macos "libedit"
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "patchelf" => :build
+  end
 
   conflicts_with "mariadb", "percona-server",
-    :because => "mysql, mariadb, and percona install the same binaries."
-
-  # https://bugs.mysql.com/bug.php?id=86711
-  # https://github.com/Homebrew/homebrew-core/pull/20538
-  fails_with :clang do
-    build 800
-    cause "Wrong inlining with Clang 8.0, see MySQL Bug #86711"
-  end
-
-  unless OS.mac?
-    patch do
-      url "https://raw.githubusercontent.com/NixOS/nixpkgs/dae42566dbee37a3b7a609fa86eca9618f4f4b67/pkgs/servers/sql/mysql/abi-check.patch"
-      sha256 "0dcfcca3bb3e7eb7ccd3ae02d4eb4fb07877970359611f081b03eab77bd4d6c9"
-    end
-    depends_on "pkg-config" => :build
-    fails_with :gcc => "5"
-    fails_with :gcc => "6"
-    depends_on "gcc@7"
-  end
+    because: "mysql, mariadb, and percona install the same binaries"
 
   def datadir
     var/"mysql"
   end
 
   def install
-    # Fix libmysqlgcs.a(gcs_logging.cc.o): relocation R_X86_64_32
-    # against `_ZN17Gcs_debug_options12m_debug_noneB5cxx11E' can not be used when making
-    # a shared object; recompile with -fPIC
-    ENV.append_to_cflags "-fPIC" unless OS.mac?
+    on_linux do
+      # Fix libmysqlgcs.a(gcs_logging.cc.o): relocation R_X86_64_32
+      # against `_ZN17Gcs_debug_options12m_debug_noneB5cxx11E' can not be used when making
+      # a shared object; recompile with -fPIC
+      ENV.append_to_cflags "-fPIC"
+    end
 
     # -DINSTALL_* are relative to `CMAKE_INSTALL_PREFIX` (`prefix`)
     args = %W[
       -DFORCE_INSOURCE_BUILD=1
       -DCOMPILATION_COMMENT=Homebrew
-      -DDEFAULT_CHARSET=utf8mb4
-      -DDEFAULT_COLLATION=utf8mb4_general_ci
       -DINSTALL_DOCDIR=share/doc/#{name}
       -DINSTALL_INCLUDEDIR=include/mysql
       -DINSTALL_INFODIR=share/info
@@ -74,10 +61,16 @@ class Mysql < Formula
       -DINSTALL_PLUGINDIR=lib/plugin
       -DMYSQL_DATADIR=#{datadir}
       -DSYSCONFDIR=#{etc}
+      -DWITH_SYSTEM_LIBS=ON
       -DWITH_BOOST=boost
       -DWITH_EDITLINE=system
-      -DWITH_SSL=yes
+      -DWITH_ICU=system
+      -DWITH_LIBEVENT=system
+      -DWITH_LZ4=system
       -DWITH_PROTOBUF=system
+      -DWITH_SSL=system
+      -DWITH_ZLIB=system
+      -DWITH_ZSTD=system
       -DWITH_UNIT_TESTS=OFF
       -DENABLED_LOCAL_INFILE=1
       -DWITH_INNODB_MEMCACHED=ON
@@ -90,6 +83,15 @@ class Mysql < Formula
     (prefix/"mysql-test").cd do
       system "./mysql-test-run.pl", "status", "--vardir=#{Dir.mktmpdir}"
     end
+
+    # Remove libssl copies as the binaries use the keg anyway and they create problems for other applications
+    # Reported upstream at https://bugs.mysql.com/bug.php?id=103227
+    rm_rf lib/"libssl.dylib"
+    rm_rf lib/"libssl.1.1.dylib"
+    rm_rf lib/"libcrypto.1.1.dylib"
+    rm_rf lib/"libcrypto.dylib"
+    rm_rf lib/"plugin/libcrypto.1.1.dylib"
+    rm_rf lib/"plugin/libssl.1.1.dylib"
 
     # Remove the tests directory
     rm_rf prefix/"mysql-test"
@@ -116,8 +118,12 @@ class Mysql < Formula
   end
 
   def post_install
-    # Make sure the datadir exists
-    datadir.mkpath
+    # Make sure the var/mysql directory exists
+    (var/"mysql").mkpath
+
+    # Don't initialize database, it clashes when testing other MySQL-like implementations.
+    return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+
     unless (datadir/"mysql/general_log.CSM").exist?
       ENV["TMPDIR"] = nil
       system bin/"mysqld", "--initialize-insecure", "--user=#{ENV["USER"]}",
@@ -135,7 +141,7 @@ class Mysql < Formula
       To connect run:
           mysql -uroot
     EOS
-    if my_cnf = ["/etc/my.cnf", "/etc/mysql/my.cnf"].find { |x| File.exist? x }
+    if (my_cnf = ["/etc/my.cnf", "/etc/mysql/my.cnf"].find { |x| File.exist? x })
       s += <<~EOS
 
         A "#{my_cnf}" from another install may interfere with a Homebrew-built
@@ -145,52 +151,45 @@ class Mysql < Formula
     s
   end
 
-  plist_options :manual => "mysql.server start"
+  plist_options manual: "mysql.server start"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/mysqld_safe</string>
-        <string>--datadir=#{datadir}</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{datadir}</string>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/mysqld_safe</string>
+          <string>--datadir=#{datadir}</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>#{datadir}</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
-    # Fatal error: Please read "Security" section of the manual to find out how to run mysqld as root!
-    return if ENV["CI"]
-
-    # Expects datadir to be a completely clean dir, which testpath isn't.
-    dir = Dir.mktmpdir
-    system bin/"mysqld", "--initialize-insecure", "--user=#{ENV["USER"]}",
-    "--basedir=#{prefix}", "--datadir=#{dir}", "--tmpdir=#{dir}"
-
-    pid = fork do
-      exec bin/"mysqld", "--bind-address=127.0.0.1", "--datadir=#{dir}"
+    (testpath/"mysql").mkpath
+    (testpath/"tmp").mkpath
+    system bin/"mysqld", "--no-defaults", "--initialize-insecure", "--user=#{ENV["USER"]}",
+      "--basedir=#{prefix}", "--datadir=#{testpath}/mysql", "--tmpdir=#{testpath}/tmp"
+    port = free_port
+    fork do
+      system "#{bin}/mysqld", "--no-defaults", "--user=#{ENV["USER"]}",
+        "--datadir=#{testpath}/mysql", "--port=#{port}", "--tmpdir=#{testpath}/tmp"
     end
-    sleep 2
-
-    output = shell_output("curl 127.0.0.1:3306")
-    output.force_encoding("ASCII-8BIT") if output.respond_to?(:force_encoding)
-    assert_match version.to_s, output
-  ensure
-    unless ENV["CI"]
-      Process.kill(9, pid)
-      Process.wait(pid)
-    end
+    sleep 5
+    assert_match "information_schema",
+      shell_output("#{bin}/mysql --port=#{port} --user=root --password= --execute='show databases;'")
+    system "#{bin}/mysqladmin", "--port=#{port}", "--user=root", "--password=", "shutdown"
   end
 end

@@ -2,83 +2,185 @@ class Buku < Formula
   include Language::Python::Virtualenv
 
   desc "Powerful command-line bookmark manager"
-  homepage "https://github.com/jarun/Buku"
-  url "https://github.com/jarun/Buku/archive/v4.2.2.tar.gz"
-  sha256 "08866f284a03454d9ee5bbb332da62e6ae1dfbe83ada75092453a7fd04fe62b3"
-  revision 3
+  homepage "https://github.com/jarun/buku"
+  url "https://files.pythonhosted.org/packages/d5/af/90b27f5e932ae7bf7ccdc86f0619a8726cd61233258faac51caafe7116b8/buku-4.5.tar.gz"
+  sha256 "b148fd335fe532b46616587f5d7a5c338202b99ae71ae777a44591a1bc8063ae"
+  license "GPL-3.0-or-later"
+  revision 1
+  head "https://github.com/jarun/buku.git"
 
   bottle do
-    cellar :any
-    sha256 "507fdab1e9b0bb374131781c14a8ca7bf2317a52e25a2a23d14f646fefd433ba" => :catalina
-    sha256 "63bba11125015a071ffb492ae9ab49e818f915c31c26d34f0cb34cbf7d266da8" => :mojave
-    sha256 "225cba1f8dae1398e1b6f124dd7f7d0a486f006e56400f4c70cd1a5285891bd2" => :high_sierra
-    sha256 "f4bc52da40003f4d090fd2c0efbb86b6d351996a0972f3c20bcb969352b355ad" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "7c27aa8811abb25446408ae2ff7b9b23a52566de53eb28821f544b342c700618"
+    sha256 cellar: :any,                 big_sur:       "6337072398171994b7e0bfd0ca8535ba5492fdbb5836573539c283c8ce6ede70"
+    sha256 cellar: :any,                 catalina:      "5484288da6724aa9d73ce7ca2719e08013235e9cc852e6366b15ec1bc96944f9"
+    sha256 cellar: :any,                 mojave:        "9c1b39060e8c194c3a0afe38f30d766ffda32acd7e85b1ef70bd7357325348dc"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7e262cc71953e24ac9030abefa4423d0889297d0f7b02d08f3d06a4da1de2cfa"
   end
 
+  depends_on "rust" => :build
   depends_on "openssl@1.1"
-  depends_on "python"
-  unless OS.mac?
-    # libffi is needed for cffi
-    # pkg-config helps "setup.py" find libffi
-    # expect is needed for tests
+  depends_on "python@3.9"
+
+  uses_from_macos "expect" => :test
+  uses_from_macos "libffi"
+
+  on_linux do
     depends_on "pkg-config" => :build
-    depends_on "libffi"
-    depends_on "expect"
   end
 
-  resource "asn1crypto" do
-    url "https://files.pythonhosted.org/packages/c1/a9/86bfedaf41ca590747b4c9075bc470d0b2ec44fb5db5d378bc61447b3b6b/asn1crypto-1.2.0.tar.gz"
-    sha256 "87620880a477123e01177a1f73d0f327210b43a3cdbd714efcd2fa49a8d7b384"
+  resource "appdirs" do
+    url "https://files.pythonhosted.org/packages/d7/d8/05696357e0311f5b5c316d7b95f46c669dd9c15aaeecbb48c7d0aeb88c40/appdirs-1.4.4.tar.gz"
+    sha256 "7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"
+  end
+
+  resource "arrow" do
+    url "https://files.pythonhosted.org/packages/b5/4a/c61e6ea9df34e2a8791c7d27d34ce6cd3a1008d18bbae06bf9016223bfcd/arrow-1.0.2.tar.gz"
+    sha256 "5df8e632e9158c48f42f68a742068bcfc1c0181cbe7543e4cda6089bb287a305"
   end
 
   resource "beautifulsoup4" do
-    url "https://files.pythonhosted.org/packages/80/f2/f6aca7f1b209bb9a7ef069d68813b091c8c3620642b568dac4eb0e507748/beautifulsoup4-4.7.1.tar.gz"
-    sha256 "945065979fb8529dd2f37dbb58f00b661bdbcbebf954f93b32fdf5263ef35348"
+    url "https://files.pythonhosted.org/packages/6b/c3/d31704ae558dcca862e4ee8e8388f357af6c9d9acb0cad4ba0fbbd350d9a/beautifulsoup4-4.9.3.tar.gz"
+    sha256 "84729e322ad1d5b4d25f805bfa05b902dd96450f43842c4e99067d5e1369eb25"
   end
 
   resource "certifi" do
-    url "https://files.pythonhosted.org/packages/55/54/3ce77783acba5979ce16674fc98b1920d00b01d337cfaaf5db22543505ed/certifi-2018.11.29.tar.gz"
-    sha256 "47f9c83ef4c0c621eaef743f133f09fa8a74a9b75f037e8624f83bd1b6626cb7"
+    url "https://files.pythonhosted.org/packages/06/a9/cd1fd8ee13f73a4d4f491ee219deeeae20afefa914dfb4c130cfc9dc397a/certifi-2020.12.5.tar.gz"
+    sha256 "1a4995114262bffbc2413b159f2a1a480c969de6e6eb13ee966d470af86af59c"
   end
 
   resource "cffi" do
-    url "https://files.pythonhosted.org/packages/93/1a/ab8c62b5838722f29f3daffcc8d4bd61844aa9b5f437341cc890ceee483b/cffi-1.12.3.tar.gz"
-    sha256 "041c81822e9f84b1d9c401182e174996f0bae9991f33725d059b771744290774"
+    url "https://files.pythonhosted.org/packages/a8/20/025f59f929bbcaa579704f443a438135918484fffaacfaddba776b374563/cffi-1.14.5.tar.gz"
+    sha256 "fd78e5fee591709f32ef6edb9a015b4aa1a5022598e36227500c8f4e02328d9c"
+  end
+
+  resource "chardet" do
+    url "https://files.pythonhosted.org/packages/ee/2d/9cdc2b527e127b4c9db64b86647d567985940ac3698eeabc7ffaccb4ea61/chardet-4.0.0.tar.gz"
+    sha256 "0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa"
+  end
+
+  resource "click" do
+    url "https://files.pythonhosted.org/packages/27/6f/be940c8b1f1d69daceeb0032fee6c34d7bd70e3e649ccac0951500b4720e/click-7.1.2.tar.gz"
+    sha256 "d2b5255c7c6349bc1bd1e59e08cd12acbbd63ce649f2588755783aa94dfb6b1a"
   end
 
   resource "cryptography" do
-    url "https://files.pythonhosted.org/packages/f3/39/d3904df7c56f8654691c4ae1bdb270c1c9220d6da79bd3b1fbad91afd0e1/cryptography-2.4.2.tar.gz"
-    sha256 "05a6052c6a9f17ff78ba78f8e6eb1d777d25db3b763343a1ae89a7a8670386dd"
+    url "https://files.pythonhosted.org/packages/fa/2d/2154d8cb773064570f48ec0b60258a4522490fcb115a6c7c9423482ca993/cryptography-3.4.6.tar.gz"
+    sha256 "2d32223e5b0ee02943f32b19245b61a62db83a882f0e76cc564e1cec60d48f87"
+  end
+
+  resource "dominate" do
+    url "https://files.pythonhosted.org/packages/29/23/edf8e470f1053245c1aa99d92c8a3da9e83f6c7d3eb39205486965425be5/dominate-2.6.0.tar.gz"
+    sha256 "76ec2cde23700a6fc4fee098168b9dee43b99c2f1dd0ca6a711f683e8eb7e1e4"
+  end
+
+  resource "Flask" do
+    url "https://files.pythonhosted.org/packages/4e/0b/cb02268c90e67545a0e3a37ea1ca3d45de3aca43ceb7dbf1712fb5127d5d/Flask-1.1.2.tar.gz"
+    sha256 "4efa1ae2d7c9865af48986de8aeb8504bf32c7f3d6fdc9353d34b21f4b127060"
+  end
+
+  resource "Flask-Admin" do
+    url "https://files.pythonhosted.org/packages/79/a2/315f7657004ad65ebe13fe051afb15c5529a57bdce5f019401897e97bff7/Flask-Admin-1.5.7.tar.gz"
+    sha256 "145f59407d78319925e20f7c3021f60c71f0cacc98e916e52000845dc4c63621"
+  end
+
+  resource "Flask-API" do
+    url "https://files.pythonhosted.org/packages/41/3b/85c631237164be518c1d91fba082eda171e44d88f394e2a884b3c2a7113f/Flask-API-2.0.tar.gz"
+    sha256 "6986642e5b25b7def710ca9489ed2b88c94006bfc06eca01c78da7cf447e66e5"
+  end
+
+  resource "Flask-Bootstrap" do
+    url "https://files.pythonhosted.org/packages/88/53/958ce7c2aa26280b7fd7f3eecbf13053f1302ee2acb1db58ef32e1c23c2a/Flask-Bootstrap-3.3.7.1.tar.gz"
+    sha256 "cb08ed940183f6343a64e465e83b3a3f13c53e1baabb8d72b5da4545ef123ac8"
+  end
+
+  resource "flask-paginate" do
+    url "https://files.pythonhosted.org/packages/11/a6/327b4958b8fdd482927669053b9d52d0660e2f59231ab220c0636019c252/flask-paginate-0.8.1.tar.gz"
+    sha256 "31133c29c718aed95276425f7795d0a32b8d45a992ddd359c69600f22f869254"
+  end
+
+  resource "flask-reverse-proxy-fix" do
+    url "https://files.pythonhosted.org/packages/ce/ca/8ca4a400b5effa463abe7d51db3e98485addce1f04cafc746dea662e3b07/flask-reverse-proxy-fix-0.2.1.tar.gz"
+    sha256 "03ce3312d92f2b0073205e74bee1e6213640b44b1de730375d8cf478447e208c"
+  end
+
+  resource "Flask-WTF" do
+    url "https://files.pythonhosted.org/packages/2e/f4/3d9e1905ffad67e20ef4f5963d711e8e29ab9439120d7ffec3d2922020e3/Flask-WTF-0.14.3.tar.gz"
+    sha256 "d417e3a0008b5ba583da1763e4db0f55a1269d9dd91dcc3eb3c026d3c5dbd720"
   end
 
   resource "html5lib" do
-    url "https://files.pythonhosted.org/packages/85/3e/cf449cf1b5004e87510b9368e7a5f1acd8831c2d6691edd3c62a0823f98f/html5lib-1.0.1.tar.gz"
-    sha256 "66cb0dcfdbbc4f9c3ba1a63fdb511ffdbd4f513b2b6d81b80cd26ce6b3fb3736"
+    url "https://files.pythonhosted.org/packages/ac/b6/b55c3f49042f1df3dcd422b7f224f939892ee94f22abcf503a9b7339eaf2/html5lib-1.1.tar.gz"
+    sha256 "b2e5b40261e20f354d198eae92afc10d750afb487ed5e50f9c4eaf07c184146f"
   end
 
   resource "idna" do
-    url "https://files.pythonhosted.org/packages/ad/13/eb56951b6f7950cadb579ca166e448ba77f9d24efc03edd7e55fa57d04b7/idna-2.8.tar.gz"
-    sha256 "c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407"
+    url "https://files.pythonhosted.org/packages/ea/b7/e0e3c1c467636186c39925827be42f16fee389dc404ac29e930e9136be70/idna-2.10.tar.gz"
+    sha256 "b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"
+  end
+
+  resource "itsdangerous" do
+    url "https://files.pythonhosted.org/packages/68/1a/f27de07a8a304ad5fa817bbe383d1238ac4396da447fa11ed937039fa04b/itsdangerous-1.1.0.tar.gz"
+    sha256 "321b033d07f2a4136d3ec762eac9f16a10ccd60f53c0c91af90217ace7ba1f19"
+  end
+
+  resource "Jinja2" do
+    url "https://files.pythonhosted.org/packages/4f/e7/65300e6b32e69768ded990494809106f87da1d436418d5f1367ed3966fd7/Jinja2-2.11.3.tar.gz"
+    sha256 "a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6"
+  end
+
+  resource "MarkupSafe" do
+    url "https://files.pythonhosted.org/packages/b9/2e/64db92e53b86efccfaea71321f597fa2e1b2bd3853d8ce658568f7a13094/MarkupSafe-1.1.1.tar.gz"
+    sha256 "29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b"
+  end
+
+  resource "packaging" do
+    url "https://files.pythonhosted.org/packages/86/3c/bcd09ec5df7123abcf695009221a52f90438d877a2f1499453c6938f5728/packaging-20.9.tar.gz"
+    sha256 "5b327ac1320dc863dca72f4514ecc086f31186744b84a230374cc1fd776feae5"
+  end
+
+  resource "pyasn1" do
+    url "https://files.pythonhosted.org/packages/a4/db/fffec68299e6d7bad3d504147f9094830b704527a7fc098b721d38cc7fa7/pyasn1-0.4.8.tar.gz"
+    sha256 "aef77c9fb94a3ac588e87841208bdec464471d9871bd5050a287cc9a475cd0ba"
   end
 
   resource "pycparser" do
-    url "https://files.pythonhosted.org/packages/68/9e/49196946aee219aead1290e00d1e7fdeab8567783e83e1b9ab5585e6206a/pycparser-2.19.tar.gz"
-    sha256 "a988718abfad80b6b157acce7bf130a30876d27603738ac39f140993246b25b3"
+    url "https://files.pythonhosted.org/packages/0f/86/e19659527668d70be91d0369aeaa055b4eb396b0f387a4f92293a20035bd/pycparser-2.20.tar.gz"
+    sha256 "2d475327684562c3a96cc71adf7dc8c4f0565175cf86b6d7a404ff4c771f15f0"
+  end
+
+  resource "pyparsing" do
+    url "https://files.pythonhosted.org/packages/c1/47/dfc9c342c9842bbe0036c7f763d2d6686bcf5eb1808ba3e170afdb282210/pyparsing-2.4.7.tar.gz"
+    sha256 "c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"
+  end
+
+  resource "python-dateutil" do
+    url "https://files.pythonhosted.org/packages/be/ed/5bbc91f03fa4c839c4c7360375da77f9659af5f7086b7a7bdda65771c8e0/python-dateutil-2.8.1.tar.gz"
+    sha256 "73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"
+  end
+
+  resource "requests" do
+    url "https://files.pythonhosted.org/packages/6b/47/c14abc08432ab22dc18b9892252efaf005ab44066de871e72a38d6af464b/requests-2.25.1.tar.gz"
+    sha256 "27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"
   end
 
   resource "six" do
-    url "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz"
-    sha256 "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+    url "https://files.pythonhosted.org/packages/6b/34/415834bfdafca3c5f451532e8a8d9ba89a21c9743a0c59fbd0205c7f9426/six-1.15.0.tar.gz"
+    sha256 "30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"
   end
 
   resource "soupsieve" do
-    url "https://files.pythonhosted.org/packages/10/e5/ba6dae356c1ca793c08b2017e27cb43199c0fd8b18595e8abf977bbc8d5f/soupsieve-1.7.2.tar.gz"
-    sha256 "10687fc53eeb3518e01a0ac84d3d711da623d3298a3039459d3f649927c4a270"
+    url "https://files.pythonhosted.org/packages/54/b9/1584ee0cd971ea935447c87bbc9d195d981feec446dd0af799d9d95c9d86/soupsieve-2.2.tar.gz"
+    sha256 "407fa1e8eb3458d1b5614df51d9651a1180ea5fedf07feb46e45d7e25e6d6cdd"
   end
 
   resource "urllib3" do
-    url "https://files.pythonhosted.org/packages/b1/53/37d82ab391393565f2f831b8eedbffd57db5a718216f82f1a8b4d381a1c1/urllib3-1.24.1.tar.gz"
-    sha256 "de9529817c93f27c8ccbfead6985011db27bd0ddfcdb2d86f3f663385c6a9c22"
+    url "https://files.pythonhosted.org/packages/d7/8d/7ee68c6b48e1ec8d41198f694ecdc15f7596356f2ff8e6b1420300cf5db3/urllib3-1.26.3.tar.gz"
+    sha256 "de3eedaad74a2683334e282005cd8d7f22f4d55fa690a2a1020a416cb0a47e73"
+  end
+
+  resource "visitor" do
+    url "https://files.pythonhosted.org/packages/d7/58/785fcd6de4210049da5fafe62301b197f044f3835393594be368547142b0/visitor-0.1.3.tar.gz"
+    sha256 "2c737903b2b6864ebc6167eef7cf3b997126f1aa94bdf590f90f1436d23e480a"
   end
 
   resource "webencodings" do
@@ -86,14 +188,18 @@ class Buku < Formula
     sha256 "b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923"
   end
 
+  resource "Werkzeug" do
+    url "https://files.pythonhosted.org/packages/10/27/a33329150147594eff0ea4c33c2036c0eadd933141055be0ff911f7f8d04/Werkzeug-1.0.1.tar.gz"
+    sha256 "6c80b1e5ad3665290ea39320b91e1be1e0d5f60652b964a3070216de83d2e47c"
+  end
+
+  resource "WTForms" do
+    url "https://files.pythonhosted.org/packages/dd/3f/f25d26b1c66896e2876124a12cd8be8f606abf4e1890a20f3ca04e4a1555/WTForms-2.3.3.tar.gz"
+    sha256 "81195de0ac94fbc8368abbaf9197b88c4f3ffd6c2719b5bf5fc9da744f3d829c"
+  end
+
   def install
-    venv = virtualenv_create(libexec, "python3")
-    venv.pip_install resources
-
-    # Replace shebang with virtualenv python
-    inreplace "buku", "#!/usr/bin/env python3", "#!#{libexec}/bin/python"
-
-    bin.install "buku"
+    virtualenv_install_with_resources
     man1.install "buku.1"
     bash_completion.install "auto-completion/bash/buku-completion.bash"
     fish_completion.install "auto-completion/fish/buku.fish"
@@ -103,8 +209,11 @@ class Buku < Formula
   test do
     ENV["LC_ALL"] = "en_US.UTF-8"
     ENV["XDG_DATA_HOME"] = "#{testpath}/.local/share"
-    ENV["PYTHONIOENCODING"] = "utf-8" unless OS.mac?
-    expect = OS.mac? ? "/usr/bin/expect" : "#{Formula["expect"].opt_bin}/expect"
+
+    expect = "/usr/bin/expect"
+    on_linux do
+      expect = Formula["expect"].opt_bin/"expect"
+    end
 
     # Firefox exported bookmarks file
     (testpath/"bookmarks.html").write <<~EOS
@@ -126,6 +235,8 @@ class Buku < Formula
       spawn #{bin}/buku --nc --import bookmarks.html
       expect -re "DB file is being created at .*"
       expect "You should encrypt it."
+      expect "Generate auto-tag (YYYYMonDD)? (y/n): "
+      send "y\r"
       expect "Append tags when bookmark exist? (y/n): "
       send "y\r"
       expect "Add parent folder names as tags? (y/n): "
@@ -171,6 +282,22 @@ class Buku < Formula
 
     # Test database content and search
     result = shell_output("#{bin}/buku --np --sany Homebrew")
+    assert_match "https://github.com/Homebrew/brew", result
+    assert_match "The missing package manager for macOS", result
+
+    # Test bukuserver
+    result = shell_output("#{bin}/bukuserver --version")
+    assert_match version.to_s, result
+
+    port = free_port
+    fork do
+      $stdout.reopen("/dev/null")
+      $stderr.reopen("/dev/null")
+      exec "#{bin}/bukuserver run --host 127.0.0.1 --port #{port}"
+    end
+    sleep 10
+
+    result = shell_output("curl -s 127.0.0.1:#{port}/api/bookmarks")
     assert_match "https://github.com/Homebrew/brew", result
     assert_match "The missing package manager for macOS", result
   end

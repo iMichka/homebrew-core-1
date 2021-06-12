@@ -1,25 +1,21 @@
 class Asciidoctorj < Formula
   desc "Java wrapper and bindings for Asciidoctor"
   homepage "https://github.com/asciidoctor/asciidoctorj"
-  url "https://dl.bintray.com/asciidoctor/maven/org/asciidoctor/asciidoctorj/2.1.0/asciidoctorj-2.1.0-bin.zip"
-  sha256 "708bb954d09eeb862ed7627e743be8f96f2a67397c561ab56e85b6bc4650cc77"
+  url "https://search.maven.org/remotecontent?filepath=org/asciidoctor/asciidoctorj/2.5.1/asciidoctorj-2.5.1-bin.zip"
+  sha256 "9fcf2fef6023257aaac21a3b5d8379c080019b1a408e43419f61d507ecddc95b"
+  license "Apache-2.0"
 
-  bottle :unneeded
-
-  depends_on :java => "1.6+"
+  depends_on "openjdk"
 
   def install
     rm_rf Dir["bin/*.bat"] # Remove Windows files.
     libexec.install Dir["*"]
-
-    executable = libexec/"bin/asciidoctorj"
-    executable.chmod 0555
-    bin.write_exec_script executable
+    (bin/"asciidoctorj").write_env_script libexec/"bin/asciidoctorj", JAVA_HOME: Formula["openjdk"].opt_prefix
   end
 
   test do
     (testpath/"test.adoc").write <<~EOS
-      = This Is A Title
+      = AsciiDoc is Writing Zen
       Random J. Author <rjauthor@example.com>
       :icons: font
 
@@ -40,7 +36,9 @@ class Asciidoctorj < Formula
       - two
       - three
     EOS
-    system bin/"asciidoctorj", "-b", "pdf", "test.adoc"
-    assert_predicate testpath/"test.pdf", :exist?
+    system bin/"asciidoctorj", "-b", "html5", "-o", "test.html", "test.adoc"
+    assert_match "<h1>AsciiDoc is Writing Zen</h1>", File.read("test.html")
+    system bin/"asciidoctorj", "-r", "asciidoctor-pdf", "-b", "pdf", "-o", "test.pdf", "test.adoc"
+    assert_match "/Title (AsciiDoc is Writing Zen)", File.read("test.pdf", mode: "rb")
   end
 end

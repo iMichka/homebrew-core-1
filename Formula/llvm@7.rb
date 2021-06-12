@@ -3,40 +3,38 @@ class LlvmAT7 < Formula
   homepage "https://llvm.org/"
   url "https://releases.llvm.org/7.1.0/llvm-7.1.0.src.tar.xz"
   sha256 "1bcc9b285074ded87b88faaedddb88e6b5d6c331dfcfb57d7f3393dd622b3764"
-  revision 1
+  license "NCSA"
+  revision OS.mac? ? 2 : 5
 
   bottle do
-    cellar :any
-    sha256 "3db0aaac0de7c0e664288f14d051c69afb9294c1c7ceca616040ad662022c049" => :catalina
-    sha256 "50d86b01a2f722cc7570193e22ba852e640f90c781d31af6b4feb94643a87585" => :mojave
-    sha256 "b3786a0bb86a273e0c4b2f6591462dde29a634bc7978960b31752e9910730bd4" => :high_sierra
-    sha256 "d94919b00ed84237cad9392cbc7093924c3019e5ec673890bdb8b2985f7430ab" => :x86_64_linux
+    sha256 cellar: :any,                 catalina:     "400bb0bb43849d1f118d93a1647de6e9636934e941c43a6f4866258f764f42b3"
+    sha256 cellar: :any,                 mojave:       "564f25a86c519b737a795de441da6c6c14e9f026813a73149b7939c986241ba6"
+    sha256 cellar: :any,                 high_sierra:  "4170d8e522ce8aea22450c818bb68b6142671f4239262395d8f09d82621ee343"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "425c485e0f7b895088aeb6a7cc79dc7bdc68ffb64fe2c3628f2b398976f5a939"
   end
 
   # Clang cannot find system headers if Xcode CLT is not installed
-  pour_bottle? do
-    reason "The bottle needs the Xcode CLT to be installed."
-    satisfy { !OS.mac? || MacOS::CLT.installed? }
-  end
+  pour_bottle? only_if: :clt_installed
 
   keg_only :versioned_formula
 
   # https://llvm.org/docs/GettingStarted.html#requirement
   depends_on "cmake" => :build
-  depends_on :xcode => :build if OS.mac?
+  depends_on xcode: :build
+  depends_on arch: :x86_64
   depends_on "libffi"
 
   unless OS.mac?
-    depends_on "gcc" # needed for libstdc++
-    depends_on "glibc" if Formula["glibc"].installed? || OS::Linux::Glibc.system_version < Formula["glibc"].version
+    if Formula["glibc"].any_version_installed? || OS::Linux::Glibc.system_version < Formula["glibc"].version
+      depends_on "glibc"
+    end
     depends_on "binutils" # needed for gold and strip
     depends_on "libedit" # llvm requires <histedit.h>
     depends_on "libelf" # openmp requires <gelf.h>
     depends_on "ncurses"
     depends_on "libxml2"
-    depends_on "python@2"
+    depends_on "python@3.8"
     depends_on "zlib"
-    depends_on "libomp"
   end
 
   resource "clang" do
@@ -106,17 +104,6 @@ class LlvmAT7 < Formula
     # can almost be treated as an entirely different build from llvm.
     ENV.permit_arch_flags
 
-    unless OS.mac?
-      # see https://llvm.org/docs/HowToCrossCompileBuiltinsOnArm.html#the-cmake-try-compile-stage-fails
-      # Basically, the stage1 clang will try to locate a gcc toolchain and often
-      # get the default from /usr/local, which might contains an old version of
-      # gcc that can't build compiler-rt. This fixes the problem and, unlike
-      # setting the main project's cmake option -DGCC_INSTALL_PREFIX, avoid
-      # hardcoding the gcc path into the binary
-      inreplace "projects/compiler-rt/CMakeLists.txt", /(cmake_minimum_required.*\n)/,
-        "\\1add_compile_options(\"--gcc-toolchain=#{Formula["gcc"].opt_prefix}\")"
-    end
-
     args = %W[
       -DLIBOMP_ARCH=x86_64
       -DLINK_POLLY_INTO_TOOLS=ON
@@ -134,6 +121,7 @@ class LlvmAT7 < Formula
       -DFFI_INCLUDE_DIR=#{Formula["libffi"].opt_lib}/libffi-#{Formula["libffi"].version}/include
       -DFFI_LIBRARY_DIR=#{Formula["libffi"].opt_lib}
       -DLLVM_CREATE_XCODE_TOOLCHAIN=ON
+      -DLIBOMP_INSTALL_ALIASES=OFF
     ]
 
     if OS.mac?
@@ -169,14 +157,11 @@ class LlvmAT7 < Formula
     man1.install_symlink share/"clang/tools/scan-build/man/scan-build.1"
 
     # install llvm python bindings
-    (lib/"python2.7/site-packages").install buildpath/"bindings/python/llvm"
-    (lib/"python2.7/site-packages").install buildpath/"tools/clang/bindings/python/clang"
+    xz = OS.mac? ? "2.7": "3.8"
+    (lib/"python#{xz}/site-packages").install buildpath/"bindings/python/llvm"
+    (lib/"python#{xz}/site-packages").install buildpath/"tools/clang/bindings/python/clang"
 
     unless OS.mac?
-      # Remove conflicting libraries.
-      # libgomp.so conflicts with gcc.
-      rm lib/"libgomp.so"
-
       # Strip executables/libraries/object files to reduce their size
       system("strip", "--strip-unneeded", "--preserve-dates", *(Dir[bin/"**/*", lib/"**/*"]).select do |f|
         f = Pathname.new(f)
@@ -185,10 +170,11 @@ class LlvmAT7 < Formula
     end
   end
 
-  def caveats; <<~EOS
-    To use the bundled libc++ please add the following LDFLAGS:
-      LDFLAGS="-L#{opt_lib} -Wl,-rpath,#{opt_lib}"
-  EOS
+  def caveats
+    <<~EOS
+      To use the bundled libc++ please add the following LDFLAGS:
+        LDFLAGS="-L#{opt_lib} -Wl,-rpath,#{opt_lib}"
+    EOS
   end
 
   test do
@@ -211,6 +197,7 @@ class LlvmAT7 < Formula
 
     system "#{bin}/clang", "-L#{lib}", "-fopenmp", "-nobuiltininc",
                            "-I#{lib}/clang/#{clean_version}/include",
+                           *("-Wl,-rpath=#{lib}" unless OS.mac?),
                            "omptest.c", "-o", "omptest", *ENV["LDFLAGS"].split
     testresult = shell_output("./omptest")
 

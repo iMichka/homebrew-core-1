@@ -1,16 +1,18 @@
 class Coreutils < Formula
   desc "GNU File, Shell, and Text utilities"
   homepage "https://www.gnu.org/software/coreutils"
-  url "https://ftp.gnu.org/gnu/coreutils/coreutils-8.31.tar.xz"
-  mirror "https://ftpmirror.gnu.org/coreutils/coreutils-8.31.tar.xz"
-  sha256 "ff7a9c918edce6b4f4b2725e3f9b37b0c4d193531cac49a48b56c4d0d3a9e9fd"
+  url "https://ftp.gnu.org/gnu/coreutils/coreutils-8.32.tar.xz"
+  mirror "https://ftpmirror.gnu.org/coreutils/coreutils-8.32.tar.xz"
+  sha256 "4458d8de7849df44ccab15e16b1548b285224dbba5f08fac070c1c0e0bcc4cfa"
+  license "GPL-3.0-or-later"
 
   bottle do
-    rebuild 1
-    sha256 "7262e4c76483ea796454db828c25955be1e6b2bc8e056ba1dd6e92bfe1118da5" => :catalina
-    sha256 "05ae58c26a53c2dfa2d9d45943b9d21753eea59609f0a48caa59713d6f6392d7" => :mojave
-    sha256 "5cba7394f1995fad0f6215a7618f65983dcf84b93b076af18d09354051320fb2" => :high_sierra
-    sha256 "24184898f91635ea03f1522cfd66f9f50d2b1acbd3b51153f1764ba473038897" => :x86_64_linux
+    rebuild 2
+    sha256 arm64_big_sur: "e7d88d2b7a91a57dfd37c2ea14752d1bb116f25694eab1161d6e8088f7db5921"
+    sha256 big_sur:       "371ec57703b3646e0113331308b6e03617c2a7f91e15e113380b605455daba20"
+    sha256 catalina:      "7a97ad96dfbe6abbb5c94424518a077e040af8a77d1946ca960a5f33cd237551"
+    sha256 mojave:        "10fbad2e35846c7e835cb979b5beb9edf07f3a9742ddcc3c28d9abd5fe9ccb1b"
+    sha256 x86_64_linux:  "0488508e9bf2ddd26b333ce3afc2b3ed98d5f711a4b6950012a1bf5587eb171f"
   end
 
   head do
@@ -23,31 +25,33 @@ class Coreutils < Formula
     depends_on "texinfo" => :build
     depends_on "wget" => :build
     depends_on "xz" => :build
-    depends_on "gperf" => :build unless OS.mac?
   end
 
-  conflicts_with "aardvark_shell_utils", :because => "both install `realpath` binaries"
-  conflicts_with "b2sum", :because => "both install `b2sum` binaries"
-  conflicts_with "ganglia", :because => "both install `gstat` binaries"
-  conflicts_with "gegl", :because => "both install `gcut` binaries"
-  conflicts_with "idutils", :because => "both install `gid` and `gid.1`"
-  conflicts_with "md5sha1sum", :because => "both install `md5sum` and `sha1sum` binaries"
-  conflicts_with "truncate", :because => "both install `truncate` binaries"
+  uses_from_macos "gperf" => :build
+
+  on_linux do
+    depends_on "attr"
+  end
+
+  conflicts_with "aardvark_shell_utils", because: "both install `realpath` binaries"
+  conflicts_with "b2sum", because: "both install `b2sum` binaries"
+  conflicts_with "ganglia", because: "both install `gstat` binaries"
+  conflicts_with "gdu", because: "both install `gdu` binaries"
+  conflicts_with "gegl", because: "both install `gcut` binaries"
+  conflicts_with "idutils", because: "both install `gid` and `gid.1`"
+  conflicts_with "md5sha1sum", because: "both install `md5sum` and `sha1sum` binaries"
+  conflicts_with "truncate", because: "both install `truncate` binaries"
+  conflicts_with "uutils-coreutils", because: "coreutils and uutils-coreutils install the same binaries"
 
   def install
-    # Fix configure: error: you should not run configure as root
-    ENV["FORCE_UNSAFE_CONFIGURE"] = "1" if ENV["CI"]
-
     system "./bootstrap" if build.head?
 
     args = %W[
       --prefix=#{prefix}
       --program-prefix=g
       --without-gmp
+      --without-selinux
     ]
-
-    # Work around a gnulib issue with macOS Catalina
-    args << "gl_cv_func_ftello_works=yes"
 
     system "./configure", *args
     system "make", "install"
@@ -67,10 +71,8 @@ class Coreutils < Formula
       b2sum base32 chcon hostid md5sum nproc numfmt pinky ptx realpath runcon
       sha1sum sha224sum sha256sum sha384sum sha512sum shred shuf stdbuf tac timeout truncate
     ]
-    unless OS.mac?
-      no_conflict << "dir"
-      no_conflict << "dircolors"
-      no_conflict << "vdir"
+    on_linux do
+      no_conflict += ["dir", "dircolors", "vdir"]
     end
     no_conflict.each do |cmd|
       bin.install_symlink "g#{cmd}" => cmd
@@ -79,7 +81,10 @@ class Coreutils < Formula
   end
 
   def caveats
-    msg = OS.mac? ? "Commands also provided by macOS" : "All commands"
+    msg = "Commands also provided by macOS"
+    on_linux do
+      msg = "All commands"
+    end
     <<~EOS
       #{msg} have been installed with the prefix "g".
       If you need to use these commands with their normal names, you

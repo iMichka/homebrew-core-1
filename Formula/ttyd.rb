@@ -1,30 +1,28 @@
 class Ttyd < Formula
   desc "Command-line tool for sharing terminal over the web"
   homepage "https://tsl0922.github.io/ttyd/"
-  url "https://github.com/tsl0922/ttyd/archive/1.5.2.tar.gz"
-  sha256 "b5b62ec2ce08add0173e6d1dfdd879e55f02f9490043e89f389981a62e87d376"
-  revision 3
+  url "https://github.com/tsl0922/ttyd/archive/1.6.3.tar.gz"
+  sha256 "1116419527edfe73717b71407fb6e06f46098fc8a8e6b0bb778c4c75dc9f64b9"
+  license "MIT"
+  revision 1
   head "https://github.com/tsl0922/ttyd.git"
 
   bottle do
-    cellar :any
-    sha256 "c91b3fe23a0aeb86888b8ad9e2990f0a0f43ee15cb58122c12b23d4e7309c284" => :catalina
-    sha256 "0ed2b2b2c3bd4767d7d05e0ff104a2556bf52d8015dc4e1b629641d81e4b7e71" => :mojave
-    sha256 "08ae9dbd7cd921f15031fb15c373cc64bd05c67ad9b7a13125b41aa735aef263" => :high_sierra
-    sha256 "8c0f0dffde21ef3b6ac68e18cd0ac02e5f7c8642bf68df645c5b9854e3a16fdf" => :x86_64_linux
+    sha256 arm64_big_sur: "17d9729f4c4c7162f8adeb361a64c30c2cfd5ed987728dd0692efb1096d9c5fc"
+    sha256 big_sur:       "3a8e47c44c2c09a23b83bf834a389d43907493bde07db0eea1ebb42b505df6dc"
+    sha256 catalina:      "918b9ae7215da2a72e88ff0456cf8be93e61249fadd97f1cd9ec09e71152b1ba"
+    sha256 mojave:        "d550e8e2cbae8483440e802a3d02d4beba1aec4c30d58e6cd27c07d69aafbe0f"
+    sha256 x86_64_linux:  "ed2291552a03df122712f7e4779c53e0e2760bb2b78157eaa63ff70c40eb8f42"
   end
 
   depends_on "cmake" => :build
-  depends_on "pkg-config" => :build
   depends_on "json-c"
   depends_on "libevent"
   depends_on "libuv"
   depends_on "libwebsockets"
   depends_on "openssl@1.1"
-  uses_from_macos "vim" # needed for xxd
 
-  # Link against shared libwebsockets library
-  patch :DATA unless OS.mac?
+  uses_from_macos "vim" # needed for xxd
 
   def install
     system "cmake", ".",
@@ -37,35 +35,3 @@ class Ttyd < Formula
     assert_match version.to_s, shell_output("#{bin}/ttyd --version")
   end
 end
-__END__
-diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 4929624..9dd0ea2 100644
---- a/CMakeLists.txt
-+++ b/CMakeLists.txt
-@@ -33,13 +33,13 @@ set(LIBWEBSOCKETS_MIN_VERSION 1.7.0)
- set(SOURCE_FILES src/server.c src/http.c src/protocol.c src/utils.c)
-
- find_package(OpenSSL REQUIRED)
--find_package(Libwebsockets ${LIBWEBSOCKETS_MIN_VERSION} QUIET)
-+#find_package(Libwebsockets ${LIBWEBSOCKETS_MIN_VERSION} QUIET)
-
- find_package(PkgConfig)
-
--if(Libwebsockets_FOUND)
--    set(LIBWEBSOCKETS_INCLUDE_DIR ${LIBWEBSOCKETS_INCLUDE_DIR} ${LIBWEBSOCKETS_INCLUDE_DIRS})
--else() # try to find libwebsockets with pkg-config
-+#if(Libwebsockets_FOUND)
-+#    set(LIBWEBSOCKETS_INCLUDE_DIR ${LIBWEBSOCKETS_INCLUDE_DIR} ${LIBWEBSOCKETS_INCLUDE_DIRS})
-+#else() # try to find libwebsockets with pkg-config
-     pkg_check_modules(Libwebsockets REQUIRED libwebsockets>=${LIBWEBSOCKETS_MIN_VERSION})
-     find_path(LIBWEBSOCKETS_INCLUDE_DIR libwebsockets.h
-             HINTS ${LIBWEBSOCKETS_INCLUDEDIR} ${LIBWEBSOCKETS_INCLUDE_DIRS})
-@@ -48,7 +48,7 @@ else() # try to find libwebsockets with pkg-config
-     include(FindPackageHandleStandardArgs)
-     find_package_handle_standard_args(LIBWEBSOCKETS DEFAULT_MSG LIBWEBSOCKETS_LIBRARIES LIBWEBSOCKETS_INCLUDE_DIR)
-     mark_as_advanced(LIBWEBSOCKETS_INCLUDE_DIR LIBWEBSOCKETS_LIBRARIES)
--endif()
-+#endif()
-
- pkg_check_modules(PC_JSON-C REQUIRED json-c)
- find_path(JSON-C_INCLUDE_DIR json.h

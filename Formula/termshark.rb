@@ -1,15 +1,15 @@
 class Termshark < Formula
   desc "Terminal UI for tshark, inspired by Wireshark"
   homepage "https://termshark.io"
-  url "https://github.com/gcla/termshark/archive/v2.0.2.tar.gz"
-  sha256 "36e45dfeb97f89379bda5be6bfe69c46e5c4211674120977e7b0033f5d90321a"
+  url "https://github.com/gcla/termshark/archive/v2.2.0.tar.gz"
+  sha256 "deefdb0b65e5d5b97c305cf280770724542f8dd122502f616e394c62c91db0c4"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e18358cf1f36863654432e2cdb4a0480450b84d7303c06ca5a5d8d6e3f700fb1" => :catalina
-    sha256 "8e06abc39790211a9af567b0fa7d4dc64e87963d0177329fa1102c2bc77e4760" => :mojave
-    sha256 "afcf0a6baa316d5df18162a32b8630d8c10d96e063545b59dbe4409470d726e2" => :high_sierra
-    sha256 "9ebc5b161156c5eaf9896f4d4c7b2a15de7191da556c5dd5a5d1ec8b6b61f5ee" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, big_sur:      "c596db102b072f39e1e61c41ac2d09d616f65bc4e3b7a8ca6d0648c8a93f9808"
+    sha256 cellar: :any_skip_relocation, catalina:     "0422a97e0be00df3518156332b95051687c24b53fbff5946f814fd5c6f96f5da"
+    sha256 cellar: :any_skip_relocation, mojave:       "f0c8ee7fdb686c2bfc788bc661d0e190af1146ebcc0960365369ad764e0ce4d2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "f64f73bb6405bbba580e02990986ac43858e0f2d70447d2a7bdb9deb54cbc96f"
   end
 
   depends_on "go" => :build
@@ -29,7 +29,7 @@ class Termshark < Formula
   end
 
   test do
-    assert_match "termshark v2.0.2",
+    assert_match "termshark v#{version}",
                  shell_output("#{bin}/termshark -v --pass-thru=false")
 
     # Build a test pcap programmatically. Termshark will read this
@@ -72,7 +72,7 @@ class Termshark < Formula
     system [
       "#{bin}/termshark -r #{HOMEBREW_TEMP}/termshark-test.pcap",
       " | grep 192.168.44.123",
-    ].join("")
+    ].join
 
     # Pretend to be a tty and run termshark with the temporary pcap. Queue up
     # 'q' and 'enter' to terminate.  Rely on the exit code of termshark, which
@@ -88,13 +88,13 @@ class Termshark < Formula
       "#{bin}/termshark -r #{HOMEBREW_TEMP}/termshark-test.pcap",
       "\\\"',pty,setsid,ctty > /dev/null",
     ]
-    system testcmds.join("")
+    system testcmds.join
 
     # "Scrape" the terminal UI for a specific IP address contained in the test
     # pcap. Since the output contains ansi terminal codes, use the -a flag to
     # grep to ensure it's not treated as binary input.
     testcmds[5] = "\\\"',pty,setsid,ctty | grep -a 192.168.44.123 > /dev/null"
-    system testcmds.join("")
+    system testcmds.join
 
     # Clean up.
     File.delete("#{HOMEBREW_TEMP}/termshark-test.pcap")

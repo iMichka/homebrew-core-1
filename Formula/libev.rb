@@ -1,17 +1,22 @@
 class Libev < Formula
   desc "Asynchronous event library"
   homepage "http://software.schmorp.de/pkg/libev.html"
-  url "http://dist.schmorp.de/libev/Attic/libev-4.27.tar.gz"
-  mirror "https://fossies.org/linux/misc/libev-4.27.tar.gz"
-  sha256 "2d5526fc8da4f072dd5c73e18fbb1666f5ef8ed78b73bba12e195cfdd810344e"
+  url "http://dist.schmorp.de/libev/Attic/libev-4.33.tar.gz"
+  mirror "https://fossies.org/linux/misc/libev-4.33.tar.gz"
+  sha256 "507eb7b8d1015fbec5b935f34ebed15bf346bed04a11ab82b8eee848c4205aea"
+
+  livecheck do
+    url "http://dist.schmorp.de/libev/"
+    regex(/href=.*?libev[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "4ceceecddfe182324e9aac9ee12ce26c98d7702b54fcc8be10d8525a2d1f7fd6" => :catalina
-    sha256 "4cfba6111b46c11b0dc714e3e6905c54f9724d84f364acce1525b7465ca4a83b" => :mojave
-    sha256 "c789236eff8445d3de322a7361677519ef52fc453dc135c0d3b2dea493d126f4" => :high_sierra
-    sha256 "c3c3d536d0cc1a07b4bffed95b48c958e562f0430c05e2c362fa1b96c95234ae" => :sierra
-    sha256 "4649219b74add036c4fd3c898348699119a4172db8cc703dc18424a2d0ea0d1f" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "8ed86bdd0ff3b47f8802b251a9ca61770ffc4c9b0be964f41f50955256b5bb53"
+    sha256 cellar: :any, big_sur:       "95ddf4b85924a6a10d4a88b6eb52616fa8375e745c99d0752618d5bb82f5248a"
+    sha256 cellar: :any, catalina:      "e5481e2ba48282bffb5ecc059f0ddddd9807400593e849ed4b48b1fed3a14698"
+    sha256 cellar: :any, mojave:        "f6cfb8c6bb1219f4a54d36113ada7cc7e1e446d5a207bc77d69ac30d9cfe391f"
+    sha256 cellar: :any, high_sierra:   "f623fc2f4dc3a0980b4733945eb2025cd40636a6d4f5e5d75ae5f89e0b7b07bd"
+    sha256 cellar: :any, x86_64_linux:  "0a2e30ca1379034e45954d63729f03aa55ad265f602d7f3e86d31aa78b81b292"
   end
 
   def install
@@ -52,7 +57,7 @@ class Libev < Formula
         return 0;
       }
     EOS
-    system ENV.cc, "-I#{include}", "-L#{lib}", "-lev", "-o", "test", "test.c"
+    system ENV.cc, "test.c", "-I#{include}", "-L#{lib}", "-lev", "-o", "test"
     input = "hello, world\n"
     assert_equal input, pipe_output("./test", input, 0)
   end

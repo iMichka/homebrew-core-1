@@ -1,14 +1,15 @@
 class Gedit < Formula
-  desc "The GNOME text editor"
+  desc "GNOME text editor"
   homepage "https://wiki.gnome.org/Apps/Gedit"
-  url "https://download.gnome.org/sources/gedit/3.34/gedit-3.34.1.tar.xz"
-  sha256 "ebf9ef4e19831699d26bb93ce029edfed65416d7c11147835fc370d73428d5c6"
+  url "https://download.gnome.org/sources/gedit/40/gedit-40.1.tar.xz"
+  sha256 "55e394a82cb65678b1ab49526cf5bd43f00d8fba21476a4849051a8e137d3691"
+  license "GPL-2.0-or-later"
 
   bottle do
-    sha256 "be10a5f9c19532b6989c3c7855c450d9ce64527ea6e42b01d22928e09d4f47fa" => :catalina
-    sha256 "fef39bc1e61bfd3d1bb26b66fafdece9be765e87ad9e8a83b59a60c661e69d6a" => :mojave
-    sha256 "e2e0f82401cea741c126b60862a7e7066578019c06eb28f319c17361dda99c5b" => :high_sierra
-    sha256 "db9975734a0f4b316177ee07ad507ce589f1687229e37ffa4123423fe39ef117" => :x86_64_linux
+    sha256 arm64_big_sur: "944db5b9131011efb9ac1ca370342b21895bc8c2220138c90fd137cc883ccc1e"
+    sha256 big_sur:       "7cee9c8a408d1f8bfc28f05475babd0e9d0236cfb2411042c56112c97d6ccbd7"
+    sha256 catalina:      "f36d6723b16e6271e0c5327b6d7723ed501c51bd1ab07a4c3c125ed877ff4e99"
+    sha256 mojave:        "5a842c19e3ff549f23d6854265423064666686548356d0c188df63b741d49d77"
   end
 
   depends_on "itstool" => :build
@@ -31,12 +32,13 @@ class Gedit < Formula
   depends_on "libsoup"
   depends_on "libxml2"
   depends_on "pango"
+  depends_on "tepl"
 
   def install
     ENV["DESTDIR"] = "/"
 
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
     end
@@ -52,10 +54,10 @@ class Gedit < Formula
     system bin/"gedit", "--version"
     # API test
     (testpath/"test.c").write <<~EOS
-      #include <gedit/gedit-utils.h>
+      #include <gedit/gedit-debug.h>
 
       int main(int argc, char *argv[]) {
-        gchar *text = gedit_utils_make_valid_utf8("test text");
+        gedit_debug_init();
         return 0;
       }
     EOS
@@ -91,7 +93,7 @@ class Gedit < Formula
       -I#{gtksourceview4.opt_include}/gtksourceview-4
       -I#{gtkx3.opt_include}/gtk-3.0
       -I#{harfbuzz.opt_include}/harfbuzz
-      -I#{OS.mac? ? include : opt_include}/gedit-3.14
+      -I#{OS.mac? ? include : opt_include}/gedit-40.0
       -I#{libepoxy.opt_include}
       -I#{libffi.opt_lib}/libffi-3.0.13/include
       -I#{libpeas.opt_include}/libpeas-1.0
@@ -116,7 +118,7 @@ class Gedit < Formula
       -lcairo-gobject
       -lgdk-3
       -lgdk_pixbuf-2.0
-      -lgedit-3.14
+      -lgedit-40.0
       -lgio-2.0
       -lgirepository-1.0
       -lglib-2.0
@@ -129,7 +131,9 @@ class Gedit < Formula
       -lpeas-1.0
       -lpeas-gtk-1.0
     ]
-    flags << "-lintl" if OS.mac?
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

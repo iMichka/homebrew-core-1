@@ -1,28 +1,34 @@
 class NanopbGenerator < Formula
   desc "C library for encoding and decoding Protocol Buffer messages"
   homepage "https://jpa.kapsi.fi/nanopb/docs/index.html"
-  url "https://jpa.kapsi.fi/nanopb/download/nanopb-0.3.9.4.tar.gz"
-  sha256 "6d0c2d41ff8bdb0a4742fb5064071c4d8da8fa1942135f0480a5ac63ef641b12"
+  url "https://jpa.kapsi.fi/nanopb/download/nanopb-0.4.5.tar.gz"
+  sha256 "7efc553d3d861bceb1221f79d29b03e4353f0df2db690cbced0f4a81882d95fd"
+  license "Zlib"
+
+  livecheck do
+    url "https://jpa.kapsi.fi/nanopb/download/"
+    regex(/href=.*?nanopb[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ce21e0da87d3842dcf0694864c7e7e7874a6bb41d58e92acf7f017746c7ffe67" => :catalina
-    sha256 "ce21e0da87d3842dcf0694864c7e7e7874a6bb41d58e92acf7f017746c7ffe67" => :mojave
-    sha256 "ce21e0da87d3842dcf0694864c7e7e7874a6bb41d58e92acf7f017746c7ffe67" => :high_sierra
-    sha256 "bfad8fd0c92916c253d773aacfc1f2d027efdad9e81231b682116a0327ff2370" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6e52f0be723f759324edec9d1f9fcffafbe7c84f2d3547d592d606f2f330b061"
+    sha256 cellar: :any_skip_relocation, big_sur:       "3619dec5a99713f7b2afcccb631e04b4a6cfd4cf07b140fda95d32e7405038a1"
+    sha256 cellar: :any_skip_relocation, catalina:      "fc7ebaa9f8ba1b2360c5cdfe36d08db127abfce401bbecba1797b1bf2047a236"
+    sha256 cellar: :any_skip_relocation, mojave:        "b9c33b74a6363131e3e0e9ffc1e91a71a53433e470c78703726ccbd7e2050caa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b085e1dc97496d9f49db598585d3a6981cf3e1f0277185946421cd15281dfed8"
   end
 
   depends_on "protobuf"
-  depends_on "python"
+  depends_on "python@3.9"
 
   conflicts_with "mesos",
-    :because => "they depend on an incompatible version of protobuf"
+    because: "they depend on an incompatible version of protobuf"
 
   def install
     cd "generator" do
       system "make", "-C", "proto"
-      inreplace "nanopb_generator.py", %r{^#!/usr/bin/env python$},
-                                       "#!/usr/bin/env python3"
+      inreplace "nanopb_generator.py", %r{^#!/usr/bin/env python3$},
+                                       "#!/usr/bin/env #{Formula["python@3.9"].opt_bin}/python3"
       libexec.install "nanopb_generator.py", "protoc-gen-nanopb", "proto"
       bin.install_symlink libexec/"protoc-gen-nanopb", libexec/"nanopb_generator.py"
     end
@@ -36,10 +42,11 @@ class NanopbGenerator < Formula
         required string test_field = 1;
       }
     EOS
+
     system Formula["protobuf"].bin/"protoc",
       "--proto_path=#{testpath}", "--plugin=#{bin}/protoc-gen-nanopb",
       "--nanopb_out=#{testpath}", testpath/"test.proto"
-    system "grep", "test_field", testpath/"test.pb.c"
-    system "grep", "test_field", testpath/"test.pb.h"
+    system "grep", "Test", testpath/"test.pb.c"
+    system "grep", "Test", testpath/"test.pb.h"
   end
 end

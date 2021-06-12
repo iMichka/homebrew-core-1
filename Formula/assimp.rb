@@ -1,42 +1,27 @@
 class Assimp < Formula
   desc "Portable library for importing many well-known 3D model formats"
-  homepage "http://www.assimp.org"
-  url "https://github.com/assimp/assimp/archive/v5.0.0.tar.gz"
-  sha256 "b0110a91650d6bb4000e3d5c2185bf77b0ff0a2e7a284bc2c4af81b33988b63c"
+  homepage "https://www.assimp.org/"
+  url "https://github.com/assimp/assimp/archive/v5.0.1.tar.gz"
+  sha256 "11310ec1f2ad2cd46b95ba88faca8f7aaa1efe9aa12605c55e3de2b977b3dbfc"
+  license :cannot_represent
   head "https://github.com/assimp/assimp.git"
 
   bottle do
-    cellar :any
-    sha256 "fe46160da97212c37c91e5798d70c8d0ff25bb551034919f54bfca92eb740eb3" => :catalina
-    sha256 "de688cc4a769519596543c4fcb6c6da9811dc98bd9fe068d358337361d7ad558" => :mojave
-    sha256 "05192d6a70b625792264ceca37da758e1a3ffeab95551968a4df53635eb0d1a3" => :high_sierra
-    sha256 "06429c589a3cbffcd3392ab8ffcc2717cb7d00e72a6fafad1267373dcd27de13" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "0571a9c07e7166cbfbd2c12b17f121c718204491501f268cdd904791df3c3697"
+    sha256 cellar: :any,                 big_sur:       "8cd36113e1e7db18e625e652a522374bf6158306254f31627f2e8f067ae665db"
+    sha256 cellar: :any,                 catalina:      "b2450bc0cc287a25a2e4ca42ff229ee104a6de51ef3a8cc02603850572126f18"
+    sha256 cellar: :any,                 mojave:        "4ee11342b9d284810e88828be1662ee5be09a161f2c1353648e63255bbf4375b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2e3ac1d327084657319b78eb9c6f6e9ca6b8d700ca0dc59461676805be2fa733"
   end
 
-  depends_on "boost" => :build
   depends_on "cmake" => :build
+
   uses_from_macos "zlib"
-
-  # Fix "unzip.c:150:11: error: unknown type name 'z_crc_t'"
-  # Upstream PR from 12 Dec 2017 "unzip: fix build with older zlib"
-  if MacOS.version <= :el_capitan
-    patch do
-      url "https://github.com/assimp/assimp/pull/1634.patch?full_index=1"
-      sha256 "79b93f785ee141dc2f56d557b2b8ee290eed0afc7dd373ad84715c6c9aa23460"
-    end
-  end
-
-  # Fix CMake error "The imported target "assimp::assimp" references the file
-  # "/usr/local/lib/libassimp.dylib.5""
-  # Upstream PR from 11 Nov 2019 "Fix shared lib name on macOS"
-  patch do
-    url "https://github.com/assimp/assimp/pull/2765.patch?full_index=1"
-    sha256 "4c8102fea4af720f65d420aa883d60e6ed0f9eb8309938793e82de69d11a23dc"
-  end
 
   def install
     args = std_cmake_args
     args << "-DASSIMP_BUILD_TESTS=OFF"
+    args << "-DCMAKE_INSTALL_RPATH=#{rpath}"
     system "cmake", *args
     system "make", "install"
   end

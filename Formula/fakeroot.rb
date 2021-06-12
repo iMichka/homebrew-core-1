@@ -1,20 +1,29 @@
 class Fakeroot < Formula
   desc "Provide a fake root environment"
   homepage "https://tracker.debian.org/pkg/fakeroot"
-  url "https://deb.debian.org/debian/pool/main/f/fakeroot/fakeroot_1.23.orig.tar.xz"
-  sha256 "009cd6696a931562cf1c212bb57ca441a4a2d45cd32c3190a35c7ae98506f4f6"
+  url "https://deb.debian.org/debian/pool/main/f/fakeroot/fakeroot_1.24.orig.tar.gz"
+  sha256 "2e045b3160370b8ab4d44d1f8d267e5d1d555f1bb522d650e7167b09477266ed"
+  license "GPL-3.0"
 
-  bottle do
-    cellar :any
-    sha256 "3196d024b09ed9fed851d173695b5909fbe883e10c14cc9207b10eb4ba9503a7" => :catalina
-    sha256 "3451446e08a5a0dcc125fac9ec5e076abb7859331a1ef63afeb3130cdc1665be" => :mojave
-    sha256 "ec1b436ab733127e356e7b7f5c80ea4ef04817e13c6715f4321a46051f67ef12" => :high_sierra
-    sha256 "7fc1ccead9bbcbd8f47d166830ce2ea0efcb6e60cd2fe69ae356a175028077a6" => :sierra
-    sha256 "4e0afd9c97c78fa0bf2c16420d21d26e4320a0a3eac94ba381b132f701ea24dc" => :el_capitan
-    sha256 "f58656ea3963e17fe42b2055524fbe8e9235a66f4c7da0549bc93cd9d086c6f6" => :x86_64_linux
+  livecheck do
+    url "https://deb.debian.org/debian/pool/main/f/fakeroot/"
+    regex(/href=.*?fakeroot[._-]v?(\d+(?:\.\d+)+)\.orig\.t/i)
   end
 
-  uses_from_macos "libcap"
+  bottle do
+    sha256 cellar: :any, catalina:     "c72ae187158b6cce73311fee527ba8bf8d2f0e18340bd66eef57b50b3d45c275"
+    sha256 cellar: :any, mojave:       "6c23e4c601af569c2de802cac685de5d18e6ebafcb53e6c53107aa3feb3d1527"
+    sha256 cellar: :any, high_sierra:  "df9be392f3579464893be013744b5aa40a7e4e91e01155bd1547e4104d381640"
+  end
+
+  # Does not build. Mac support looks abandoned since 2013
+  # Initial mac support: https://github.com/mackyle/fakeroot
+  # https://salsa.debian.org/clint/fakeroot/-/blob/master/README_MACOSX.txt
+  disable! date: "2022-03-28", because: :does_not_build
+
+  on_linux do
+    depends_on "libcap"
+  end
 
   # Compile is broken. https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=766649
   # Patches submitted upstream on 24/10/2014, but no reply from maintainer thus far.
@@ -45,39 +54,33 @@ class Fakeroot < Formula
     # have to patch the generated file after it is generated.
     # Patch has been submitted with detailed explanation to
     # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=766649
-    if OS.mac?
-      system "make", "wraptmpf.h"
-      (buildpath/"patch-for-wraptmpf-h").write <<~EOS
-        diff --git a/wraptmpf.h b/wraptmpf.h
-        index dbfccc9..0e04771 100644
-        --- a/wraptmpf.h
-        +++ b/wraptmpf.h
-        @@ -575,6 +575,10 @@ static __inline__ int next_mkdirat (int dir_fd, const char *pathname, mode_t mod
-         #endif /* HAVE_MKDIRAT */
-         #ifdef HAVE_OPENAT
-         extern int openat (int dir_fd, const char *pathname, int flags, ...);
-        +static __inline__ int next_openat (int dir_fd, const char *pathname, int flags, mode_t mode) __attribute__((always_inline));
-        +static __inline__ int next_openat (int dir_fd, const char *pathname, int flags, mode_t mode) {
-        +  return openat (dir_fd, pathname, flags, mode);
-        +}
+    system "make", "wraptmpf.h"
+    (buildpath/"patch-for-wraptmpf-h").write <<~EOS
+      diff --git a/wraptmpf.h b/wraptmpf.h
+      index dbfccc9..0e04771 100644
+      --- a/wraptmpf.h
+      +++ b/wraptmpf.h
+      @@ -575,6 +575,10 @@ static __inline__ int next_mkdirat (int dir_fd, const char *pathname, mode_t mod
+       #endif /* HAVE_MKDIRAT */
+       #ifdef HAVE_OPENAT
+       extern int openat (int dir_fd, const char *pathname, int flags, ...);
+      +static __inline__ int next_openat (int dir_fd, const char *pathname, int flags, mode_t mode) __attribute__((always_inline));
+      +static __inline__ int next_openat (int dir_fd, const char *pathname, int flags, mode_t mode) {
+      +  return openat (dir_fd, pathname, flags, mode);
+      +}
 
-         #endif /* HAVE_OPENAT */
-         #ifdef HAVE_RENAMEAT
-      EOS
+       #endif /* HAVE_OPENAT */
+       #ifdef HAVE_RENAMEAT
+    EOS
 
-      system "patch < patch-for-wraptmpf-h"
-    end
+    system "patch < patch-for-wraptmpf-h"
 
     system "make"
     system "make", "install"
   end
 
   test do
-    if MacOS.version <= :yosemite
-      assert_equal "root", shell_output("#{bin}/fakeroot whoami").strip
-    else
-      assert_match version.to_s, shell_output("#{bin}/fakeroot -v")
-    end
+    assert_match version.to_s, shell_output("#{bin}/fakeroot -v")
   end
 end
 

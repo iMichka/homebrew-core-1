@@ -3,16 +3,17 @@ require "language/node"
 class ContentfulCli < Formula
   desc "Contentful command-line tools"
   homepage "https://github.com/contentful/contentful-cli"
-  url "https://registry.npmjs.org/contentful-cli/-/contentful-cli-1.2.3.tgz"
-  sha256 "123ca9051c27e68a4fc0c291c5c675e681564ef2d4f3a75b100574c4b76bac80"
+  url "https://registry.npmjs.org/contentful-cli/-/contentful-cli-1.6.40.tgz"
+  sha256 "c5db9c84e96f8c04cac8996069d8b2e4f4295dabd455b48e878f7541b195eae3"
+  license "MIT"
   head "https://github.com/contentful/contentful-cli.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "6be2a293bddf005f8e6f2efe1210efde3f7929c4245199f564136bcb2b1c191e" => :catalina
-    sha256 "c0be6526734d59f8566f9a3f53350c24e48205b00b4cf61126995b7f765ed402" => :mojave
-    sha256 "3fcca4afc7e192981ad45d5ebfc3b8cde0ae67e72ae8edaff459f80b33e009b0" => :high_sierra
-    sha256 "2b86cd4782cec599de0efcf508c5e5ed4be1fca69707eae3f9b98ce762fa06de" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "37a8e0c08fc75cdca3a9a306f28ad9901169fe80f7d9b2761566d207eb8aa86e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "53dab7f8d91ebd96f70c6d4ed7d7e0576abb48edeb2a3b85e13c7ac00f5062d8"
+    sha256 cellar: :any_skip_relocation, catalina:      "53dab7f8d91ebd96f70c6d4ed7d7e0576abb48edeb2a3b85e13c7ac00f5062d8"
+    sha256 cellar: :any_skip_relocation, mojave:        "53dab7f8d91ebd96f70c6d4ed7d7e0576abb48edeb2a3b85e13c7ac00f5062d8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6ec5c0ddb35ba35bceb6de779ed876a23c66bfda262b657dd6e12a6094267973"
   end
 
   depends_on "node"
@@ -26,6 +27,6 @@ class ContentfulCli < Formula
     output = shell_output("#{bin}/contentful space list 2>&1", 1)
     assert_match "🚨  Error: You have to be logged in to do this.", output
     assert_match "You can log in via contentful login", output
-    assert_match "Or provide a managementToken via --management-Token argument", output
+    assert_match "Or provide a management token via --management-token argument", output
   end
 end

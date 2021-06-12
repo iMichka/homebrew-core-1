@@ -1,21 +1,36 @@
 class Openblas < Formula
   desc "Optimized BLAS library"
   homepage "https://www.openblas.net/"
-  url "https://github.com/xianyi/OpenBLAS/archive/v0.3.7.tar.gz"
-  sha256 "bde136122cef3dd6efe2de1c6f65c10955bbb0cc01a520c2342f5287c28f9379"
-  head "https://github.com/xianyi/OpenBLAS.git", :branch => "develop"
+  license "BSD-3-Clause"
+  revision OS.mac? ? 1 : 2
+  head "https://github.com/xianyi/OpenBLAS.git", branch: "develop"
 
-  bottle do
-    cellar :any
-    sha256 "58b74b20463a5ab0cf0ae418e14cc6bed41f3fb26369c82abe001bfbd6a51b9f" => :catalina
-    sha256 "463a7d63d2f6e5f38b86f91925549424ac3c7ce07d9c29450534c949f422954b" => :mojave
-    sha256 "532b75aa999f42dfdacab3458a3a6e473cc603476906d4a44dd2bf77394bc41c" => :high_sierra
-    sha256 "eb7ee78a2cb04296541006294740a78c952ff969d26840c21a3e9eb0924d7d08" => :sierra
-    sha256 "c27b687ed5973c5178ab77bb2686d7a4945b88d3140d9d1a024df7423bc698fd" => :x86_64_linux
+  stable do
+    url "https://github.com/xianyi/OpenBLAS/archive/v0.3.15.tar.gz"
+    sha256 "30a99dec977594b387a17f49904523e6bc8dd88bd247266e83485803759e4bbe"
+
+    # Fix compile on ARM
+    # https://github.com/xianyi/OpenBLAS/issues/3222
+    patch do
+      url "https://github.com/xianyi/OpenBLAS/commit/c90c23e78f24f37c6be877e37075463a4ba8f201.patch?full_index=1"
+      sha256 "eb89ce6160fc896eb6668658c2e6fdc34942b5e39ed45d28af4673435a500cf5"
+    end
   end
 
-  keg_only :provided_by_macos,
-           "macOS provides BLAS and LAPACK in the Accelerate framework"
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
+  bottle do
+    sha256                               arm64_big_sur: "d6a3a72eab5bdf20737b24e4ca142ce9f1de7facf296692a1cb427f6991738a3"
+    sha256 cellar: :any,                 big_sur:       "fa68f6847227743daa07f70be8e0436e43575bea3c3fb2a2672521afa9c4766f"
+    sha256 cellar: :any,                 catalina:      "053e13fbeb193ed30add73eb3afdec1f8f97314a00dfd328f2c18b66624e6161"
+    sha256 cellar: :any,                 mojave:        "891c7cc3bc0d6f99829558bc7ee557d3a3511398ab9cccab4783c9c6843d498b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b5ae1d1942e8c90752a179190287e5820d5428b545cba9089e754d84b9798b4f"
+  end
+
+  keg_only :shadowed_by_macos, "macOS provides BLAS in Accelerate.framework"
 
   depends_on "gcc" # for gfortran
   fails_with :clang
@@ -24,14 +39,21 @@ class Openblas < Formula
     ENV["DYNAMIC_ARCH"] = "1"
     ENV["USE_OPENMP"] = "1"
     ENV["NO_AVX512"] = "1"
+    # Force a large NUM_THREADS to support larger Macs than the VMs that build the bottles
+    ENV["NUM_THREADS"] = "56"
+    ENV["TARGET"] = case Hardware.oldest_cpu
+    when :arm_vortex_tempest
+      "VORTEX"
+    else
+      Hardware.oldest_cpu.upcase.to_s
+    end
 
     # Must call in two steps
     system "make", "CC=#{ENV.cc}", "FC=gfortran", "libs", "netlib", "shared", *("NO_AVX512=1" unless OS.mac?)
     system "make", "PREFIX=#{prefix}", "install"
 
-    so = OS.mac? ? "dylib" : "so"
-    lib.install_symlink "libopenblas.#{so}" => "libblas.#{so}"
-    lib.install_symlink "libopenblas.#{so}" => "liblapack.#{so}"
+    lib.install_symlink shared_library("libopenblas") => shared_library("libblas")
+    lib.install_symlink shared_library("libopenblas") => shared_library("liblapack")
   end
 
   test do

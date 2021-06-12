@@ -1,15 +1,22 @@
 class Gmic < Formula
   desc "Full-Featured Open-Source Framework for Image Processing"
   homepage "https://gmic.eu/"
-  url "https://gmic.eu/files/source/gmic_2.8.0.tar.gz"
-  sha256 "d1ca5c726f7570af3a6f0bca27eeb66ef1e6a1b6a17bdaeaf0d59be40b9cd075"
+  url "https://gmic.eu/files/source/gmic_2.9.7.tar.gz"
+  sha256 "942537487ea722141230579db3cd4331368429c0e33cb38fee1b17aae9557f16"
+  license "CECILL-2.1"
   head "https://github.com/dtschump/gmic.git"
 
+  livecheck do
+    url "https://gmic.eu/files/source/"
+    regex(/href=.*?gmic[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "d259d87c9472d9e46b898938d6e14136eea816c20b9a367f5c6a8a5388e49e05" => :catalina
-    sha256 "10f8571f1376aec45f91b45c1ed57b23cf07ef1c73dc944c22ae5db5048a0d68" => :mojave
-    sha256 "654703f48c73f2e7977bff37b2357ad2a0d4a67d4b0c41877833c7a5bf7eb632" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "2a684946ab82b40f48894bac5628fd568555c79e412154415149c559b8855439"
+    sha256 cellar: :any,                 big_sur:       "fa3a9f34a4e6af5756037d3d0085cc95192fd2cf133e14985cd98314b46c0d2d"
+    sha256 cellar: :any,                 catalina:      "28d193071d9c956bb8002584cbd7e9439cb3b4fbbce4fb37106345dfcc3898e8"
+    sha256 cellar: :any,                 mojave:        "8a24235a837b3972a6f8b39b3ca219e676c7807ed83daf613576f1acb813faa2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c660018ce294eb5b43422c8c030c9f17a1be9965952f43c2a66371d225784633"
   end
 
   depends_on "cmake" => :build
@@ -31,5 +38,8 @@ class Gmic < Formula
     %w[test.jpg test.png].each do |file|
       system bin/"gmic", test_fixtures(file)
     end
+    system bin/"gmic", "-input", test_fixtures("test.jpg"), "rodilius", "10,4,400,16",
+           "smooth", "60,0,1,1,4", "normalize_local", "10,16", "-output", testpath/"test_rodilius.jpg"
+    assert_predicate testpath/"test_rodilius.jpg", :exist?
   end
 end

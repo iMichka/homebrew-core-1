@@ -2,41 +2,30 @@ class Helmsman < Formula
   desc "Helm Charts as Code tool"
   homepage "https://github.com/Praqma/helmsman"
   url "https://github.com/Praqma/helmsman.git",
-    :tag      => "v1.13.1",
-    :revision => "d4731fbe63312934cf7caa6b07acfca6fd2d03c3"
+      tag:      "v3.7.0",
+      revision: "995800328cf48b13ccf19f3d459767db269e3823"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5355b3de085c37ac35cc02f7350dd85a212f250e3cc25954489e8c6338b4f7af" => :catalina
-    sha256 "b252811d22d8d26c853bb868769fc9618b6c562967f3f045cfbddab53ee1a49e" => :mojave
-    sha256 "f54f83dd557ed2b63953719e20ba4ae515887ee465f64444b889322b981621d5" => :high_sierra
-    sha256 "2b6cb22f0182a038c0a3323860a9a9d68d90b9af161c4a1fcf18998dca0282ae" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "cfd2ab562ab5bc6304d3f82655f93875fdfe3bc6c3cb235f8b5c13ddc9ebbc2d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1e4db69c004603804cb86347a0c9fb86fc83c6ea1c6c6751bd66dd03ea961571"
+    sha256 cellar: :any_skip_relocation, catalina:      "12a5f4a4a8489c4b931092beceabb9ecae2927c9a43483f9f7f7dd10e850adf0"
+    sha256 cellar: :any_skip_relocation, mojave:        "bf2c4fe81938188969df95a39645881e509c7768171808786bcc89e039386a67"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
-  depends_on "helm@2"
+  depends_on "helm"
   depends_on "kubernetes-cli"
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    dir = buildpath/"src/github.com/Praqma/helmsman"
-    dir.install buildpath.children
-
-    cd dir do
-      system "dep", "ensure", "-vendor-only"
-      system "go", "build", "-o", bin/"helmsman"
-      bin.env_script_all_files(libexec/"bin", :PATH => "#{Formula["helm@2"].opt_bin}:$PATH")
-      prefix.install_metafiles
-      pkgshare.install "example.yaml"
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-s -w -X main.version=#{version}", "./cmd/helmsman"
+    pkgshare.install "examples/example.yaml"
   end
 
   test do
     assert_match version.to_s, shell_output("#{bin}/helmsman version")
 
     output = shell_output("#{bin}/helmsman --apply -f #{pkgshare}/example.yaml 2>&1", 1)
-    assert_match "helm diff plugin is not installed", output
+    assert_match "helm diff not found", output
   end
 end

@@ -1,15 +1,20 @@
 class Stunnel < Formula
   desc "SSL tunneling program"
   homepage "https://www.stunnel.org/"
-  url "https://www.stunnel.org/downloads/stunnel-5.56.tar.gz"
-  sha256 "7384bfb356b9a89ddfee70b5ca494d187605bb516b4fff597e167f97e2236b22"
+  url "https://www.stunnel.org/downloads/stunnel-5.59.tar.gz"
+  sha256 "137776df6be8f1701f1cd590b7779932e123479fb91e5192171c16798815ce9f"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://www.stunnel.org/downloads.html"
+    regex(/href=.*?stunnel[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "90d65b410dfcabbc5d4b586449ae92b23cbe3f9e087a7075ec66b81807c17b7b" => :catalina
-    sha256 "61d66e0c5c5d411becd8b7d1f9ba913c1a15b9d15ec70e1253ca2e7fbdb0e516" => :mojave
-    sha256 "22548c4f8f3a15ebe6cd79aa2162dc7af8abaacf3e94d32d7cc8afc8f2049318" => :high_sierra
-    sha256 "f1083f37b4ffbb63c80e6162c585faa69019eea419a8f2caa40706e29e62f9df" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "f50ed8a71e35d3509b0453ddba6b69f8af5f3f2f1b97418fadacc0efa3813d0f"
+    sha256 cellar: :any, big_sur:       "1f963558de66d9549d77bd970c0e67a5e01666317c20b63403361df25569f7ec"
+    sha256 cellar: :any, catalina:      "e0002bbf08f27e3533a7b518bfcc669b813122fb7e8943b5896f2d1325ad169f"
+    sha256 cellar: :any, mojave:        "f4735a2843512ff3bdd76ecaf23b1bc7049987cdc1831fdd0c410e7c91ab5f9b"
   end
 
   depends_on "openssl@1.1"
@@ -55,24 +60,25 @@ class Stunnel < Formula
     EOS
   end
 
-  plist_options :manual => "stunnel"
+  plist_options manual: "stunnel"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/stunnel</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/stunnel</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do

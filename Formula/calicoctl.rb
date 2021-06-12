@@ -2,32 +2,32 @@ class Calicoctl < Formula
   desc "Calico CLI tool"
   homepage "https://www.projectcalico.org"
   url "https://github.com/projectcalico/calicoctl.git",
-      :tag      => "v3.11.1",
-      :revision => "6c04a83961025c39f50fb7c22d8d6d100c425514"
+      tag:      "v3.19.1",
+      revision: "6fc0db96a3d2df7bd2eb0929f9c3d327380b0ed0"
+  license "Apache-2.0"
+  head "https://github.com/projectcalico/calicoctl.git"
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a71b6903e8f3e335dee4d8d213cbe581944fe11a5c1b579c694654ae76ba2c77" => :catalina
-    sha256 "eaa4ff648279776c26f7a8b85f80075a77db8c145bd288a2a834bfc593163502" => :mojave
-    sha256 "21ba7e939dc75d10260c72ccbbe23bb00dfe979007dcafe04200e4ea8b1048d4" => :high_sierra
-    sha256 "7abf1be8fc6dfc0d1b8fe39ad9af3dd38497cbfbb678fa3aab4438a33116850a" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1a0f248d5b5f9059ed24a4cd762adb2e195f7a1c721d4f4ec40f7f707d9c892c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "400e7c298d661badd89ac967a33921297657a6f53a4155ee4fa620c7b71b8040"
+    sha256 cellar: :any_skip_relocation, catalina:      "ad8a82058db04666e990a8963dfa233b5db2d852257b14a7b98d05771d96a38a"
+    sha256 cellar: :any_skip_relocation, mojave:        "a44473b4ee9ce7ca1a4a9444a1a4d06e51f6ecc0142a00b62d2f2c1e0024c1ff"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0d0ba7d803ddfa930ddd3c127b95ea42fe8ee93051b0cd38b41bec91d3dfc651"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    dir = buildpath/"src/github.com/projectcalico/calicoctl"
-    dir.install buildpath.children
-
-    cd dir do
-      commands = "github.com/projectcalico/calicoctl/calicoctl/commands"
-      ldflags = "-X #{commands}.VERSION=#{stable.specs[:tag]} -X #{commands}.GIT_REVISION=#{stable.specs[:revision][0, 8]} -s -w"
-      system "go", "build", "-v", "-o", "dist/calicoctl-darwin-amd64", "-ldflags", ldflags, "calicoctl/calicoctl.go"
-      bin.install "dist/calicoctl-darwin-amd64" => "calicoctl"
-      prefix.install_metafiles
-    end
+    commands = "github.com/projectcalico/calicoctl/v3/calicoctl/commands"
+    ldflags = "-X #{commands}.VERSION=#{version} " \
+              "-X #{commands}.GIT_REVISION=#{Utils.git_short_head} " \
+              "-s -w"
+    system "go", "build", *std_go_args(ldflags: ldflags), "calicoctl/calicoctl.go"
   end
 
   test do

@@ -1,18 +1,18 @@
 class Arpack < Formula
   desc "Routines to solve large scale eigenvalue problems"
   homepage "https://github.com/opencollab/arpack-ng"
-  url "https://github.com/opencollab/arpack-ng/archive/3.7.0.tar.gz"
-  sha256 "972e3fc3cd0b9d6b5a737c9bf6fd07515c0d6549319d4ffb06970e64fa3cc2d6"
-  revision 3
+  url "https://github.com/opencollab/arpack-ng/archive/3.8.0.tar.gz"
+  sha256 "ada5aeb3878874383307239c9235b716a8a170c6d096a6625bfd529844df003d"
+  license "BSD-3-Clause"
+  revision OS.mac? ? 1 : 2
   head "https://github.com/opencollab/arpack-ng.git"
 
   bottle do
-    cellar :any
-    sha256 "16a4a696da2803d4a427508bd4dc27ccec4ac28b072cc82172945d81a895fa13" => :catalina
-    sha256 "8d6eb8e363467ee3b8a40c875e789edc3c43e3a095b03a383e721495c6905de7" => :mojave
-    sha256 "41856273d9f50a1738a26c290af692414ced685379eebd69c89db308e2cd48fb" => :high_sierra
-    sha256 "2c2dfdc439824d04d14c863d22c75f4e70d5f191e3cba9c6a6e567dcd4e0c1a6" => :sierra
-    sha256 "8c9565c6f27fa5910905cd1c7bd4135bb3df761a9d60181abfa6a211e3608aa1" => :x86_64_linux
+    sha256                               arm64_big_sur: "ce6c690e2da971fd3c2b1b481e2a1a63c74e45ab308abc8212d4e8622ab57fb3"
+    sha256 cellar: :any,                 big_sur:       "d7e7dcfe9877c71a43edc35191855abab902424d99eb30835092e01d9bbb042d"
+    sha256 cellar: :any,                 catalina:      "42b2c8c8c61ff92e7c3c96d3735decfd5bb00b5741bc66ee7b77a4c10f338ad4"
+    sha256 cellar: :any,                 mojave:        "c77c3b77ef86bea4c18757c674af5775bc33463f1f59cf49ed7ad9fbb9b6d3b9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5034e1b605cb565120ffbf1ce42176e1ed45cee0767408609ace1bc1ba9a32e1"
   end
 
   depends_on "autoconf" => :build
@@ -35,6 +35,10 @@ class Arpack < Formula
       --enable-icb
       --enable-icb-exmm
     ]
+
+    # Fix for GCC 10, remove with next version
+    # https://github.com/opencollab/arpack-ng/commit/ad82dcbc
+    args << "FFLAGS=-fallow-argument-mismatch"
 
     system "./bootstrap"
     system "./configure", *args

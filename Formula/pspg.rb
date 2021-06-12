@@ -1,16 +1,17 @@
 class Pspg < Formula
   desc "Unix pager optimized for psql"
   homepage "https://github.com/okbob/pspg"
-  url "https://github.com/okbob/pspg/archive/2.6.1.tar.gz"
-  sha256 "6f2da47dbb2afc258b1dd38f125685888d5af6796922d9195993af8736339eab"
+  url "https://github.com/okbob/pspg/archive/5.0.3.tar.gz"
+  sha256 "1480950baa121ad8fd5907a551d0b31c8d2c2d3a3a36d4a47a5b62106e7ba088"
+  license "BSD-2-Clause"
   head "https://github.com/okbob/pspg.git"
 
   bottle do
-    cellar :any
-    sha256 "9a4790e9a52ebc240b126bfffffb5de551af189ae3b70556976b47fe82a83111" => :catalina
-    sha256 "1ec39b50bd344692740069f60f009fa8b6a4d032c7298db4d2f2168435e0fbd4" => :mojave
-    sha256 "80ebbbf3457b508426cab75935129a36b979edbca03f5e5e2aaa3f98ae854146" => :high_sierra
-    sha256 "6f122801170e7e6459fc776fb27262a116aad4f89dd3b73679ea155336cd0c6c" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "b191b3e64afb9c788592c7d75781981e1e2c0c37d06ee4a58a7e2199598078a4"
+    sha256 cellar: :any,                 big_sur:       "4f4ec2ec8b3aa8185fb73e9462b1c58a68967a073bd36cf35da448b4eb05c71e"
+    sha256 cellar: :any,                 catalina:      "0c9c96ace196cfb67735e353bb01c9954e5da0b8d0578acef4d1e208b3c19736"
+    sha256 cellar: :any,                 mojave:        "e80db616230ed0b6f8490694eece539a205eec3e07b412d18e3c4a0bf5c3ee30"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5a623167d036847301d78b3be0e27145a7d13917589a57b7abdee3dee61696a9"
   end
 
   depends_on "libpq"
@@ -23,15 +24,16 @@ class Pspg < Formula
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    Add the following line to your psql profile (e.g. ~/.psqlrc)
-      \\setenv PAGER pspg
-      \\pset border 2
-      \\pset linestyle unicode
-  EOS
+  def caveats
+    <<~EOS
+      Add the following line to your psql profile (e.g. ~/.psqlrc)
+        \\setenv PAGER pspg
+        \\pset border 2
+        \\pset linestyle unicode
+    EOS
   end
 
   test do
-    assert_match "pspg-#{version.to_f}", shell_output("#{bin}/pspg --version")
+    assert_match "pspg-#{version}", shell_output("#{bin}/pspg --version")
   end
 end

@@ -1,17 +1,20 @@
 class AmmoniteRepl < Formula
   desc "Ammonite is a cleanroom re-implementation of the Scala REPL"
-  homepage "https://lihaoyi.github.io/Ammonite/#Ammonite-REPL"
-  url "https://github.com/lihaoyi/Ammonite/releases/download/1.8.2/2.12-1.8.2"
-  sha256 "378d7a9fa1a8f44f8e27769259a465423cf540658ba42365213a3c00e4a8acc0"
+  homepage "https://ammonite.io/"
+  url "https://github.com/lihaoyi/Ammonite/releases/download/2.3.8/2.13-2.3.8"
+  sha256 "e7af76416202ff02b8faece785740d957e3ca6351f8d56cf69a749ec4d25484b"
+  license "MIT"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "376399e1a06d675716e8ddf899e7160be48e7ce23aedbf0d7529ae8351152b63"
+  end
 
-  depends_on :java => "1.8+"
+  depends_on "openjdk"
 
   def install
-    libexec.install Dir["*"].shift => "amm"
-    chmod 0555, libexec/"amm"
-    bin.install_symlink libexec/"amm"
+    (libexec/"bin").install Dir["*"].first => "amm"
+    chmod 0755, libexec/"bin/amm"
+    (bin/"amm").write_env_script libexec/"bin/amm", Language::Java.overridable_java_home_env
   end
 
   test do

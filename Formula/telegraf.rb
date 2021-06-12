@@ -1,32 +1,29 @@
 class Telegraf < Formula
   desc "Server-level metric gathering agent for InfluxDB"
-  homepage "https://influxdata.com"
-  url "https://github.com/influxdata/telegraf/archive/1.13.0.tar.gz"
-  sha256 "055fb85be002e1fb50f9077c3513a1fef9dc7cecf5ac583d8e1f5ae5c3ebfee4"
+  homepage "https://www.influxdata.com/"
+  url "https://github.com/influxdata/telegraf/archive/v1.18.3.tar.gz"
+  sha256 "18131af75eea19d0fa7ac3c0c97d9cf941a4e77acf233be6324b208833d02cea"
+  license "MIT"
   head "https://github.com/influxdata/telegraf.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "8b10b64e49627c4fca3ae010e3a8768ce2cc8ac640b2bb5390a4f36f46323238" => :catalina
-    sha256 "bad0bb1fab6d96467aa83084f285ee9a6f9f88be6ad61eca380f9def9ede4f28" => :mojave
-    sha256 "90f29d2908f9dcd0eb741f96c01e5d5d68153c0ef5d17297b4414618f4dbf3ed" => :high_sierra
-    sha256 "adf5698fbf3ed7da5fb67595112ab702e5fe328826ea03f2553dbf941486b08a" => :x86_64_linux
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "dep" => :build
+  bottle do
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "2a2f33cfdf096eaa825615353e1bf5d03f9f47e793870fe1293120c6271c49ae"
+    sha256 cellar: :any_skip_relocation, big_sur:       "29083553a472c332c8015f03b997c6e181da757ec1ef343d5eef2a10bd977d46"
+    sha256 cellar: :any_skip_relocation, catalina:      "25b0d123887c86bf9e9366b5d051c2e7da6523f6f7804cd02edf4af1798fc6a3"
+    sha256 cellar: :any_skip_relocation, mojave:        "fe86b37c70365eb7787c82d8940b4b48e8bb73a100eb15b20346794e2f80c21b"
+  end
+
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/github.com/influxdata/telegraf"
-    dir.install buildpath.children
-    cd dir do
-      system "dep", "ensure", "-vendor-only"
-      system "go", "install", "-ldflags", "-X main.version=#{version}", "./..."
-      prefix.install_metafiles
-    end
-    bin.install "bin/telegraf"
-    etc.install dir/"etc/telegraf.conf" => "telegraf.conf"
+    system "go", "build", *std_go_args, "-ldflags", "-X main.version=#{version}", "./cmd/telegraf"
+    etc.install "etc/telegraf.conf" => "telegraf.conf"
   end
 
   def post_install
@@ -34,39 +31,40 @@ class Telegraf < Formula
     (etc/"telegraf.d").mkpath
   end
 
-  plist_options :manual => "telegraf -config #{HOMEBREW_PREFIX}/etc/telegraf.conf"
+  plist_options manual: "telegraf -config #{HOMEBREW_PREFIX}/etc/telegraf.conf"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
         <dict>
-          <key>SuccessfulExit</key>
-          <false/>
+          <key>KeepAlive</key>
+          <dict>
+            <key>SuccessfulExit</key>
+            <false/>
+          </dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/telegraf</string>
+            <string>-config</string>
+            <string>#{etc}/telegraf.conf</string>
+            <string>-config-directory</string>
+            <string>#{etc}/telegraf.d</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>WorkingDirectory</key>
+          <string>#{var}</string>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/telegraf.log</string>
+          <key>StandardOutPath</key>
+          <string>#{var}/log/telegraf.log</string>
         </dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/telegraf</string>
-          <string>-config</string>
-          <string>#{etc}/telegraf.conf</string>
-          <string>-config-directory</string>
-          <string>#{etc}/telegraf.d</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>WorkingDirectory</key>
-        <string>#{var}</string>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/telegraf.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/telegraf.log</string>
-      </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do

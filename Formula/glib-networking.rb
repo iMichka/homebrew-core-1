@@ -1,24 +1,28 @@
 class GlibNetworking < Formula
   desc "Network related modules for glib"
-  homepage "https://launchpad.net/glib-networking"
-  url "https://download.gnome.org/sources/glib-networking/2.62/glib-networking-2.62.2.tar.xz"
-  sha256 "0644b8dc042bab8c9d2892aee5716513280c8773dbef43a038149f24cae15544"
+  homepage "https://gitlab.gnome.org/GNOME/glib-networking"
+  url "https://download.gnome.org/sources/glib-networking/2.68/glib-networking-2.68.1.tar.xz"
+  sha256 "d05d8bd124a9f53fc2b93b18f2386d512e4f48bc5a80470a7967224f3bf53b30"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "81ecbaeb6d3fff3839280d691de59b8aac6bcd5ec4d8d3fbf7bc3cdbc40cb9ef" => :catalina
-    sha256 "c47a90d947d6e4ca48ccfe468107aa454bb1b80ab3047711abe0ff1be913b345" => :mojave
-    sha256 "b13917cc21b6ceb0d867ace7ffd1cd568f31bdf71471665d0da1683cf3ac2375" => :high_sierra
-    sha256 "145e6b60b71eac9aaada4304aa20196bc2b8fb9f85863bc12de17ae3281f6d79" => :x86_64_linux
+    sha256               arm64_big_sur: "58be10c17da1a361a5f98a5525ff33967d2d17df212e14b622cd1effd6449dee"
+    sha256 cellar: :any, big_sur:       "22288b8ad200b43cc6e6be824457e7d078425aeb9d3c9992a60b7f98bc1d8780"
+    sha256 cellar: :any, catalina:      "cf152dc56f935513958b8807d4a8c7f02b9e6950110ce66609f54df5bff0da59"
+    sha256 cellar: :any, mojave:        "0e4b6128e863ec39780f0750a5057a90013780c47b2438d25b30e4effbbe3609"
+    sha256               x86_64_linux:  "d0fe1329801d27218280ff3db1e6c89fdd02b5b34dff96c968917ccea896bda5"
   end
 
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "glib"
   depends_on "gnutls"
   depends_on "gsettings-desktop-schemas"
-  uses_from_macos "libidn"
+
+  on_linux do
+    depends_on "libidn"
+  end
 
   link_overwrite "lib/gio/modules"
 
@@ -27,7 +31,7 @@ class GlibNetworking < Formula
     ENV["DESTDIR"] = "/"
 
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}",
+      system "meson", *std_meson_args,
                       "-Dlibproxy=disabled",
                       "-Dopenssl=disabled",
                       "-Dgnome_proxy=disabled",

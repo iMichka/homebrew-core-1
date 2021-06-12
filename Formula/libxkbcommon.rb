@@ -1,51 +1,40 @@
 class Libxkbcommon < Formula
   desc "Keyboard handling library"
   homepage "https://xkbcommon.org/"
-  url "https://xkbcommon.org/download/libxkbcommon-0.8.4.tar.xz"
-  sha256 "60ddcff932b7fd352752d51a5c4f04f3d0403230a584df9a2e0d5ed87c486c8b"
+  url "https://xkbcommon.org/download/libxkbcommon-1.3.0.tar.xz"
+  sha256 "7b09e098ea69bc3054f0c57a9a25fda571c4df22398811606e32b5fffeb75e7b"
+  license "MIT"
+  head "https://github.com/xkbcommon/libxkbcommon.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b092312f682e9cbd6f2b1918dfdc57e3ba18038945bdd0d98558ca5605a852e0" => :catalina
-    sha256 "d11930a50f52bee01e250ae80e1972a12f10a422bb885df42befdb4784f3a983" => :mojave
-    sha256 "da3a6ad4c591da868a4aeb245b9311181a03d4392e82cc5159d24740c8695b86" => :high_sierra
-    sha256 "6b78ab52d77c4c1c81485d4071298a38a78ec1d74e55e57786d833ea8ecc58af" => :sierra
-    sha256 "0bb5124a1cf6a6e1213a091c14d9605473bbe4baec950655a141e39a705eedf4" => :x86_64_linux
-  end
-
-  head do
-    url "https://github.com/xkbcommon/libxkbcommon.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
+    sha256 arm64_big_sur: "4d90728ce58c3e91ceb8f184bf78b0dcde24b8d80f64820f788f116d4d621ba8"
+    sha256 big_sur:       "d70f333837f2e6f3c4ff279c8a5811fde4ac7fc7ee20c01f71531ffc669a7ce5"
+    sha256 catalina:      "91d714d117af4e8b2c8c6a044b32dbcb4d88afe8fcf8eab44060e3025e4c5da0"
+    sha256 mojave:        "366af8c0fc612df3d5dd13aee882a46e4d962299b62fccc0de3a5ec903bf24de"
+    sha256 x86_64_linux:  "282703860bf715b5fc66013d740fafc92f7fdb674b0febb9dd7776d0d8abe71d"
   end
 
   depends_on "bison" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on :x11 if OS.mac?
+  depends_on "libx11"
+  depends_on "libxcb"
+  depends_on "xkeyboardconfig"
 
-  unless OS.mac?
-    depends_on "linuxbrew/xorg/xkeyboardconfig"
-    depends_on "linuxbrew/xorg/libxcb"
-  end
+  uses_from_macos "libxml2"
 
   def install
-    system "./autogen.sh" if build.head?
-    if OS.mac?
-      inreplace "configure" do |s|
-        s.gsub! "-version-script $output_objdir/$libname.ver", ""
-        s.gsub! "$wl-version-script", ""
-      end
-      inreplace %w[Makefile.in Makefile.am] do |s|
-        s.gsub! "-Wl,--version-script=${srcdir}/xkbcommon.map", ""
-        s.gsub! "-Wl,--version-script=${srcdir}/xkbcommon-x11.map", ""
-      end
+    args = %W[
+      -Denable-wayland=false
+      -Denable-docs=false
+      -Dxkb-config-root=#{HOMEBREW_PREFIX}/share/X11/xkb
+      -Dx-locale-root=#{HOMEBREW_PREFIX}/share/X11/locale
+    ]
+    mkdir "build" do
+      system "meson", *std_meson_args, *args, ".."
+      system "ninja", "install", "-v"
     end
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}"
-    system "make", "install"
   end
 
   test do

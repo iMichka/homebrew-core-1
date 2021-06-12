@@ -4,14 +4,16 @@ class Sfml < Formula
   homepage "https://www.sfml-dev.org/"
   url "https://www.sfml-dev.org/files/SFML-2.5.1-sources.zip"
   sha256 "bf1e0643acb92369b24572b703473af60bac82caf5af61e77c063b779471bb7f"
+  license "Zlib"
+  revision 1
   head "https://github.com/SFML/SFML.git"
 
   bottle do
-    cellar :any
-    sha256 "b94077b2fc05c84af837de5bdf0681c1538c07b320b40155dd7f81cff809d37c" => :catalina
-    sha256 "3f4dd43eb91902d4c4f7558d965b372ace9b1227185c55db5172a7f599593caa" => :mojave
-    sha256 "72544adffb4dea8194163d44f16588c2c85ab795ba02eb7b93a9d687f2958383" => :high_sierra
-    sha256 "ab58d3643f256258efe63d74689bfb4eae7dd012665552e61eb6bb749af08f77" => :sierra
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "ef472896cd55333ffe21c531b3edb055e487f5a675174feacfa6e02269877a6d"
+    sha256 cellar: :any, big_sur:       "3b8efaafe447f0f3a218eb81a65d92715c35e3a703373256031cb0c3d9d21084"
+    sha256 cellar: :any, catalina:      "12898a75c1d21de54fef1ca9c42c2d115d30ffcc9d7b10546c9c8d7428b467fa"
+    sha256 cellar: :any, mojave:        "c45c383d9e0049ad94cbadb1f5bdd7b870bb01a9cdc8804f495e3ac48e8955d3"
   end
 
   depends_on "cmake" => :build
@@ -21,6 +23,15 @@ class Sfml < Formula
   depends_on "jpeg"
   depends_on "libogg"
   depends_on "libvorbis"
+
+  on_linux do
+    depends_on "libx11"
+    depends_on "libxrandr"
+    depends_on "mesa"
+    depends_on "mesa-glu"
+    depends_on "openal-soft"
+    depends_on "systemd"
+  end
 
   # https://github.com/Homebrew/homebrew/issues/40301
 
@@ -33,10 +44,16 @@ class Sfml < Formula
     # headers that were moved there in https://github.com/SFML/SFML/pull/795
     rm_rf Dir["extlibs/*"] - ["extlibs/headers"]
 
-    system "cmake", ".", *std_cmake_args,
-                         "-DSFML_MISC_INSTALL_PREFIX=#{share}/SFML",
-                         "-DSFML_INSTALL_PKGCONFIG_FILES=TRUE",
-                         "-DSFML_BUILD_DOC=TRUE"
+    args = ["-DCMAKE_INSTALL_RPATH=#{opt_lib}",
+            "-DSFML_MISC_INSTALL_PREFIX=#{share}/SFML",
+            "-DSFML_INSTALL_PKGCONFIG_FILES=TRUE",
+            "-DSFML_BUILD_DOC=TRUE"]
+
+    on_linux do
+      args << "-DSFML_USE_SYSTEM_DEPS=ON"
+    end
+
+    system "cmake", ".", *std_cmake_args, *args
     system "make", "install"
   end
 
@@ -48,8 +65,8 @@ class Sfml < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "-I#{include}/SFML/System", "-L#{lib}", "-lsfml-system",
-           testpath/"test.cpp", "-o", "test"
+    system ENV.cxx, "-I#{include}/SFML/System", testpath/"test.cpp",
+           "-L#{lib}", "-lsfml-system", "-o", "test"
     system "./test"
   end
 end

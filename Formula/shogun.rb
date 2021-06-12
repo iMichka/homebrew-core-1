@@ -2,15 +2,17 @@ class Shogun < Formula
   desc "Large scale machine learning toolbox"
   homepage "https://www.shogun-toolbox.org/"
   url "https://github.com/shogun-toolbox/shogun.git",
-      :tag      => "shogun_6.1.4",
-      :revision => "ab274e7ab6bf24dd598c1daf1e626cb686d6e1cc"
-  sha256 "57169dc8c05b216771c567b2ee2988f14488dd13f7d191ebc9d0703bead4c9e6"
-  revision 3
+      tag:      "shogun_6.1.4",
+      revision: "ab274e7ab6bf24dd598c1daf1e626cb686d6e1cc"
+  license "BSD-3-Clause"
+  revision 11
 
   bottle do
-    sha256 "affaea43f1e4ed4d0102675079a1334fa5dca7f836842e4d10a7f64b0c969860" => :catalina
-    sha256 "5362818881e0f42095759525a346d59c49a0f8420916abd8ed03fd9884b5da36" => :mojave
-    sha256 "070a2ee1245e3ed473b928efecf401a6365fde05755e81251d3f63840f285c88" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "4e39c797d38f15383d76c312d84313ce3757b33d6cb42393de432db7a9ee6391"
+    sha256 cellar: :any,                 big_sur:       "bfefc3fb2694eb343be5fcb54b6b922ee462f6c3f4cbe38bf7392600db03ba5d"
+    sha256 cellar: :any,                 catalina:      "88ac63fbb529bf14938d9b5032aa58a6718f27a5953a47ec4498404953c982a9"
+    sha256 cellar: :any,                 mojave:        "589e96815f03a551445e9817da9781e5f4613a80411cb3d42085aaa5fd491be4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e96c890c90c2eab21593920d4a62fca59d449a283555b41358f521846ab685f7"
   end
 
   depends_on "cmake" => :build

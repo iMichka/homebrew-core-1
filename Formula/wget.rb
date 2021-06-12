@@ -1,15 +1,16 @@
 class Wget < Formula
   desc "Internet file retriever"
   homepage "https://www.gnu.org/software/wget/"
-  url "https://ftp.gnu.org/gnu/wget/wget-1.20.3.tar.gz"
-  sha256 "31cccfc6630528db1c8e3a06f6decf2a370060b982841cfab2b8677400a5092e"
-  revision 2
+  url "https://ftp.gnu.org/gnu/wget/wget-1.21.1.tar.gz"
+  sha256 "59ba0bdade9ad135eda581ae4e59a7a9f25e3a4bde6a5419632b31906120e26e"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "ef65c759c5097a36323fa9c77756468649e8d1980a3a4e05695c05e39568967c" => :catalina
-    sha256 "28f4090610946a4eb207df102d841de23ced0d06ba31cb79e040d883906dcd4f" => :mojave
-    sha256 "91dd0caca9bd3f38c439d5a7b6f68440c4274945615fae035ff0a369264b8a2f" => :high_sierra
-    sha256 "c6cd0e129ff133307530846f45280872d516b82bb5346f5193e1603f3b3dc34a" => :x86_64_linux
+    sha256 arm64_big_sur: "e9034fc9062d5d28972135be031876672aff18fa945ce37e9c2ee1e2c4287f3a"
+    sha256 big_sur:       "e6ea2a50b8196206f7072360e713535bb16fb786c8b5fe23cab05757e0f67b13"
+    sha256 catalina:      "88116cb28d6b85e441d1bb9df0a1454b84f8b9d0e8817a5bee0f228acc59e75a"
+    sha256 mojave:        "ae4e6f1dc4ecaf2bbed7700e8d64cdc671bf9d6c085ba335f119861fd15956fe"
+    sha256 x86_64_linux:  "aa5cfb050e6f0b017b6c94b38b5dceeb723bfb25c754ed74a4c9854402e1eab9"
   end
 
   head do
@@ -24,7 +25,10 @@ class Wget < Formula
   depends_on "pkg-config" => :build
   depends_on "libidn2"
   depends_on "openssl@1.1"
-  depends_on "util-linux" if OS.linux? # for libuuid
+
+  on_linux do
+    depends_on "util-linux"
+  end
 
   def install
     system "./bootstrap", "--skip-po" if build.head?
@@ -32,12 +36,11 @@ class Wget < Formula
                           "--sysconfdir=#{etc}",
                           "--with-ssl=openssl",
                           "--with-libssl-prefix=#{Formula["openssl@1.1"].opt_prefix}",
-                          # Work around a gnulib issue with macOS Catalina
-                          "gl_cv_func_ftello_works=yes",
                           "--disable-debug",
                           "--disable-pcre",
                           "--disable-pcre2",
-                          "--without-libpsl"
+                          "--without-libpsl",
+                          "--without-included-regex"
     system "make", "install"
   end
 

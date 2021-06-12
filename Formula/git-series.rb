@@ -3,19 +3,20 @@ class GitSeries < Formula
   homepage "https://github.com/git-series/git-series"
   url "https://github.com/git-series/git-series/archive/0.9.1.tar.gz"
   sha256 "c0362e19d3fa168a7cb0e260fcdecfe070853b163c9f2dfd2ad8213289bc7e5f"
-  revision 1
+  license "MIT"
+  revision 3
 
   bottle do
-    cellar :any
-    sha256 "2073a7838f6ba7f715bc056a1855e71ce4e2d800f6f3ecaaa455bd9d38372eab" => :catalina
-    sha256 "bbad06cbdc7e4d275aa65b8ca0c7148583a35181200a3eefc4b48f691e195010" => :mojave
-    sha256 "3a41df7702c89ca5d9cce8aaf667adb8aea8ac49e63962e73cded92ea765338f" => :high_sierra
-    sha256 "76bc22f517e888f1090927a582ccbcf5f09493cc127cd00289008342ffb5a08a" => :sierra
-    sha256 "0fa295ba581c35e002e10eb19f69b550992611f8b54489f81d5e1e3c57d6f054" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "ccf1c1e9a18629fe874987409d79f84da6e171fe802a6918147c3198b0047cce"
+    sha256 cellar: :any, big_sur:       "2193cb415148a398304ae5cde86bd8f672c62fef1028ad78057d66fa3ca0fd36"
+    sha256 cellar: :any, catalina:      "e273c21ef68060e010e42bc805bf1a2e5baf9a8e7ecec6338490175857713168"
+    sha256 cellar: :any, mojave:        "31c32b8df3a5a2c70c54786a0c222ce4fdeccace4cb3a5bf50f3a27d9f46167d"
+    sha256 cellar: :any, x86_64_linux:  "aeb8fd7080e3d1f792aa568c6810575574afff53fa9d87c9a35ee5fb03a9a865"
   end
 
   depends_on "cmake" => :build
   depends_on "rust" => :build
+  depends_on "libgit2"
   depends_on "libssh2"
   depends_on "openssl@1.1"
 
@@ -23,6 +24,9 @@ class GitSeries < Formula
     # Ensure that the `openssl` crate picks up the intended library.
     # https://crates.io/crates/openssl#manual-configuration
     ENV["OPENSSL_DIR"] = Formula["openssl@1.1"].opt_prefix
+
+    ENV["LIBGIT2_SYS_USE_PKG_CONFIG"] = "1"
+    ENV["LIBSSH2_SYS_USE_PKG_CONFIG"] = "1"
 
     system "cargo", "install", "--root", prefix, "--path", "."
     man1.install "git-series.1"

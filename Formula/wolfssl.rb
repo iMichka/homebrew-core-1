@@ -1,18 +1,24 @@
 class Wolfssl < Formula
   desc "Embedded SSL Library written in C"
-  homepage "https://www.wolfssl.com/wolfSSL/Home.html"
+  homepage "https://www.wolfssl.com"
   url "https://github.com/wolfSSL/wolfssl.git",
-      :tag      => "v4.2.0-stable",
-      :revision => "48c4b2fedcee4d61b6a76c5ce9e33ab212d6ab4a"
-  sha256 "4e15f494604e41725499f8b708798f8ddc2fcaa8f39b4369bcd000b3cab482d8"
+      tag:      "v4.7.0-stable",
+      revision: "830de9a9fb99e30f9ac9caa0a7f7bba29c3b4863"
+  license "GPL-2.0-or-later"
   head "https://github.com/wolfSSL/wolfssl.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/v?(\d+(?:\.\d+)+)[._-]stable["' >]}i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "cbeb92db86356a2f0ab9add4e1648f235c45771f85dea088dbbabc5e19f48fd2" => :catalina
-    sha256 "dfd3c89b0ecd94631cc48af24aad0f3b90f285e1b9b8309fa6e9b0a4f64abc92" => :mojave
-    sha256 "0ed429c6131d3802d733bda32249d05b154cac0bc3192f5e1f272fd777445f17" => :high_sierra
-    sha256 "674e023d34281ee96f2d58fe003c0cd49135a2438c27c8f51dad54677769e347" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "d3c1a0238f4bff3d6bbe97c95f28c0b48eba899acc86fdf780611f26ccb5f790"
+    sha256 cellar: :any,                 big_sur:       "d01ee339331c0c96fe0512667e879a442790e5c9af2a7629a8458a43901c1b9d"
+    sha256 cellar: :any,                 catalina:      "4bc15cd6d682ab0319e44bb002e33277e749764b13c1333d0c2f61fee8599eb0"
+    sha256 cellar: :any,                 mojave:        "495873f14e34b81d5d4e56b131b70678f1445495de50dc8fc897463b16e3652a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "45a073acaa386eb313922dfbb7f05762c97832037424e3a9c79bf0cd83d67934"
   end
 
   depends_on "autoconf" => :build
@@ -20,10 +26,6 @@ class Wolfssl < Formula
   depends_on "libtool" => :build
 
   def install
-    # https://github.com/Homebrew/homebrew-core/pull/1046
-    # https://github.com/Homebrew/brew/pull/251
-    ENV.delete("SDKROOT")
-
     args = %W[
       --disable-silent-rules
       --disable-dependency-tracking
@@ -78,10 +80,10 @@ class Wolfssl < Formula
       --enable-fasthugemath
     ]
 
-    # Extra flag is stated as a needed for the Mac platform.
-    # https://wolfssl.com/wolfSSL/Docs-wolfssl-manual-2-building-wolfssl.html
-    # Also, only applies if fastmath is enabled.
-    if OS.mac?
+    on_macos do
+      # Extra flag is stated as a needed for the Mac platform.
+      # https://www.wolfssl.com/docs/wolfssl-manual/ch2/
+      # Also, only applies if fastmath is enabled.
       ENV.append_to_cflags "-mdynamic-no-pic"
     end
 

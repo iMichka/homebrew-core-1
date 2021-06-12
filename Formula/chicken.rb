@@ -1,29 +1,43 @@
 class Chicken < Formula
   desc "Compiler for the Scheme programming language"
   homepage "https://www.call-cc.org/"
-  url "https://code.call-cc.org/releases/5.1.0/chicken-5.1.0.tar.gz"
-  sha256 "5c1101a8d8faabfd500ad69101e0c7c8bd826c68970f89c270640470e7b84b4b"
+  url "https://code.call-cc.org/releases/5.2.0/chicken-5.2.0.tar.gz"
+  sha256 "819149c8ce7303a9b381d3fdc1d5765c5f9ac4dee6f627d1652f47966a8780fa"
+  license "BSD-3-Clause"
   head "https://code.call-cc.org/git/chicken-core.git"
 
+  livecheck do
+    url "https://code.call-cc.org/releases/current/"
+    regex(/href=.*?chicken[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    sha256 "de1ec14d117a991683d9d8dfff264eb88368f3607f412528fcbc10df5cf76f43" => :catalina
-    sha256 "f08f36b85d0a45fae786647581714722d8aaff881ce57f0504548fe1b7c76a5b" => :mojave
-    sha256 "7700eba9ea0485079f542114f81109f6951908aba573b3aafa020574614bf700" => :high_sierra
-    sha256 "7c79e7ec3d377cf3cc4aacae7c997859d6d11d8e081d609d3423b4cffcb48e22" => :sierra
-    sha256 "4e8ce2adfd2cbfd2a5aa4472778bbe4f25ab313147b25c484b5e6cff87718977" => :x86_64_linux
+    sha256 arm64_big_sur: "8245210e28c0dd3ee7605efed72f157e49751e67e4c9eea279e5fc558a413278"
+    sha256 big_sur:       "1d723ed0cb6621708f2123882a05fffa9328f1ebdedb505f60746e5a1740761d"
+    sha256 catalina:      "674b9d864481f15a5b406c1ef2e1dfce8ee584a100edf2501a096afee44ad396"
+    sha256 mojave:        "3d35a95b8296a8e37c5bbaf5d77188684adcccc7f3f3d77e73c6c3e9ac566f86"
+    sha256 high_sierra:   "17b093038bb0845a2687c1294288a11992f4e2279a64c93ef0e2c80977a1d882"
+    sha256 x86_64_linux:  "e6629e7f5cabe5d64f4f886e1daa4f6baa5c005d163a766d146f3889f0722544"
   end
 
   def install
     ENV.deparallelize
 
     args = %W[
-      PLATFORM=#{OS.mac? ? "macosx" : "linux"}
       PREFIX=#{prefix}
       C_COMPILER=#{ENV.cc}
       LIBRARIAN=ar
       ARCH=x86-64
     ]
-    args << "POSTINSTALL_PROGRAM=install_name_tool" if OS.mac?
+
+    on_macos do
+      args << "POSTINSTALL_PROGRAM=install_name_tool"
+      args << "PLATFORM=macosx"
+    end
+
+    on_linux do
+      args << "PLATFORM=linux"
+    end
 
     system "make", *args
     system "make", "install", *args

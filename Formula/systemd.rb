@@ -1,69 +1,59 @@
 class Systemd < Formula
   desc "System and service manager"
   homepage "https://wiki.freedesktop.org/www/Software/systemd/"
-  url "https://github.com/systemd/systemd/archive/v234.tar.gz"
-  sha256 "da3e69d10aa1c983d33833372ad4929037b411ac421fb085c8cee79ae1d80b6a"
-  revision 3
+  url "https://github.com/systemd/systemd/archive/v246.tar.gz"
+  sha256 "4268bd88037806c61c5cd1c78d869f7f20bf7e7368c63916d47b5d1c3411bd6f"
+  license all_of: ["GPL-2.0-or-later", "LGPL-2.1-or-later"]
   head "https://github.com/systemd/systemd.git"
-  # tag "linux"
 
   bottle do
-    sha256 "25ef6f91c22aee4651c7d74d67f5ed298b77744605508e0361311fc56337034a" => :x86_64_linux
+    sha256 x86_64_linux: "bd50f07866cf8875f079d7dab3ee0f176fc154ef42ce3a3879ca0a722eac3e96"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
   depends_on "coreutils" => :build
   depends_on "docbook-xsl" => :build
   depends_on "gettext" => :build
   depends_on "gperf" => :build
   depends_on "intltool" => :build
+  depends_on "libgpg-error" => :build
   depends_on "libtool" => :build
-  depends_on "libxslt" => :build # for xsltproc
+  depends_on "libxslt" => :build
   depends_on "m4" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "expat"
   depends_on "libcap"
+  depends_on :linux
+  depends_on "lz4"
+  depends_on "openssl@1.1"
   depends_on "util-linux" # for libmount
-  depends_on "libgpg-error" => :build
-
-  patch do
-    url "https://github.com/systemd/systemd/commit/227b8a762fea1458547be2cdf0e6e4aac0079730.diff?full_index=1"
-    sha256 "3a123a6cba8cf1e27b2ace04f81c6d0a87e29c7a9900aa2ec1d1fea8e06656a8"
-  end
-
-  # src/core/dbus.c:1022:5: internal compiler error: Segmentation fault
-  fails_with :gcc => "4.8"
+  depends_on "xz"
 
   def install
-    ENV.prepend_create_path "PERL5LIB", libexec/"lib/perl5"
+    args = %W[
+      --prefix=#{prefix}
+      --libdir=lib
+      --sysconfdir=#{etc}
+      --localstatedir=#{var}
+      -Drootprefix=#{prefix}
+      -Dsysvinit-path=#{prefix}/etc/init.d
+      -Dsysvrcnd-path=#{prefix}/etc/rc.d
+      -Dpamconfdir=#{prefix}/etc/pam.d
+      -Dcreate-log-dirs=false
+      -Dhwdb=false
+      -Dlz4=true
+      -Dgcrypt=false
+    ]
 
-    # Needed by intltool (xml::parser)
-    ENV.prepend_path "PERL5LIB", "#{Formula["intltool"].libexec}/lib/perl5"
-
-    # Fix error: unsupported reloc 42
-    inreplace "configure.ac", "-Wl,-fuse-ld=gold", ""
-
-    # Fix compilation error: file ./man/custom-html.xsl line 24 element import
-    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
-
-    system "./autogen.sh"
-    system "./configure",
-      "--disable-acl",
-      "--disable-debug",
-      "--disable-dependency-tracking",
-      "--disable-silent-rules",
-      "--prefix=#{prefix}",
-      "--localstatedir=#{var}",
-      "--sysconfdir=#{prefix}/etc",
-      "--with-rootprefix=#{prefix}",
-      "--with-sysvinit-path=#{prefix}/etc/init.d",
-      "--with-sysvrcnd-path=#{prefix}/etc/rc.d",
-      "--with-libgpg-error-prefix=#{Formula["libgpg-error"].opt_prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
-    system "#{bin}/systemd-path"
+    assert_match "temporary: /tmp", shell_output("#{bin}/systemd-path")
   end
 end

@@ -1,16 +1,22 @@
 class Sfk < Formula
   desc "Command-line tools collection"
   homepage "http://stahlworks.com/dev/swiss-file-knife.html"
-  url "https://downloads.sourceforge.net/project/swissfileknife/1-swissfileknife/1.9.5.2/sfk-1.9.5.tar.gz"
-  version "1.9.5.2"
-  sha256 "0c9596d0271cc5c04d91c99f53ff17d5bf566187512f0e51f9fb2e4f4a44d152"
+  url "https://downloads.sourceforge.net/project/swissfileknife/1-swissfileknife/1.9.8.0/sfk-1.9.8.tar.gz"
+  version "1.9.8.0"
+  sha256 "837c7a3fabd1549c0ea5748d05ece5f259d906358226ce04799c4c13e59f1968"
+  license "BSD-2-Clause"
+
+  livecheck do
+    url :stable
+    regex(%r{url.*?swissfileknife/v?(\d+(?:\.\d+)+)/}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "01a8fdc14835ec662924df0ec6772afa80585e78ff92d58e92596d84e18e0d99" => :catalina
-    sha256 "c8ba1f86897c1091d54528e2d3e1269ab140197b86c4eaea47ac5aa39d7bf2cd" => :mojave
-    sha256 "47d8b16e909564e1f04667c725c0a0ae4668f915af7528646e37d03f9ec9f021" => :high_sierra
-    sha256 "25a45209dcf60963f0894c621d53a479b4509a5494cafba9dfaf1537b9093d6f" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7ee72add140bb65a9a321ecc7995f9569faf1a781a414e6c29150160e714e577"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a02c2a0af4647ecc3ac769d65bf7f3b380986fc6ce86a0abf443b8b1da6084f5"
+    sha256 cellar: :any_skip_relocation, catalina:      "a48c5b3fca272552ace60bc3a8a10636cb54da3c79f9fbf98314504582ba9546"
+    sha256 cellar: :any_skip_relocation, mojave:        "4070b917ef0c60cee55d29f6c563069e2eb23793e3024f008e1a76c15f476bb3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cbf68a56c2cfcc7885613d983bf110659c221a547e5102c5779436bd0130870f"
   end
 
   def install

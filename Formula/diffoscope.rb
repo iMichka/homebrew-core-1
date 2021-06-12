@@ -1,25 +1,33 @@
 class Diffoscope < Formula
+  include Language::Python::Virtualenv
+
   desc "In-depth comparison of files, archives, and directories"
   homepage "https://diffoscope.org"
-  url "https://files.pythonhosted.org/packages/89/3f/e99b3a34f7b57b9680582936db229bba361e12b088a20cf82ebd3fafcd8c/diffoscope-128.tar.gz"
-  sha256 "b3baeb222b8ea81765c4b1e3db084da923e0f08f1a4d1207014abb4f0cd29568"
+  url "https://files.pythonhosted.org/packages/a3/43/77f45fd6fe16912607c6afeb37dad232a5db7719f4939f69640db52180fc/diffoscope-177.tar.gz"
+  sha256 "8ac0cad150914bab2a53caa3f21876a78b092f3d2a36b9134874cd5c04a26b2e"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a3adf0916ecc3946fa7edf974b05d8b2dcd39caab86056ef3572e1f0e4122b71" => :catalina
-    sha256 "a3adf0916ecc3946fa7edf974b05d8b2dcd39caab86056ef3572e1f0e4122b71" => :mojave
-    sha256 "a3adf0916ecc3946fa7edf974b05d8b2dcd39caab86056ef3572e1f0e4122b71" => :high_sierra
-    sha256 "b3c858001193cb5126429196fb6e58834282201041b3cb7f5acca5e43d267d75" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "cae4d0646d47ecc683ed2c30f468d9a4b670995d53f17e794745d026ba569b6d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e641de0f2b93c6bef7502649883ffd76731ad4945b18ea0d12986d0b3d92f28f"
+    sha256 cellar: :any_skip_relocation, catalina:      "9c3b865c6f0fab34233b384efb700a80413fdd2a5ce08267bd53dd499b15452e"
+    sha256 cellar: :any_skip_relocation, mojave:        "a0e4d961da1e2e35da3e28ff6c03bd98fe998bfe8638aa9b916d65e6e7da98b0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "347ccba0eb967f4ed72d629a37320f7b95b30761d0012758e265ec40a72182f0"
   end
 
-  depends_on "gnu-tar"
   depends_on "libarchive"
   depends_on "libmagic"
-  depends_on "python"
+  depends_on "python@3.9"
+
+  # Use resources from diffoscope[cmdline]
+  resource "argcomplete" do
+    url "https://files.pythonhosted.org/packages/6a/b4/3b1d48b61be122c95f4a770b2f42fc2552857616feba4d51f34611bd1352/argcomplete-1.12.3.tar.gz"
+    sha256 "2c7dbffd8c045ea534921e63b0be6fe65e88599990d8dc408ac8c542b72a5445"
+  end
 
   resource "libarchive-c" do
-    url "https://files.pythonhosted.org/packages/63/fe/9e6c78db381934e28c7ec3d30d4f209fe24442d17f1bd8c56d13ae185cf6/libarchive-c-2.9.tar.gz"
-    sha256 "9919344cec203f5db6596a29b5bc26b07ba9662925a05e24980b84709232ef60"
+    url "https://files.pythonhosted.org/packages/53/d5/bee2190570a2b4c372a022f16ebfc2313ff717a023f277f5d6f9ebf281a2/libarchive-c-3.1.tar.gz"
+    sha256 "618a7ecfbfb58ca15e11e3138d4a636498da3b6bc212811af158298530fbb87e"
   end
 
   resource "progressbar" do
@@ -28,28 +36,18 @@ class Diffoscope < Formula
   end
 
   resource "python-magic" do
-    url "https://files.pythonhosted.org/packages/84/30/80932401906eaf787f2e9bd86dc458f1d2e75b064b4c187341f29516945c/python-magic-0.4.15.tar.gz"
-    sha256 "f3765c0f582d2dfc72c15f3b5a82aecfae9498bd29ca840d72f37d7bd38bfcd5"
+    url "https://files.pythonhosted.org/packages/3a/70/76b185393fecf78f81c12f9dc7b1df814df785f6acb545fc92b016e75a7e/python-magic-0.4.24.tar.gz"
+    sha256 "de800df9fb50f8ec5974761054a708af6e4246b03b4bdaee993f948947b0ebcf"
   end
 
   def install
-    ENV.delete("PYTHONPATH") # play nice with libmagic --with-python
+    venv = virtualenv_create(libexec, Formula["python@3.9"].opt_bin/"python3")
+    venv.pip_install resources
+    venv.pip_install buildpath
 
-    pyver = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{pyver}/site-packages"
-
-    resources.each do |r|
-      r.stage do
-        system "python3", *Language::Python.setup_install_args(libexec/"vendor")
-      end
-    end
-
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{pyver}/site-packages"
-    system "python3", *Language::Python.setup_install_args(libexec)
-    bin.install Dir[libexec/"bin/*"]
-    libarchive = Formula["libarchive"].opt_lib/"libarchive.#{OS.mac? ? "dylib" : "so"}"
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"],
-                                            :LIBARCHIVE => libarchive)
+    bin.install libexec/"bin/diffoscope"
+    libarchive = Formula["libarchive"].opt_lib/shared_library("libarchive")
+    bin.env_script_all_files(libexec/"bin", LIBARCHIVE: libarchive)
   end
 
   test do

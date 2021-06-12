@@ -2,17 +2,17 @@ class Gowsdl < Formula
   desc "WSDL2Go code generation as well as its SOAP proxy"
   homepage "https://github.com/hooklift/gowsdl"
   url "https://github.com/hooklift/gowsdl.git",
-      :tag      => "v0.3.1",
-      :revision => "2375731131398bde30666dc45b48cd92f937de98"
+      tag:      "v0.5.0",
+      revision: "51f3ef6c0e8f41ed1bdccce4c04e86b6769da313"
+  license "MPL-2.0"
   head "https://github.com/hooklift/gowsdl.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "5fd404e38c1b998c6984f06c4ac9cafe14003d532966b06c089fa6e769d11d67" => :catalina
-    sha256 "b31f125e412680a97253faa4faf56b83f56fc3dc0ceec2eaca6bfdac5d2eb41a" => :mojave
-    sha256 "4d2525b76e187e99b69b11237bd0bb5125559815b4041b177ced99eed0b87a8f" => :high_sierra
-    sha256 "6ab3132d3b9488265bb6650ce778d98b4621077fc16bdbc93a18ffea0557abba" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1e00fdcd6cf4d9f6b4d8df22fbd7622ec946b4188944e4f5fb04aed3c29878f4"
+    sha256 cellar: :any_skip_relocation, big_sur:       "311386c63c7c7ffda0e89c0cf753b5ce53745909e492b2866f75c157c97e48a8"
+    sha256 cellar: :any_skip_relocation, catalina:      "5decccb2c1f5b9c093dc045fceede062ea21bfb0273c7cfa9d7c1cde04229e4c"
+    sha256 cellar: :any_skip_relocation, mojave:        "5fa5da76a1c3677059c85a6001e90b1a1d3256d7a7942133ca4824365dbc7fec"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2860a4fcd548e2aa0378793b1d56f07f0b6c4731f1e54bb1b6e093344f8ba7be"
   end
 
   depends_on "go" => :build

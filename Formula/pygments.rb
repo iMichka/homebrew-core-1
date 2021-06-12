@@ -3,20 +3,20 @@ class Pygments < Formula
 
   desc "Generic syntax highlighter"
   homepage "https://pygments.org/"
-  url "https://files.pythonhosted.org/packages/7e/ae/26808275fc76bf2832deb10d3a3ed3107bc4de01b85dcccbe525f2cd6d1e/Pygments-2.4.2.tar.gz"
-  sha256 "881c4c157e45f30af185c1ffe8d549d48ac9127433f2c380c24b84572ad66297"
-
+  url "https://files.pythonhosted.org/packages/ba/6e/7a7c13c21d8a4a7f82ccbfe257a045890d4dbf18c023f985f565f97393e3/Pygments-2.9.0.tar.gz"
+  sha256 "a18f47b506a429f6f4b9df81bb02beab9ca21d0a5fee38ed15aef65f0545519f"
+  license "BSD-2-Clause"
   head "https://github.com/pygments/pygments.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d6d30984eae722a0bde57e6590e0c89121cf340f050f0ac8a995212d622173b5" => :catalina
-    sha256 "778197007f7c9dda3f9121d7ee3aa0014002665b40dae5dae14e07f504162062" => :mojave
-    sha256 "ab35a224a347be5ad296ac3ee12e69e917ca34f7f47a7ef948aa81ca1d40e710" => :high_sierra
-    sha256 "931c35edfec89042b2fc1c97256055060dd92fc60c699a883a204caf66930bae" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e4808dcffb3c6d546a56d04ec28b96eb27345f54d0c146b3bcadf6b617fabaff"
+    sha256 cellar: :any_skip_relocation, big_sur:       "3b47aad9d600099fcc9d88bb76d2762c7e7af5c83d8d7bae1330d7a165e2c47f"
+    sha256 cellar: :any_skip_relocation, catalina:      "3b47aad9d600099fcc9d88bb76d2762c7e7af5c83d8d7bae1330d7a165e2c47f"
+    sha256 cellar: :any_skip_relocation, mojave:        "3b47aad9d600099fcc9d88bb76d2762c7e7af5c83d8d7bae1330d7a165e2c47f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f8f79ab4c6f2a3b35213ac9662e756561f4e716cd562509d386a1708b34227f3"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
     bash_completion.install "external/pygments.bashcomp" => "pygmentize"

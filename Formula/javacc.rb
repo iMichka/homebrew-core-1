@@ -1,18 +1,26 @@
 class Javacc < Formula
-  desc "Java parser generator"
+  desc "Parser generator for use with Java applications"
   homepage "https://javacc.org/"
-  url "https://github.com/javacc/javacc/archive/7.0.4.tar.gz"
-  sha256 "a6a2381dfae5fdfe7849b921c9950af594ff475b69fbc6e8568365c5734cf77c"
+  url "https://github.com/javacc/javacc/archive/javacc-7.0.10.tar.gz"
+  sha256 "656cb9aaed498bcfa5faae40aa8d006760d5431c276fda5bb46cff4225d7c3cc"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/javacc[._-]v?(\d+(?:\.\d+)+)["' >]}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b13e7c7f8c0761cdc61f143006fb632ee5fee4399b87f5f0230ade64792f5b0b" => :catalina
-    sha256 "1929d7068a6b22f8b089d9805d755df470d5847761b7d610f38214b67b0b5270" => :mojave
-    sha256 "d11bdf6d0d8d07db045ae2a99908f4746e50a95f0a4075bc41747e237b0b2370" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8a3acf2460346b3e8fb8fccdff9098574002e3fd927633bf6135a0ab0dd400ce"
+    sha256 cellar: :any_skip_relocation, big_sur:       "81fa6c9cfa14578b76e7baa27ef7ac27ad0038558f4d372ecac6486f2eadc35a"
+    sha256 cellar: :any_skip_relocation, catalina:      "54792663583f44565206d4728237a9452859c162cea1e9c7ff782bf33daf6d99"
+    sha256 cellar: :any_skip_relocation, mojave:        "f954f391fb286509601a18d87042c3f6d218a7b57414e719cd37786723d71106"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "09a1b7cfc2e79aada89e9ac45f4c62d4d046fac355715fe7801297f0c89acc2b"
   end
 
   depends_on "ant" => :build
-  depends_on :java
+  depends_on "openjdk"
 
   def install
     system "ant"
@@ -22,7 +30,8 @@ class Javacc < Formula
     %w[javacc jjdoc jjtree].each do |script|
       (bin/script).write <<~SH
         #!/bin/bash
-        exec java -classpath #{libexec/"javacc.jar"} #{script} "$@"
+        export JAVA_HOME="${JAVA_HOME:-#{Formula["openjdk"].opt_prefix}}"
+        exec "${JAVA_HOME}/bin/java" -classpath '#{libexec}/javacc.jar' #{script} "$@"
       SH
     end
   end

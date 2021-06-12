@@ -1,24 +1,25 @@
 class Libspectre < Formula
   desc "Small library for rendering Postscript documents"
   homepage "https://wiki.freedesktop.org/www/Software/libspectre/"
-  url "https://libspectre.freedesktop.org/releases/libspectre-0.2.8.tar.gz"
-  sha256 "65256af389823bbc4ee4d25bfd1cc19023ffc29ae9f9677f2d200fa6e98bc7a8"
-  revision 9
+  url "https://libspectre.freedesktop.org/releases/libspectre-0.2.9.tar.gz"
+  sha256 "49ae9c52b5af81b405455c19fe24089d701761da2c45d22164a99576ceedfbed"
+  license "GPL-2.0-or-later"
+  revision 2
+
+  livecheck do
+    url "https://libspectre.freedesktop.org/releases/"
+    regex(/href=.*?libspectre[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d551192bf058b808f379b2d03bd4a94a47dca0b0301e12e994ec672141b370a2" => :catalina
-    sha256 "60d21fc1ce243a3f9d715f620977125380ee3d3b123a36bedff450c777b9a439" => :mojave
-    sha256 "8c62d8a24f6d20220811dd7eb9fed9e52963ffdba540e75f84f67f2757e559d7" => :high_sierra
-    sha256 "4302c8055f682626998c1c06bbede2a5dd56e538cc076a710162349aeda2d7b2" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "569048e256adf2200f0d78bb9e0e69124bfc95d048942a7e7302021d4f26a725"
+    sha256 cellar: :any,                 big_sur:       "dd24fcf3da06f8020b4c5439ca40d1b2eb17a518b62f205e8d34d4e259b0fd7e"
+    sha256 cellar: :any,                 catalina:      "b6010400519844d7e3c0ead42e613279dcf301b69775bbc75f8e93c2cadf797b"
+    sha256 cellar: :any,                 mojave:        "03c755d7c557ed3b53e73f398be9d2a04fd87143fa91d8dcbb010d8a36f313a0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3306db6030a81ed47d8a4195802e271d99f4c41a22759f8b8f92173318a59cfa"
   end
 
   depends_on "ghostscript"
-
-  patch do
-    url "https://github.com/Homebrew/formula-patches/raw/master/libspectre/libspectre-0.2.7-gs918.patch"
-    sha256 "e4c186ddc6cebc92ee0aee24bc79c7f5fff147a0c0d9cadf7ebdc3906d44711c"
-  end
 
   def install
     ENV.append "CFLAGS", "-I#{Formula["ghostscript"].opt_include}/ghostscript"

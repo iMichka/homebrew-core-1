@@ -1,15 +1,21 @@
 class Htslib < Formula
   desc "C library for high-throughput sequencing data formats"
   homepage "https://www.htslib.org/"
-  url "https://github.com/samtools/htslib/releases/download/1.10/htslib-1.10.tar.bz2"
-  sha256 "7ae44dd9faeb4c4293e9bb4815164ac28c6c6fae81fed4791df2fa878f57a972"
+  url "https://github.com/samtools/htslib/releases/download/1.12/htslib-1.12.tar.bz2"
+  sha256 "2280141b46e953ba4ae01b98335a84f8e6ccbdb6d5cdbab7f70ee4f7e3b6f4ca"
+  license "MIT"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "dbacdef5228a255b0c1c3def472eacabebe2785143683f56dce4ae2df12ef601" => :catalina
-    sha256 "7ed8777a2c6aa4bf909d9adb9e41e7b3c9c3f249d6ba6b17ca23b0ef65400b28" => :mojave
-    sha256 "330fb579bea2afe187a93b02efb826349efd8b4fc1ffe59b03c812adfece73f8" => :high_sierra
-    sha256 "8eda77db599c1a81a68730f27f3bc5b3b679b86b1a057db41cf59014b2866ab9" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "7df497b0d0ffc8370403fb973ebd143e8c2776978f7f6aaeed045e1ff17c3121"
+    sha256 cellar: :any,                 big_sur:       "337d53e97fef7ccad36110c39283f261d377442573182743ac892fa6bf2e0ed5"
+    sha256 cellar: :any,                 catalina:      "884b19991c4f1ac91b4ece1979a1585947283dc8eaa2ac12275b8e44e14d4e4b"
+    sha256 cellar: :any,                 mojave:        "1c65a9f4187196a2bc689a5a0299e7b9eafd0a192ca1b0e6ae924a9d13e8974b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e92a15f2ddcfb9a5471215f5f43806b02889d0caac47ba5b1f7245531c5f292b"
   end
 
   depends_on "xz"
@@ -21,11 +27,15 @@ class Htslib < Formula
   def install
     system "./configure", "--prefix=#{prefix}", "--enable-libcurl"
     system "make", "install"
-    pkgshare.install "test"
   end
 
   test do
-    sam = pkgshare/"test/ce#1.sam"
+    sam = testpath/"test.sam"
+    sam.write <<~EOS
+      @SQ	SN:chr1	LN:500
+      r1	0	chr1	100	0	4M	*	0	0	ATGC	ABCD
+      r2	0	chr1	200	0	4M	*	0	0	AATT	EFGH
+    EOS
     assert_match "SAM", shell_output("#{bin}/htsfile #{sam}")
     system "#{bin}/bgzip -c #{sam} > sam.gz"
     assert_predicate testpath/"sam.gz", :exist?

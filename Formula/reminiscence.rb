@@ -1,15 +1,20 @@
 class Reminiscence < Formula
   desc "Flashback engine reimplementation"
   homepage "http://cyxdown.free.fr/reminiscence/"
-  url "http://cyxdown.free.fr/reminiscence/REminiscence-0.4.5.tar.bz2"
-  sha256 "108ec26b71539a0697eff97498c31a26a10278892649584531732a0df0472abf"
+  url "http://cyxdown.free.fr/reminiscence/REminiscence-0.4.8.tar.bz2"
+  sha256 "1cb6ccb4ac9ec38fa80dd80dbdb24ccf16cf58d2de42a030776a3a7c691cabf8"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?REminiscence[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "fb9ac602c0bf9afe43287302a18e9a47d3cc27f2ef894fbfce60a90594e750ad" => :catalina
-    sha256 "165e1694ef3880e68eecb99e1288fc7aa3d31d54cd15240757aa60292c479bda" => :mojave
-    sha256 "b991cb2fbd838085444fe0267b352b9cce450892aa0982e3a5166ce2bfcc0cff" => :high_sierra
-    sha256 "30c11862986141340dea80799cc37ee1d4bc7f5de9ea803f3a32490786354bfa" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "e5f1b6bbae4b98d7b63fc625185777507337626a291562e40e9bf43a5b5cd07a"
+    sha256 cellar: :any,                 big_sur:       "d9ce59c1d7e918e95c41ab0634f37296716d81985463b066415c5cd311e23a1b"
+    sha256 cellar: :any,                 catalina:      "6e2a4eae17d7c5344f2fdcf4c23214fba760d039e9a5d9a1ba6d9236684a9331"
+    sha256 cellar: :any,                 mojave:        "267a60d456e2223523e09144575cab1d5b6087b8e52c4bb6715450ee00fa60ac"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ab91d1b6b87215a1d468168f91a2ae78b4380ba88ba775a746c65062f4e4ba92"
   end
 
   depends_on "autoconf" => :build
@@ -19,11 +24,12 @@ class Reminiscence < Formula
   depends_on "libmodplug"
   depends_on "libogg"
   depends_on "sdl2"
+
   uses_from_macos "zlib"
 
   resource "tremor" do
-    url "https://git.xiph.org/tremor.git",
-        :revision => "7c30a66346199f3f09017a09567c6c8a3a0eedc8"
+    url "https://gitlab.xiph.org/xiph/tremor.git",
+        revision: "7c30a66346199f3f09017a09567c6c8a3a0eedc8"
   end
 
   def install
@@ -35,15 +41,12 @@ class Reminiscence < Formula
       system "make", "install"
     end
 
-    # fix for files missing from archive, reported upstream via email
-    inreplace "Makefile" do |s|
-      s.gsub! "-DUSE_STATIC_SCALER", ""
-      s.gsub! "SCALERS :=", "#SCALERS :="
-    end
-
     ENV.prepend "CPPFLAGS", "-I#{libexec}/include"
     ENV.prepend "LDFLAGS", "-L#{libexec}/lib"
-    ENV.append "LDFLAGS", "-Wl,-rpath=#{libexec}/lib" unless OS.mac?
+    on_linux do
+      # Fixes: reminiscence: error while loading shared libraries: libvorbisidec.so.1
+      ENV.append "LDFLAGS", "-Wl,-rpath=#{libexec}/lib"
+    end
 
     system "make"
     bin.install "rs" => "reminiscence"

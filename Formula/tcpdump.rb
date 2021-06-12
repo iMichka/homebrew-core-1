@@ -1,16 +1,21 @@
 class Tcpdump < Formula
   desc "Command-line packet analyzer"
   homepage "https://www.tcpdump.org/"
-  url "https://www.tcpdump.org/release/tcpdump-4.9.3.tar.gz"
-  sha256 "2cd47cb3d460b6ff75f4a9940f594317ad456cfbf2bd2c8e5151e16559db6410"
+  url "https://www.tcpdump.org/release/tcpdump-4.99.1.tar.gz"
+  sha256 "79b36985fb2703146618d87c4acde3e068b91c553fb93f021a337f175fd10ebe"
+  license "BSD-3-Clause"
   head "https://github.com/the-tcpdump-group/tcpdump.git"
 
+  livecheck do
+    url "https://www.tcpdump.org/release/"
+    regex(/href=.*?tcpdump[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "d4a3781175e0ce1d1a1048a3e211b8775dcec91e362fb51b3384e7404be3b4b6" => :catalina
-    sha256 "6cd2cafe6229e2ccb97ba0b636e19a89c9e2f0ec85778910ed55498a30c03eb3" => :mojave
-    sha256 "22f03cae37a35d6369292efd2c661f781df8dc21184046e768e13c148dbb3f19" => :high_sierra
-    sha256 "019a0224c29a377ee82ad9985496f4aa2a8851ef13f25b0caea0c3d9189d39c7" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "76240f2c1366e4ff70ec2a7a4faecdd8a39b57ba4641a88a01850e773a408964"
+    sha256 cellar: :any, big_sur:       "f13d5873a6d26314c930711e8565ce1265ac127a8470952aadda54232bbc9e8f"
+    sha256 cellar: :any, catalina:      "4238eca3a7436080167e6b83054e10e14774cc77368d0e84e6e6914d34bf7290"
+    sha256 cellar: :any, mojave:        "c919c1dde35897ff9bb40f367e4f286808ca6eeaf31ae99c279dfb779e9f4785"
   end
 
   depends_on "libpcap"
@@ -18,13 +23,19 @@ class Tcpdump < Formula
 
   def install
     system "./configure", "--prefix=#{prefix}",
-                          "--enable-ipv6",
                           "--disable-smb",
                           "--disable-universal"
     system "make", "install"
   end
 
   test do
-    system sbin/"tcpdump", "--help"
+    output = shell_output("#{bin}/tcpdump --help 2>&1")
+
+    assert_match "tcpdump version #{version}", output
+    assert_match "libpcap version #{Formula["libpcap"].version}", output
+    assert_match "OpenSSL #{Formula["openssl@1.1"].version}", output
+
+    assert_match "tcpdump: (cannot open BPF device) /dev/bpf0: Operation not permitted",
+      shell_output("#{bin}/tcpdump ipv6 2>&1", 1)
   end
 end

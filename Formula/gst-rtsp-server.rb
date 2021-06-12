@@ -1,37 +1,48 @@
 class GstRtspServer < Formula
   desc "RTSP server library based on GStreamer"
   homepage "https://gstreamer.freedesktop.org/modules/gst-rtsp-server.html"
-  url "https://gstreamer.freedesktop.org/src/gst-rtsp-server/gst-rtsp-server-1.16.2.tar.xz"
-  sha256 "de07a2837b3b04820ce68264a4909f70c221b85dbff0cede7926e9cdbb1dc26e"
+  url "https://gstreamer.freedesktop.org/src/gst-rtsp-server/gst-rtsp-server-1.18.4.tar.xz"
+  sha256 "a46bb8de40b971a048580279d2660e616796f871ad3ed00c8a95fe4d273a6c94"
+  license "LGPL-2.0-or-later"
+
+  livecheck do
+    url "https://gstreamer.freedesktop.org/src/gst-rtsp-server/"
+    regex(/href=.*?gst-rtsp-server[._-]v?(\d+\.\d*[02468](?:\.\d+)*)\.t/i)
+  end
 
   bottle do
-    sha256 "30d213fe81eece2d6a566c7d53ea36f9f3ee24219aa7b0be4edf15d46559cc03" => :catalina
-    sha256 "fc5d1f94602dc377f2d6938ed5f97e1a104958fbfeb26e48598e18c0dd0ca9ca" => :mojave
-    sha256 "94e6f9c451be9c5f2e3b3a92d7450b730b3cea49c85f1e03cd8348943385a311" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "0fd899f6268df8362cadf3f19b92753740301acaf2aa180a4d95f256cb40e4a8"
+    sha256 cellar: :any,                 big_sur:       "2cbafc9f96e6c7b87afac67edaf0c0252205307ee088066f2d3766807ebdc68e"
+    sha256 cellar: :any,                 catalina:      "7528fe1df86bbd0c6702b3e4c843af6509640098c1cd5b5d326941c2006c503a"
+    sha256 cellar: :any,                 mojave:        "1f69a3c5c02d021ebbb7e5a96779f38d15ffa3eef0680d993f3f5c508bbdb0ad"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "67a8b17e2a87a37114fe58c38381d2cbb4a6c80c17818062861eb3204c2acf7e"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "libtool" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "gettext"
   depends_on "gst-plugins-base"
   depends_on "gstreamer"
 
   def install
-    system "./configure", "--prefix=#{prefix}",
-                          "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--disable-examples",
-                          "--disable-tests",
-                          "--enable-introspection=yes"
+    args = std_meson_args + %w[
+      -Dintrospection=enabled
+      -Dexamples=disabled
+      -Dtests=disabled
+    ]
 
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
     gst = Formula["gstreamer"].opt_bin/"gst-inspect-1.0"
     output = shell_output("#{gst} --gst-plugin-path #{lib} --plugin rtspclientsink")
-    assert_match /\s#{version}\s/, output
+    assert_match(/\s#{version}\s/, output)
   end
 end

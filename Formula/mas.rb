@@ -2,34 +2,26 @@ class Mas < Formula
   desc "Mac App Store command-line interface"
   homepage "https://github.com/mas-cli/mas"
   url "https://github.com/mas-cli/mas.git",
-      :tag      => "v1.6.3",
-      :revision => "3ac7e51b9e9fdd33f7caf7c77bebf09bf0cce44b"
+      tag:      "v1.8.2",
+      revision: "2f2a43b425498f3cee50974116b8c9d27adbb7cb"
+  license "MIT"
   head "https://github.com/mas-cli/mas.git"
 
   bottle do
-    cellar :any
-    sha256 "2069b8c1c1a64c2fb91cc1c25ab9c9890c61f2182224b9e0605a35a151bb85bd" => :catalina
-    sha256 "3dd5a50b551a37c164c31375cc8498ba870e29e50086bd5c4c294bc26708a6d2" => :mojave
-    sha256 "a0d1e45203448c08420c3eab2d40ef957fd22c8e40fbeb067bc7bffe4f08dfe2" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1be3820e630aa31911100619f299b7d6b56349cc7298555ad3a7198c8846d79d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7c0d556cbae91f5770e1fb04fead95922e0931c4c897a1b940aae0347ff0e680"
+    sha256 cellar: :any_skip_relocation, catalina:      "4fe1a0f7fb506a65578b4f25cb6e9b9c40cebb13ed61941f6d41e69a04b97a7a"
   end
 
-  depends_on "carthage" => :build
-  depends_on :xcode => ["10.1", :build]
   depends_on :macos
+  if Hardware::CPU.arm?
+    depends_on xcode: ["12.2", :build]
+  else
+    depends_on xcode: ["12.0", :build]
+  end
 
   def install
-    # Working around build issues in dependencies
-    # - Prevent warnings from causing build failures
-    # - Prevent linker errors by telling all lib builds to use max size install names
-    xcconfig = buildpath/"Overrides.xcconfig"
-    xcconfig.write <<~EOS
-      GCC_TREAT_WARNINGS_AS_ERRORS = NO
-      OTHER_LDFLAGS = -headerpad_max_install_names
-    EOS
-    ENV["XCODE_XCCONFIG_FILE"] = xcconfig
-
-    # Only build necessary dependencies (Commandant, Result)
-    system "carthage", "bootstrap", "--platform", "macOS", "Commandant", "Result"
+    system "script/build"
     system "script/install", prefix
 
     bash_completion.install "contrib/completion/mas-completion.bash" => "mas"
@@ -38,6 +30,6 @@ class Mas < Formula
 
   test do
     assert_equal version.to_s, shell_output("#{bin}/mas version").chomp
-    assert_include shell_output("#{bin}/mas info 497799835"), "Xcode"
+    assert_includes shell_output("#{bin}/mas info 497799835"), "Xcode"
   end
 end

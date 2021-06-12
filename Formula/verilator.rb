@@ -1,20 +1,34 @@
 class Verilator < Formula
   desc "Verilog simulator"
   homepage "https://www.veripool.org/wiki/verilator"
-  url "https://www.veripool.org/ftp/verilator-4.022.tgz"
-  sha256 "3745611e83bfb35f24a626c803960dc0d4c1cae85a8f189f17f41e34e8c740ea"
+  url "https://www.veripool.org/ftp/verilator-4.200.tgz"
+  sha256 "773913f4410512a7a51de3d04964766438dc11fc22b213eab5c6c29730df3e36"
+  license any_of: ["LGPL-3.0-only", "Artistic-2.0"]
+
+  livecheck do
+    url "https://github.com/verilator/verilator.git"
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    sha256 "b2c95ed4a46716d7a90928b3b03593fbcc8106be013d41bff8f7d783332775c0" => :catalina
-    sha256 "b5c97e50fd6590119afe09d4b6bc23a6ec57db69dea35681c5f4a44fa747798a" => :mojave
-    sha256 "035e91fe184fa5aaa46ec7e8be3357704cc64ed859a5bc1717c10319d0b7836b" => :high_sierra
+    sha256 arm64_big_sur: "fe191d41a9bf04fd0536c7564cf1368535e22a0e1245e5c1672bc5e056848181"
+    sha256 big_sur:       "cd3937360e860cc0792fbf109cd245d3f48b0cb70d489bfda7db170eb1451e1a"
+    sha256 catalina:      "e2825ec3ef68a3344f102d15fd5a5c7915a18bacaf57d9ffdd1dc870e1e152e7"
+    sha256 mojave:        "f777b5823ce0aeb7fae25d6f8040d29aebd8f02e02a588b78773f7702bf83e7c"
+    sha256 x86_64_linux:  "0340e9fe3a310334a147036930819e2afdfefa1882b0c952065c206fa46502b6"
   end
 
   head do
-    url "https://git.veripool.org/git/verilator", :using => :git
+    url "https://git.veripool.org/git/verilator", using: :git
     depends_on "autoconf" => :build
     depends_on "automake" => :build
   end
+
+  depends_on "python@3.9" => :build
+
+  uses_from_macos "bison"
+  uses_from_macos "flex"
+  uses_from_macos "perl"
 
   skip_clean "bin" # Allows perl scripts to keep their executable flag
 

@@ -1,17 +1,24 @@
 class Tectonic < Formula
   desc "Modernized, complete, self-contained TeX/LaTeX engine"
   homepage "https://tectonic-typesetting.github.io/"
-  url "https://github.com/tectonic-typesetting/tectonic/archive/v0.1.11.tar.gz"
-  sha256 "e700dc691dfd092adfe098b716992136343ddfac5eaabb1e8cfae4e63f8454c7"
-  revision 3
+  url "https://github.com/tectonic-typesetting/tectonic/archive/tectonic@0.5.2.tar.gz"
+  sha256 "b60920b690054d870830298cc84735b6e2d45b96b7f64e94a14b4f8250b5b29c"
+  license "MIT"
+
+  # As of writing, only the tags starting with `tectonic@` are release versions.
+  # NOTE: The `GithubLatest` strategy cannot be used here because the "latest"
+  # release on GitHub sometimes points to a tag that isn't a release version.
+  livecheck do
+    url :stable
+    regex(/^tectonic@v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "f0ca20c3fb6590fc243d4d10b4c7441f0f9f2db02dc094bcc6b79f9b00021712" => :catalina
-    sha256 "444c5e60329bda85226028b831b300c46620fc7ffb398767bd55e657dc13b8c7" => :mojave
-    sha256 "73e06f54020a87762d6126205d26c7d50d216e3cbdb3778ed0828d32a89ef032" => :high_sierra
-    sha256 "46e092cdc508c92f4cd96c22f9da84fcc4cdd102aed3c81e8fcf2a601bfb8328" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "6dea3b9c89c8ff8fa38a0a265a42efc3fd3ff3e09bdad95072fa1c0e2d9103bd"
+    sha256 cellar: :any,                 big_sur:       "1118d095babcecf89b1d90513ef294e48e0b2aeccc5f9bdb6374c1cfc742ea58"
+    sha256 cellar: :any,                 catalina:      "2caa513eb14fd691cce7ba6d9a24280665430235003405068b84ee928589ecf1"
+    sha256 cellar: :any,                 mojave:        "88af317afb4a753a21957f0366fcd52405b6d96ac3a92bd563b4cbb8a81150f0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f0f13e0750c3efe9b154cbde5f24558d4e582dd3f0a79cb1b0a60e11b96315db"
   end
 
   depends_on "pkg-config" => :build
@@ -26,12 +33,13 @@ class Tectonic < Formula
   def install
     ENV.cxx11
     ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version # needed for CLT-only builds
+    ENV.delete("HOMEBREW_SDKROOT") if MacOS.version == :high_sierra
 
     # Ensure that the `openssl` crate picks up the intended library.
     # https://crates.io/crates/openssl#manual-configuration
     ENV["OPENSSL_DIR"] = Formula["openssl@1.1"].opt_prefix
 
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", "--features", "external-harfbuzz", *std_cargo_args
   end
 
   test do

@@ -1,16 +1,17 @@
 class Libtasn1 < Formula
   desc "ASN.1 structure parser library"
   homepage "https://www.gnu.org/software/libtasn1/"
-  url "https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.15.0.tar.gz"
-  mirror "https://ftpmirror.gnu.org/libtasn1/libtasn1-4.15.0.tar.gz"
-  sha256 "dd77509fe8f5304deafbca654dc7f0ea57f5841f41ba530cff9a5bf71382739e"
+  url "https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.17.0.tar.gz"
+  mirror "https://ftpmirror.gnu.org/libtasn1/libtasn1-4.17.0.tar.gz"
+  sha256 "ece7551cea7922b8e10d7ebc70bc2248d1fdd73351646a2d6a8d68a9421c45a5"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    cellar :any
-    sha256 "f1988371a72d252ecf69f2c39d61a8ad01cb49dd84ea716f00e38a2a74ff5ee0" => :catalina
-    sha256 "2e13d55178c6a4c057dbef42599700d06d7ef4192500b9254ff5cd99d5a07167" => :mojave
-    sha256 "1cf05b98fcb012d92efad23aaf68ba67e9edd7e15813f2b8826878d15b1ba189" => :high_sierra
-    sha256 "2fd0fd0fc3076fe38ce168ac0c3e8a8c31f7af02a8f7e85ef36c56fcd404772c" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "8b8ba758c8cb70a6970c69801937090ca5bc3fb68f9fb5358f2183299fbee3fa"
+    sha256 cellar: :any,                 big_sur:       "a045a7b16828e7c18bad248feb37207815daea23ff313c1cd6e94e94b222bb73"
+    sha256 cellar: :any,                 catalina:      "0b0b6a4b18ff4aef03772082d153be836b406af22e678a0b61553c70fdf95f10"
+    sha256 cellar: :any,                 mojave:        "73201deae5a10cd4b4125b4a7c811f48ed861cd6fe2f82d69fed6003115d7bef"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ac4599c1f1a9b4858cbf688524cbdec6c412004b447102c034662781e0d96481"
   end
 
   def install
@@ -36,6 +37,6 @@ class Libtasn1 < Formula
       s 47
     EOS
     system "#{bin}/asn1Coding", "pkix.asn", "assign.asn1"
-    assert_match /Decoding: SUCCESS/, shell_output("#{bin}/asn1Decoding pkix.asn assign.out PKIX1.Dss-Sig-Value 2>&1")
+    assert_match "Decoding: SUCCESS", shell_output("#{bin}/asn1Decoding pkix.asn assign.out PKIX1.Dss-Sig-Value 2>&1")
   end
 end

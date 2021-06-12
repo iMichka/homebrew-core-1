@@ -3,57 +3,61 @@ class Netpbm < Formula
   homepage "https://netpbm.sourceforge.io/"
   # Maintainers: Look at https://sourceforge.net/p/netpbm/code/HEAD/tree/
   # for stable versions and matching revisions.
-  url "https://svn.code.sf.net/p/netpbm/code/stable", :revision => 3603
-  version "10.73.27"
+  url "https://svn.code.sf.net/p/netpbm/code/stable", revision: "4107"
+  version "10.86.22"
+  license "GPL-3.0-or-later"
   version_scheme 1
   head "https://svn.code.sf.net/p/netpbm/code/trunk"
 
+  livecheck do
+    url "https://sourceforge.net/p/netpbm/code/HEAD/tree/stable/"
+    strategy :page_match
+    regex(/Release v?(\d+(?:\.\d+)+)/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "0cfe434022c5d517d3d5857a6665c34bd2cacda459d72c0d98eede9059baaaea" => :catalina
-    sha256 "469cb2a025a09badb8b1f8c8f591fe9e7970b1d3f31c3652081f56180ddb944a" => :mojave
-    sha256 "98c91433c81c781fa85d6c43d48c8dedf8dc4136adec1c9d7ee7b94abc35eb89" => :high_sierra
-    sha256 "24e357df064d03650ceb98903d09ee5c130effcdf76e78276595073756ce8722" => :sierra
-    sha256 "93240c9e73fd9167c4ceb2a3df55694c9f8344b87d97e23a28a88b7d2c1987d7" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "0132f49fda9f6b5ce50c8e400b16b19b4daaf0adabecb05f2bc961fbc958a298"
+    sha256 cellar: :any,                 big_sur:       "e2254237db71e5278c239560583a9de64c94f62d1ec78609c3028b932004867d"
+    sha256 cellar: :any,                 catalina:      "97034c4987a09fb78e38f6c1f156c4c00f206755c38c351e5b2d9d190ca8975c"
+    sha256 cellar: :any,                 mojave:        "8d8b0fe86051d79a9cd043ce4e83031e8bc564c6b6186de47d9039f6e7ddcaaa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6e4da507d5ef49a0fdb340f6aac7bef814c5cc14cbb81d6752b068047bf81379"
   end
 
   depends_on "jasper"
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "libtiff"
-  unless OS.mac?
-    depends_on "flex" => :build
-    depends_on "libxml2"
-    depends_on "zlib"
-  end
 
-  conflicts_with "jbigkit", :because => "both install `pbm.5` and `pgm.5` files"
+  uses_from_macos "flex" => :build
+  uses_from_macos "libxml2"
+  uses_from_macos "zlib"
 
   def install
     # Fix file not found errors for /usr/lib/system/libsystem_symptoms.dylib and
     # /usr/lib/system/libsystem_darwin.dylib on 10.11 and 10.12, respectively
-    if MacOS.version == :sierra || MacOS.version == :el_capitan
-      ENV["SDKROOT"] = MacOS.sdk_path
-    end
+    ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version <= :sierra
 
     cp "config.mk.in", "config.mk"
 
     inreplace "config.mk" do |s|
       s.remove_make_var! "CC"
-      if OS.linux?
-        s.change_make_var! "CFLAGS_SHLIB", "-fPIC"
-      elsif OS.mac?
-        s.change_make_var! "CFLAGS_SHLIB", "-fno-common"
-        s.change_make_var! "NETPBMLIBTYPE", "dylib"
-        s.change_make_var! "NETPBMLIBSUFFIX", "dylib"
-        s.change_make_var! "LDSHLIB", "--shared -o $(SONAME)"
-      end
       s.change_make_var! "TIFFLIB", "-ltiff"
       s.change_make_var! "JPEGLIB", "-ljpeg"
       s.change_make_var! "PNGLIB", "-lpng"
       s.change_make_var! "ZLIB", "-lz"
       s.change_make_var! "JASPERLIB", "-ljasper"
       s.change_make_var! "JASPERHDR_DIR", "#{Formula["jasper"].opt_include}/jasper"
+
+      on_macos do
+        s.change_make_var! "CFLAGS_SHLIB", "-fno-common"
+        s.change_make_var! "NETPBMLIBTYPE", "dylib"
+        s.change_make_var! "NETPBMLIBSUFFIX", "dylib"
+        s.change_make_var! "LDSHLIB", "--shared -o $(SONAME)"
+      end
+
+      on_linux do
+        s.change_make_var! "CFLAGS_SHLIB", "-fPIC"
+      end
     end
 
     ENV.deparallelize
@@ -68,19 +72,13 @@ class Netpbm < Formula
       end
 
       prefix.install %w[bin include lib misc]
-      # do man pages explicitly; otherwise a junk file is installed in man/web
-      man1.install Dir["man/man1/*.1"]
-      man5.install Dir["man/man5/*.5"]
-      lib.install Dir["link/*.a"]
-      lib.install Dir["link/*.dylib"] if OS.mac?
+      lib.install Dir["staticlink/*.a"], Dir["sharedlink/#{shared_library("*")}"]
       (lib/"pkgconfig").install "pkgconfig_template" => "netpbm.pc"
     end
-
-    (bin/"doc.url").unlink
   end
 
   test do
-    fwrite = Utils.popen_read("#{bin}/pngtopam #{test_fixtures("test.png")} -alphapam")
+    fwrite = shell_output("#{bin}/pngtopam #{test_fixtures("test.png")} -alphapam")
     (testpath/"test.pam").write fwrite
     system "#{bin}/pamdice", "test.pam", "-outstem", testpath/"testing"
     assert_predicate testpath/"testing_0_0.", :exist?

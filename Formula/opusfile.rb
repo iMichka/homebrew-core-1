@@ -1,21 +1,22 @@
 class Opusfile < Formula
   desc "API for decoding and seeking in .opus files"
   homepage "https://www.opus-codec.org/"
-  url "https://archive.mozilla.org/pub/opus/opusfile-0.11.tar.gz"
-  sha256 "74ce9b6cf4da103133e7b5c95df810ceb7195471e1162ed57af415fabf5603bf"
-  revision 1
+  url "https://ftp.osuosl.org/pub/xiph/releases/opus/opusfile-0.12.tar.gz"
+  sha256 "118d8601c12dd6a44f52423e68ca9083cc9f2bfe72da7a8c1acb22a80ae3550b"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any
-    sha256 "880361a708feef58ac653b5d75c8097424e5b3103a7ff00ac147020de1b7d925" => :catalina
-    sha256 "3ed382fc35e4038c6453b73f7f4de91563c5d46ec42661ef0c6f2fc3ce73f0fa" => :mojave
-    sha256 "a02bf319a06dce9af3eb978a1cc4f787883bdbe64aa2085f7e30279bee27d732" => :high_sierra
-    sha256 "ec6639a35be7e6c52129231be4c20e1d078bea09862ee573ecaf359a5c3cd7d6" => :sierra
-    sha256 "57727ad3f2f52b01c644d4c33a76d368be9e5866b8eb860699a005299dc08141" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "4274c0f9758385bbf30fabde125317dcf4934e5188d86b791cb1292efb9e26fd"
+    sha256 cellar: :any, big_sur:       "0e6dc752d650542ea8ae4b67182700724ae32ffd5dfa9323d5c2563ed267dd0f"
+    sha256 cellar: :any, catalina:      "c43c50e65738c25ef72af85e5509577314764c3dad0fb4c122704591d6f3a515"
+    sha256 cellar: :any, mojave:        "8754dfcc9abec5de74e8cd7af31614c06e8208bd623f9ad5446048ad14218a97"
+    sha256 cellar: :any, high_sierra:   "ff718107c425123a06270b62aa9a7bd3fee4f785d03dac21a58f7059720be22b"
+    sha256 cellar: :any, x86_64_linux:  "e0fdfbd4ea8d99b3ea0f2b574ac04edc1a3e9eea21ed7820dfe5641e5ba680cb"
   end
 
   head do
-    url "https://git.xiph.org/opusfile.git"
+    url "https://gitlab.xiph.org/xiph/opusfile.git"
+
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build
@@ -26,9 +27,9 @@ class Opusfile < Formula
   depends_on "openssl@1.1"
   depends_on "opus"
 
-  resource "music_48kbps.opus" do
-    url "https://www.opus-codec.org/examples/samples/music_48kbps.opus"
-    sha256 "64571f56bb973c078ec784472944aff0b88ba0c88456c95ff3eb86f5e0c1357d"
+  resource "sample" do
+    url "https://dl.espressif.com/dl/audio/gs-16b-1c-44100hz.opus"
+    sha256 "f80fabebe4e00611b93019587be9abb36dbc1935cb0c9f4dfdf5c3b517207e1b"
   end
 
   def install
@@ -39,6 +40,7 @@ class Opusfile < Formula
   end
 
   test do
+    resource("sample").stage { testpath.install Pathname.pwd.children(false).first => "sample.opus" }
     (testpath/"test.c").write <<~EOS
       #include <opus/opusfile.h>
       #include <stdlib.h>
@@ -59,7 +61,6 @@ class Opusfile < Formula
                              "-L#{lib}",
                              "-lopusfile",
                              "-o", "test"
-    resource("music_48kbps.opus").stage testpath
-    system "./test", "music_48kbps.opus"
+    system "./test", "sample.opus"
   end
 end

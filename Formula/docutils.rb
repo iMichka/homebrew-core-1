@@ -3,22 +3,26 @@ class Docutils < Formula
 
   desc "Text processing system for reStructuredText"
   homepage "https://docutils.sourceforge.io"
-  url "https://downloads.sourceforge.net/project/docutils/docutils/0.15/docutils-0.15.tar.gz"
-  sha256 "c35e87e985f70106f6f97e050f3bed990641e0e104566134b9cd23849a460e96"
+  url "https://downloads.sourceforge.net/project/docutils/docutils/0.17.1/docutils-0.17.1.tar.gz"
+  sha256 "686577d2e4c32380bb50cbb22f575ed742d58168cee37e99117a854bcd88f125"
+  revision 1
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3230d98f9912c462a2b6dd1aa64494fa26037eec4c1975a75970361de6243e79" => :catalina
-    sha256 "c655dd3f311370b4c6683236b6ead52d800397e050584124a54709effa556746" => :mojave
-    sha256 "7fc8102f9f46d9f3bc4debe405fa6b533809aa73da074d0379652971a30fbd93" => :high_sierra
-    sha256 "6393cc30ff4cef96e4309fc912267fd9649396fc31a471b15af6363eb1cedf95" => :sierra
-    sha256 "b78153a715eb15fffa96ac921752128ce0b2e48ff7a1b20df5325b8c84caf224" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b4f3eca7d4566cbb4ba7ecd31a55c6baf8bf3b6d3ff2574d0b91149e627a3b29"
+    sha256 cellar: :any_skip_relocation, big_sur:       "526706f3668d3ea0cfdab76748a9de32835e4a2e901af6a85ecaee399c910503"
+    sha256 cellar: :any_skip_relocation, catalina:      "526706f3668d3ea0cfdab76748a9de32835e4a2e901af6a85ecaee399c910503"
+    sha256 cellar: :any_skip_relocation, mojave:        "526706f3668d3ea0cfdab76748a9de32835e4a2e901af6a85ecaee399c910503"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9f46bdee85bcb11c10c0823dd9c0c113cbfa3dce54095a7d81b15e22248908a8"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
     virtualenv_install_with_resources
+
+    Dir.glob("#{libexec}/bin/*.py") do |f|
+      bin.install_symlink f => File.basename(f, ".py")
+    end
   end
 
   test do

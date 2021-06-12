@@ -1,16 +1,17 @@
 class Libgeotiff < Formula
   desc "Library and tools for dealing with GeoTIFF"
-  homepage "https://geotiff.osgeo.org/"
-  url "https://github.com/OSGeo/libgeotiff/releases/download/1.5.1/libgeotiff-1.5.1.tar.gz"
-  sha256 "f9e99733c170d11052f562bcd2c7cb4de53ed405f7acdde4f16195cd3ead612c"
+  homepage "https://github.com/OSGeo/libgeotiff"
+  url "https://github.com/OSGeo/libgeotiff/releases/download/1.6.0/libgeotiff-1.6.0.tar.gz"
+  sha256 "9311017e5284cffb86f2c7b7a9df1fb5ebcdc61c30468fb2e6bca36e4272ebca"
+  license "MIT"
+  revision 1
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f833648eceb8cb0070df9188fab7bb6211323bea2ea9eaa202385d8af02ee705" => :catalina
-    sha256 "5feecdec004c5bc749dbc16c4dda70382b001ad1e64ab7035086cfb425abf231" => :mojave
-    sha256 "f34254f5d27c0b074d1b74dc4c73baeb8c042b4126a0e7283b7e11911e0e0e0c" => :high_sierra
-    sha256 "b8f77860ec5528e75e3c74991ec06885a65dd0fab8d9b153a2742c8696e7e43b" => :sierra
-    sha256 "2ca2a7920ae704e18c5a7864100319ffdcfa22cd9a657d5417abda068f9628a9" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "693599ceb6c27a406ef40a2132fd90736c92e639f09ba9fc73a914a692a7d302"
+    sha256 cellar: :any,                 big_sur:       "d799eaf361b8ae3a149e616376ccc2bd6c165666931d41bea939eb1d60fd84dc"
+    sha256 cellar: :any,                 catalina:      "46c76bb3d4807e703b47edbe613f8fcbacf62dbafa3f9c51bc3ea64ea04f76fc"
+    sha256 cellar: :any,                 mojave:        "f558aff9a210d09cd3b6fd64756ab852bdcf3650c6d377dc007fb276f5f29720"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1db957a5da5ceae44796620bf38a07695e8afc02fb149970a2213bf73e035703"
   end
 
   head do
@@ -23,7 +24,7 @@ class Libgeotiff < Formula
 
   depends_on "jpeg"
   depends_on "libtiff"
-  depends_on "proj"
+  depends_on "proj@7"
 
   def install
     system "./autogen.sh" if build.head?
@@ -68,6 +69,6 @@ class Libgeotiff < Formula
                    "-L#{Formula["libtiff"].opt_lib}", "-ltiff", "-o", "test"
     system "./test", "test.tif"
     output = shell_output("#{bin}/listgeo test.tif")
-    assert_match /GeogInvFlatteningGeoKey.*123.456/, output
+    assert_match(/GeogInvFlatteningGeoKey.*123.456/, output)
   end
 end

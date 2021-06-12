@@ -1,21 +1,27 @@
 class Just < Formula
   desc "Handy way to save and run project-specific commands"
   homepage "https://github.com/casey/just"
-  url "https://github.com/casey/just/archive/v0.5.3.tar.gz"
-  sha256 "f86fc0fb522d45afdb09703c44071ef3f5740de5fcf65f3fd93415b27bc4625c"
+  url "https://github.com/casey/just/archive/v0.9.4.tar.gz"
+  sha256 "70c0d6cbc21b7d4e993cd0218d89f82e86498ac86762e785dc2fec6c65202905"
+  license "CC0-1.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "52373ae9135dac336161cce4676c360def86c551c3da068d786134b4d2b331d0" => :catalina
-    sha256 "246ef70a47dc400b6ef7b2a290b2ab6ed655bfc84917b5b76287843668b23328" => :mojave
-    sha256 "422a62ff2ffa9cfdea61a13f1962f12c072fcf44c99db067eef70dc2a82559a6" => :high_sierra
-    sha256 "cdf35cfb8366ed86bc1ff0e69693553facf5587b60c51ef2c68b253e43f77066" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a7007d784dd56ca0c596e641e96b73ee32ac21fd30f93d11af0f434df01c9c4c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "87760e80e1fd21b9e4e31b4e087733a1f747ba09781e20c94a13ccedae04c717"
+    sha256 cellar: :any_skip_relocation, catalina:      "930d9a441bafbb63240d3052dfbceaf812b2b2bfa60431283679d8ed1d98bab7"
+    sha256 cellar: :any_skip_relocation, mojave:        "9f5fb1dd103031ff0a4a05f86b12b82a0361244e8188e0a13842ccbad7e235f5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d52f7747ec3cf934e9e5d05af830eb073649b254a4a46bc0852e9fe4291db949"
   end
 
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
+
+    man1.install "man/just.1"
+    bash_completion.install "completions/just.bash" => "just"
+    fish_completion.install "completions/just.fish"
+    zsh_completion.install "completions/just.zsh" => "_just"
   end
 
   test do
@@ -23,7 +29,7 @@ class Just < Formula
       default:
         touch it-worked
     EOS
-    system "#{bin}/just"
+    system bin/"just"
     assert_predicate testpath/"it-worked", :exist?
   end
 end

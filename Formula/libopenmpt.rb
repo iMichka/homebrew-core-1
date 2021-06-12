@@ -1,15 +1,22 @@
 class Libopenmpt < Formula
   desc "Software library to decode tracked music files"
   homepage "https://lib.openmpt.org/libopenmpt/"
-  url "https://lib.openmpt.org/files/libopenmpt/src/libopenmpt-0.4.10+release.autotools.tar.gz"
-  version "0.4.10"
-  sha256 "6a2804d5491eaa90e4b2d7fb5d68e436113e8c8fd164fc705547bcb23a8f258a"
+  url "https://lib.openmpt.org/files/libopenmpt/src/libopenmpt-0.5.9+release.autotools.tar.gz"
+  version "0.5.9"
+  sha256 "8d808ac6095aa8f19c11518c616d3b9039016acd7b49b309db28d56b2bba0641"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url "https://lib.openmpt.org/files/libopenmpt/src/"
+    regex(/href=.*?libopenmpt[._-]v?(\d+(?:\.\d+)+)\+release\.autotools\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "11940fb1b2afac44b1f7c18eb1f313a4c97abd59c81af40ee076fda1c6580b43" => :catalina
-    sha256 "c8702f4b8a0a4f1385725a93edf495f269f02d665374b99b9c721fbb1f660a48" => :mojave
-    sha256 "914c4183efdccd7c4af6906122398e8b8df3918dd34a6c13f96a323a1852ab21" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "87ca4bbe0945759d95b7ad1975c7b1a541a85a9ff4a2c3ff3d799ec7d9830b7f"
+    sha256 cellar: :any,                 big_sur:       "e3c73cd81d98afc871c030341e3d0fcc4563280ac0838831e87bf9c6c3a70b7a"
+    sha256 cellar: :any,                 catalina:      "ebd6a6b2fdc369a436debd55ee63fe234e03e52b41f0e5eb334506628b7c2149"
+    sha256 cellar: :any,                 mojave:        "c60969a4721431a18a6bf07cf4df55e9fefdb62b11b64a62408efd4f09b1b309"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "91e0fd5635df912e2a998a9def8cc446199ab8b72a26f07c19cc0d1099605562"
   end
 
   depends_on "pkg-config" => :build
@@ -20,6 +27,15 @@ class Libopenmpt < Formula
   depends_on "libvorbis"
   depends_on "mpg123"
   depends_on "portaudio"
+
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "gcc" # for C++17
+    depends_on "pulseaudio"
+  end
+
+  fails_with gcc: "5"
 
   resource "mystique.s3m" do
     url "https://api.modarchive.org/downloads.php?moduleid=54144#mystique.s3m"

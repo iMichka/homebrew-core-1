@@ -1,14 +1,17 @@
 class Lightgbm < Formula
   desc "Fast, distributed, high performance gradient boosting framework"
   homepage "https://github.com/microsoft/LightGBM"
-  url "https://github.com/microsoft/LightGBM/archive/v2.3.1.tar.gz"
-  sha256 "b2b8ed5e06be21444c4e9defd66877510d1800a650543f75bfc1b28f77745b84"
+  url "https://github.com/microsoft/LightGBM.git",
+      tag:      "v3.2.1",
+      revision: "b8e38ec1eb8020052d5b39e31e9f2cb6366fb873"
+  license "MIT"
 
   bottle do
-    cellar :any
-    sha256 "b8b078e8458186a058a47ba94d302dfb3688cae329112594bbbb125712c5c79a" => :catalina
-    sha256 "eefdb9c1c9749755431ac7fafc09bc9d3d31d73d6d9077f4e0a9d6d89ae4d032" => :mojave
-    sha256 "afaa412201c008a88980e9ecd9967d4ccfacdaa967229f084457e3780cba3b78" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "ae442333df20db31769e25fedd3b32a4238eaa2a94f178c237fc567373f2a245"
+    sha256 cellar: :any,                 big_sur:       "84e713ec15bd966c737fc70b5650a725a21f3551df897a6160b2f27d8561d3a1"
+    sha256 cellar: :any,                 catalina:      "1c9178a701a721781329f0c4dc45bc955f84a5ee93f6f68fe817ae33168adcab"
+    sha256 cellar: :any,                 mojave:        "f714a735772ed4246dbf5bfff4c6c1f1b4d1cf36680488b16e80c19a1e3d3334"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "272dc628c6b1c51ce194b52caee57e07a09ee6b4cc11733f3dbb608659697126"
   end
 
   depends_on "cmake" => :build
@@ -16,16 +19,7 @@ class Lightgbm < Formula
 
   def install
     mkdir "build" do
-      libomp = Formula["libomp"]
-      args = std_cmake_args
-      args << "-DOpenMP_C_FLAGS=\"-Xpreprocessor -fopenmp -I#{libomp.opt_include}\""
-      args << "-DOpenMP_C_LIB_NAMES=omp"
-      args << "-DOpenMP_CXX_FLAGS=\"-Xpreprocessor -fopenmp -I#{libomp.opt_include}\""
-      args << "-DOpenMP_CXX_LIB_NAMES=omp"
-      args << "-DOpenMP_omp_LIBRARY=#{libomp.opt_lib}/libomp.dylib"
-      args << "-DAPPLE_OUTPUT_DYLIB=ON"
-
-      system "cmake", *args, ".."
+      system "cmake", *std_cmake_args, "-DAPPLE_OUTPUT_DYLIB=ON", ".."
       system "make"
       system "make", "install"
     end

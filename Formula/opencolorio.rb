@@ -1,36 +1,31 @@
 class Opencolorio < Formula
   desc "Color management solution geared towards motion picture production"
   homepage "https://opencolorio.org/"
-  url "https://github.com/imageworks/OpenColorIO/archive/v1.1.1.tar.gz"
-  sha256 "c9b5b9def907e1dafb29e37336b702fff22cc6306d445a13b1621b8a754c14c8"
-  revision 1
+  url "https://github.com/imageworks/OpenColorIO/archive/v2.0.1.tar.gz"
+  sha256 "ff1397b4516fdecd75096d5b575d6a23771d0c876bbcfc7beb5a82af37adcdf9"
+  license "BSD-3-Clause"
   head "https://github.com/imageworks/OpenColorIO.git"
 
   bottle do
-    cellar :any
-    sha256 "5f0934f3f79e043ed2e49307d251743ef74efeaf105ae45a6bd93fea62f4f28c" => :catalina
-    sha256 "f21ad137b2e3536ed54e05909e3d9b4ee1da8ec2acbe97e7dc5e0bc696735b52" => :mojave
-    sha256 "6aa5426be3f5d36134c981eda604f81a89e9c88ad1ff93fc164a9726031c50b0" => :high_sierra
-    sha256 "6a75c5efd60a5b6a5fba4f8ee1dbd2fba1f262026240d0fb97650f561ec878b6" => :sierra
-    sha256 "e6c55b12d073dfa210c7442f5e0acbd6ff4771677446aa6471f6878f0aca57e9" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "ff7921b54ca7e0589fff3dbf2e8f2b071b0f503f1657f4963d80749a8c5aedf0"
+    sha256 cellar: :any,                 big_sur:       "94fc18f52a783c11afd946c72b100bf16d570767d5934b245c03cabb3f9de715"
+    sha256 cellar: :any,                 catalina:      "8dcc8e3561f9e564239366ed88a2488b36af37c022e8b98f94e2d6cb1e718bde"
+    sha256 cellar: :any,                 mojave:        "c0fa4803986b6960a3a3578f6e453428864eff5fb7ed5f51fd6c505258cc0ca5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1c8017976fdbf491f5ff05a65f5e09b898c9f554943d61f13cb586b78fbc26cd"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "little-cms2"
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
-    py3_config = `python3-config --configdir`.chomp
-    py3_include = `python3 -c "import distutils.sysconfig as s; print(s.get_python_inc())"`.chomp
-    py3_version = Language::Python.major_minor_version "python3"
-
     args = std_cmake_args + %W[
       -DCMAKE_VERBOSE_MAKEFILE=OFF
+      -DCMAKE_INSTALL_RPATH=#{rpath}
       -DPYTHON=python3
-      -DPYTHON_EXECUTABLE=#{which "python3"}
-      -DPYTHON_LIBRARY=#{py3_config}/libpython#{py3_version}.dylib
-      -DPYTHON_INCLUDE_DIR=#{py3_include}
+      -DPYTHON_EXECUTABLE=#{Formula["python@3.9"].opt_bin}/"python3"
     ]
 
     mkdir "macbuild" do

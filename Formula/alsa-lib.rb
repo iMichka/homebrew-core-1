@@ -1,13 +1,21 @@
 class AlsaLib < Formula
   desc "Provides audio and MIDI functionality to the Linux operating system"
   homepage "https://www.alsa-project.org/"
-  url "ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.2.1.1.tar.bz2"
-  sha256 "c95ac63c0aad43a6ac457d960569096b0b2ef72dc4e3737e77e3e2de87022cec"
-  # tag "linux"
+  url "https://www.alsa-project.org/files/pub/lib/alsa-lib-1.2.5.tar.bz2"
+  sha256 "9092894a8c083b33acf8d6deb901b58f5d20d6da583789f814e8e46f2850ef18"
+  license "LGPL-2.1-or-later"
+
+  livecheck do
+    url "https://www.alsa-project.org/files/pub/lib/"
+    regex(/href=.*?alsa-lib[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "e34ed1fe2d15292da93c911bb70a204019c223fc475ded583b3dfa477479c797" => :x86_64_linux
+    rebuild 1
+    sha256 x86_64_linux: "b91e5524748677d744b486196e343f46916e76fee9ca945591809f32197cf45d"
   end
+
+  depends_on :linux
 
   def install
     system "./configure", "--disable-debug",

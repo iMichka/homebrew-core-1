@@ -4,44 +4,47 @@ class GoAT111 < Formula
   url "https://dl.google.com/go/go1.11.13.src.tar.gz"
   mirror "https://fossies.org/linux/misc/go1.11.13.src.tar.gz"
   sha256 "5032095fd3f641cafcce164f551e5ae873785ce7b07ca7c143aecd18f7ba4076"
+  license "BSD-3-Clause"
 
   bottle do
-    sha256 "54190931138cfffd1581a40e1cf6d13038fd8a5b277728824fc98c2fa5f6eb88" => :catalina
-    sha256 "100e91a2d1c1533f24399a5730c7705c831604ab134cd889cf74e07bbd069dcc" => :mojave
-    sha256 "118b70c5b092c9374dccc87165d2b88c32c5dcea1fc9b7c0d3b6d30116f4990d" => :high_sierra
-    sha256 "5b5e2452501f5b3c7c25a8e4ba42ea9c20cb483250bc027046d3ef961c15b526" => :sierra
-    sha256 "a83d37389f98d1580fb37d8ae41c12c7c549e11fb253c9e17438bda90d9f69dc" => :x86_64_linux
+    rebuild 1
+    sha256 big_sur:      "cd0a119a31af419daf333e10f9b0a15e5e67fd898c853294e411e4f480b0214a"
+    sha256 catalina:     "077ca87532424c95f5072fa0d6cb0aa316fb6c6309ba9ad8d158556ddf264792"
+    sha256 mojave:       "8f9794052cd1e44eedd34c5a28fd7614cb21e1c67d54a8c4b5733115f04978c8"
+    sha256 high_sierra:  "c42368b27f9f70e02a858a3bbf07f73e41295512191d8b7b524a474b8157e91a"
+    sha256 x86_64_linux: "54304544009d7e38589e94cfde1a301a165e2e39d1839f27dd65c100d720a5ad"
   end
 
   keg_only :versioned_formula
 
-  depends_on :macos => :yosemite
+  disable! date: "2021-02-16", because: :unsupported
+
+  depends_on arch: :x86_64
 
   resource "gotools" do
     url "https://go.googlesource.com/tools.git",
-        :branch => "release-branch.go1.11"
+        branch: "release-branch.go1.11"
   end
 
   # Don't update this unless this version cannot bootstrap the new version.
   resource "gobootstrap" do
-    if OS.mac?
+    on_macos do
       url "https://storage.googleapis.com/golang/go1.7.darwin-amd64.tar.gz"
       sha256 "51d905e0b43b3d0ed41aaf23e19001ab4bc3f96c3ca134b48f7892485fc52961"
-    elsif OS.linux?
+    end
+
+    on_linux do
       url "https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz"
       sha256 "702ad90f705365227e902b42d91dd1a40e48ca7f67a2f4b2fd052aaa4295cd95"
     end
-    version "1.7"
   end
 
   def install
-    ENV["CGO_ENABLED"] = "1" unless OS.mac?
     (buildpath/"gobootstrap").install resource("gobootstrap")
     ENV["GOROOT_BOOTSTRAP"] = buildpath/"gobootstrap"
 
     cd "src" do
       ENV["GOROOT_FINAL"] = libexec
-      ENV["GOOS"]         = OS.mac? ? "darwin" : "linux"
       system "./make.bash", "--no-clean"
     end
 

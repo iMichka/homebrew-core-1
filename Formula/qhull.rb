@@ -1,34 +1,40 @@
 class Qhull < Formula
   desc "Computes convex hulls in n dimensions"
   homepage "http://www.qhull.org/"
-  url "http://www.qhull.org/download/qhull-2019-src-7.3.2.tgz"
-  version "2019.1"
-  sha256 "2b7990558c363076261564f61b74db4d0d73b71869755108a469038c07dc43fb"
+  url "http://www.qhull.org/download/qhull-2020-src-8.0.2.tgz"
+  version "2020.2"
+  sha256 "b5c2d7eb833278881b952c8a52d20179eab87766b00b865000469a45c1838b7e"
+  license "Qhull"
+  head "https://github.com/qhull/qhull.git"
+
+  # It's necessary to match the version from the link text, as the filename
+  # only contains the year (`2020`), not a full version like `2020.2`.
+  livecheck do
+    url "http://www.qhull.org/download/"
+    regex(/href=.*?qhull[._-][^"' >]+?[._-]src[^>]*?\.t[^>]+?>[^<]*Qhull v?(\d+(?:\.\d+)*)/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "2914810492c9ef6f46606237d8ab3adc84b4cdb5edfdab722dfa4adf58864504" => :catalina
-    sha256 "fcee31c1350555f924e27fc7868c4244fe9e6f3be67dc9a91426c85f27e65306" => :mojave
-    sha256 "9eab455f07e6bc666960235f23919cce155bf630a689cafdf346083dc88925df" => :high_sierra
-    sha256 "f11988dc10c758047763b80947b08a2b5cf5dd10743242d63705e29836d3fcf8" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "d54263b22f2c4effc10ab2dbab54ec0b7f2592d07cdad43c20ddfffff149aad0"
+    sha256 cellar: :any,                 big_sur:       "1c0b6ed4613b8319859b7c0c15b174bb1e89178c79e060ccc400220beb079d46"
+    sha256 cellar: :any,                 catalina:      "b48c342482e1e50857c444f8eb39f71c36a522a9f0692bd479b93d2088672d2f"
+    sha256 cellar: :any,                 mojave:        "6bec66662d9b4d1942a959505442790cfafd482660a2c8785a45175714fe1ae6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b40fe40b671bd6abb26125e5e68a68374f676a02cb92b192041689ca80c81e1c"
   end
 
   depends_on "cmake" => :build
 
-  # fixes build on case-insensitive filesystems
-  # see https://github.com/qhull/qhull/issues/48
-  patch do
-    url "https://github.com/qhull/qhull/commit/6052739c827bff64de3f05343e45fd080909759c.patch?full_index=1"
-    sha256 "ed97d5920ad9c09e028a26da1f0e8d9d313f3e757d52c14ea562827d6c865804"
-  end
-
   def install
-    system "cmake", ".", *std_cmake_args
-    system "make", "install"
+    ENV.cxx11
+
+    cd "build" do
+      system "cmake", "..", *std_cmake_args
+      system "make", "install"
+    end
   end
 
   test do
-    input = Utils.popen_read(bin/"rbox", "c", "D2")
+    input = shell_output(bin/"rbox c D2")
     output = pipe_output("#{bin}/qconvex s n 2>&1", input, 0)
     assert_match "Number of facets: 4", output
   end

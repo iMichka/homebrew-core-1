@@ -3,23 +3,24 @@ class Slimerjs < Formula
   homepage "https://slimerjs.org/"
   url "https://github.com/laurentj/slimerjs/archive/1.0.0.tar.gz"
   sha256 "6fd07fa6953e4e497516dd0a7bc5eb2f21c68f9e60bdab080ac2c86e8ab8dfb2"
+  license "MPL-2.0"
   head "https://github.com/laurentj/slimerjs.git"
 
-  bottle :unneeded
-
   def install
+    ENV["TZ"] = "UTC"
     cd "src" do
-      system "zip", "-r", "omni.ja", "chrome/", "components/", "modules/",
-                    "defaults/", "chrome.manifest", "-x@package_exclude.lst"
+      system "zip", "-o", "-X", "-r", "omni.ja", "chrome/", "components/",
+        "modules/", "defaults/", "chrome.manifest", "-x@package_exclude.lst"
       libexec.install %w[application.ini omni.ja slimerjs slimerjs.py]
     end
     bin.install_symlink libexec/"slimerjs"
   end
 
-  def caveats; <<~EOS
-    The configuration file was installed in:
-      #{libexec}/application.ini
-  EOS
+  def caveats
+    <<~EOS
+      The configuration file was installed in:
+        #{libexec}/application.ini
+    EOS
   end
 
   test do

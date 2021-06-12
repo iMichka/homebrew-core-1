@@ -2,50 +2,47 @@ class Erlang < Formula
   desc "Programming language for highly scalable real-time systems"
   homepage "https://www.erlang.org/"
   # Download tarball from GitHub; it is served faster than the official tarball.
-  url "https://github.com/erlang/otp/archive/OTP-22.2.tar.gz"
-  sha256 "232c37a502c7e491a9cbf86acb7af64fbc1a793fcbcbd0093cb029cf1c3830a7"
-  head "https://github.com/erlang/otp.git"
-  revision 1 unless OS.mac?
+  url "https://github.com/erlang/otp/releases/download/OTP-24.0.2/otp_src_24.0.2.tar.gz"
+  sha256 "882e8a93194c32cf8335f62c86489c1850d5a5ec9bdfa35fff55b9317213ab8e"
+  license "Apache-2.0"
 
-  bottle do
-    cellar :any
-    sha256 "1e901f31a951ef0a8c3fc32902003c1a012ce9598092913c2f8510224720d572" => :catalina
-    sha256 "dd7a2b6b247cb85588a264cc147d0a4ed09af2391a8f8cac8e05cd4d772c72de" => :mojave
-    sha256 "58445e027848ec1d1d1d0eed5ac4a72169bfa62a441288b8b4e5c5c028450d1f" => :high_sierra
-    sha256 "bbf007e101d7ac71505286afddc2c88900ddbbe8a6c1cf17db0c1d5bb499ba02" => :x86_64_linux
+  livecheck do
+    url :stable
+    regex(/^OTP[._-]v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
-  depends_on "libtool" => :build
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "d50e7ed210cbf8a06c2bc87d6c261e43f64ae13f1401e3b05e3bf8403c1bfac3"
+    sha256 cellar: :any,                 big_sur:       "db0a9ace0b92a59e8586a560fd7e022aea8b405d5787d2a7e237de3b75ca6fd1"
+    sha256 cellar: :any,                 catalina:      "855422653acbc02598b0308ec3d550ba86d9541cc7018dedfe4c448dc9e2269d"
+    sha256 cellar: :any,                 mojave:        "13db9a1d679b466df28688dc8cd0bc6d842fe1e147391ea55605a4d5a7487d73"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7569389e8c1f817ee6d21a4b0e5281a149efa1dcdd37b66022ebf93c20033d7a"
+  end
+
+  head do
+    url "https://github.com/erlang/otp.git"
+
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "libtool" => :build
+  end
+
   depends_on "openssl@1.1"
   depends_on "wxmac" # for GUI apps like observer
 
-  depends_on "m4" => :build unless OS.mac?
-
-  resource "man" do
-    url "https://www.erlang.org/download/otp_doc_man_22.1.tar.gz"
-    mirror "https://fossies.org/linux/misc/otp_doc_man_22.1.tar.gz"
-    sha256 "64f45909ed8332619055d424c32f8cc8987290a1ac4079269572fba6ef9c74d9"
-  end
-
   resource "html" do
-    url "https://www.erlang.org/download/otp_doc_html_22.1.tar.gz"
-    mirror "https://fossies.org/linux/misc/otp_doc_html_22.1.tar.gz"
-    sha256 "3864ac1aa30084738d783d12c241c0a4943cf22a6d1d0f6c7bb9ba0a45ecb9eb"
+    url "https://www.erlang.org/download/otp_doc_html_24.0.tar.gz"
+    mirror "https://fossies.org/linux/misc/otp_doc_html_24.0.tar.gz"
+    sha256 "6ceaa2cec97fa5a631779544a3c59afe9e146084e560725b823c476035716e73"
   end
 
   def install
-    # Work around Xcode 11 clang bug
-    # https://bitbucket.org/multicoreware/x265/issues/514/wrong-code-generated-on-macos-1015
-    ENV.append_to_cflags "-fno-stack-check" if DevelopmentTools.clang_build_version >= 1010
-
     # Unset these so that building wx, kernel, compiler and
-    # other modules doesn't fail with an unintelligable error.
+    # other modules doesn't fail with an unintelligible error.
     %w[LIBS FLAGS AFLAGS ZFLAGS].each { |k| ENV.delete("ERL_#{k}") }
 
     # Do this if building from a checkout to generate configure
-    system "./otp_build", "autoconf" if File.exist? "otp_build"
+    system "./otp_build", "autoconf" unless File.exist? "configure"
 
     args = %W[
       --disable-debug
@@ -53,7 +50,6 @@ class Erlang < Formula
       --prefix=#{prefix}
       --enable-dynamic-ssl-lib
       --enable-hipe
-      --enable-sctp
       --enable-shared-zlib
       --enable-smp-support
       --enable-threads
@@ -62,7 +58,7 @@ class Erlang < Formula
       --without-javac
     ]
 
-    if OS.mac?
+    on_macos do
       args << "--enable-darwin-64bit"
       args << "--enable-kernel-poll" if MacOS.version > :el_capitan
       args << "--with-dynamic-trace=dtrace" if MacOS::CLT.installed?
@@ -72,19 +68,48 @@ class Erlang < Formula
     system "make"
     system "make", "install"
 
-    (lib/"erlang").install resource("man").files("man")
+    # Build the doc chunks (manpages are also built by default)
+    system "make", "docs", "DOC_TARGETS=chunks"
+    system "make", "install-docs"
+
     doc.install resource("html")
   end
 
-  def caveats; <<~EOS
-    Man pages can be found in:
-      #{opt_lib}/erlang/man
+  def caveats
+    <<~EOS
+      Man pages can be found in:
+        #{opt_lib}/erlang/man
 
-    Access them with `erl -man`, or add this directory to MANPATH.
-  EOS
+      Access them with `erl -man`, or add this directory to MANPATH.
+    EOS
   end
 
   test do
     system "#{bin}/erl", "-noshell", "-eval", "crypto:start().", "-s", "init", "stop"
+    (testpath/"factorial").write <<~EOS
+      #!#{bin}/escript
+      %% -*- erlang -*-
+      %%! -smp enable -sname factorial -mnesia debug verbose
+      main([String]) ->
+          try
+              N = list_to_integer(String),
+              F = fac(N),
+              io:format("factorial ~w = ~w\n", [N,F])
+          catch
+              _:_ ->
+                  usage()
+          end;
+      main(_) ->
+          usage().
+
+      usage() ->
+          io:format("usage: factorial integer\n").
+
+      fac(0) -> 1;
+      fac(N) -> N * fac(N-1).
+    EOS
+    chmod 0755, "factorial"
+    assert_match "usage: factorial integer", shell_output("./factorial")
+    assert_match "factorial 42 = 1405006117752879898543142606244511569936384000000000", shell_output("./factorial 42")
   end
 end

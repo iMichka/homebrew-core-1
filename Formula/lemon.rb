@@ -1,45 +1,40 @@
 class Lemon < Formula
   desc "LALR(1) parser generator like yacc or bison"
   homepage "https://www.hwaci.com/sw/lemon/"
-  url "https://tx97.net/pub/distfiles/lemon-1.69.tar.bz2"
-  mirror "https://mirror.amdmi3.ru/distfiles/lemon-1.69.tar.bz2"
-  sha256 "bc7c1cae233b6af48f4b436ee900843106a15bdb1dc810bc463d8c6aad0dd916"
+  url "https://sqlite.org/2021/sqlite-src-3350500.zip"
+  version "3.35.5"
+  sha256 "f4beeca5595c33ab5031a920d9c9fd65fe693bad2b16320c3a6a6950e66d3b11"
+  license "blessing"
+
+  livecheck do
+    url "https://sqlite.org/news.html"
+    regex(%r{v?(\d+(?:\.\d+)+)</h3>}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "286af27372fde1ea7ea8e0eb910a3707b622e73cfc1e66f23e7fbe4bf7d3d59c" => :catalina
-    sha256 "99d4d1999862af18af2c16f3b80564e2202e3fbb17012283f0c9bdf87ef403b3" => :mojave
-    sha256 "239bfe217ab89f4e6ef9fbfcc0f82996c3d5ab835324c3b91e42314e1cb002d3" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7027ff601090217b6c1378d47580b41b8111f0d66d646bdfbfcc430ff3ad0f0a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "68fb9d794706f072174d9efa3cf603f7151bf4472d227ab94c247d855759e9ce"
+    sha256 cellar: :any_skip_relocation, catalina:      "8376c00bf91370667128f720bb8ae5a8bd9756ca057145ae8a1e12d00799f964"
+    sha256 cellar: :any_skip_relocation, mojave:        "53ae7fd5849d6058ead9e06b09a6dd2f1efdbf0886f7741391e11955ba7fd423"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "94414165e75da76304820d6bd34f4c71494cf8ba5f9d6f8e71632747e01f2d3e"
   end
 
   def install
-    pkgshare.install "lempar.c"
+    pkgshare.install "tool/lempar.c"
 
     # patch the parser generator to look for the 'lempar.c' template file where we've installed it
-    inreplace "lemon.c", / = pathsearch\([^)]*\);/, " = \"#{pkgshare}/lempar.c\";"
+    inreplace "tool/lemon.c", "lempar.c", "#{pkgshare}/lempar.c"
 
-    system ENV.cc, "-o", "lemon", "lemon.c"
+    system ENV.cc, "-o", "lemon", "tool/lemon.c"
     bin.install "lemon"
+
+    pkgshare.install "test/lemon-test01.y"
+    doc.install "doc/lemon.html"
   end
 
   test do
-    (testpath/"gram.y").write <<~EOS
-      %token_type {int}
-      %left PLUS.
-      %include {
-        #include <iostream>
-        #include "example1.h"
-      }
-      %syntax_error {
-        std::cout << "Syntax error!" << std::endl;
-      }
-      program ::= expr(A).   { std::cout << "Result=" << A << std::endl; }
-      expr(A) ::= expr(B) PLUS  expr(C).   { A = B + C; }
-      expr(A) ::= INTEGER(B). { A = B; }
-    EOS
-
-    system "#{bin}/lemon", "gram.y"
-    assert_predicate testpath/"gram.c", :exist?
+    system "#{bin}/lemon", "-d#{testpath}", "#{pkgshare}/lemon-test01.y"
+    system ENV.cc, "lemon-test01.c"
+    assert_match "tests pass", shell_output("./a.out")
   end
 end

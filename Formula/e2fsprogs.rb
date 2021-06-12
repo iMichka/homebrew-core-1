@@ -1,17 +1,28 @@
 class E2fsprogs < Formula
   desc "Utilities for the ext2, ext3, and ext4 file systems"
   homepage "https://e2fsprogs.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.44.5/e2fsprogs-1.44.5.tar.gz"
-  sha256 "2e211fae27ef74d5af4a4e40b10b8df7f87c655933bd171aab4889bfc4e6d1cc"
-  revision 1
+  url "https://downloads.sourceforge.net/project/e2fsprogs/e2fsprogs/v1.46.2/e2fsprogs-1.46.2.tar.gz"
+  sha256 "f79f26b4f65bdc059fca12e1ec6a3040c3ce1a503fb70eb915bee71903815cd5"
+  license all_of: [
+    "GPL-2.0-or-later",
+    "LGPL-2.0-or-later", # lib/ex2fs
+    "LGPL-2.0-only",     # lib/e2p
+    "BSD-3-Clause",      # lib/uuid
+    "MIT",               # lib/et, lib/ss
+  ]
   head "https://git.kernel.org/pub/scm/fs/ext2/e2fsprogs.git"
 
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/e2fsprogs[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
+
   bottle do
-    sha256 "a2b0a389e56c197c9a68c3a0598933534c6e0da0b15023dec490cbe3889d49c7" => :catalina
-    sha256 "8bfa7f8116eabc2422696487b228493ddcc2991699a3158de30d6dba6c10ef73" => :mojave
-    sha256 "f0850aaef4670664e086d9a30568f5a50b5da21bf27d03b8e26478d44b2436f7" => :high_sierra
-    sha256 "70bfe479fd8e5769780ad9b408739653c8b4ef94d4752c9b65ebe134c2b03eb4" => :sierra
-    sha256 "6d7b3fd71982fa92e054ec395003ac023c3503c667531afb819809f7d9dee55f" => :x86_64_linux
+    sha256 arm64_big_sur: "1e0cdd0fdb3195c51b5c8945ee6940831c996b7a43bed64ae44793eedec30f5b"
+    sha256 big_sur:       "5867593150f8074619181fb886e614d799be0fa241e579875593e8c4cadcd900"
+    sha256 catalina:      "567cf6795aebc06c1f1d99051800bcd55195061062398bad92049a38bb343890"
+    sha256 mojave:        "fd0cb15c18294ce9072377f0833b73302011efc1087c9fdc4fce3e730839c717"
+    sha256 x86_64_linux:  "25a91467203c7b91baf520ec78db74032fd630858f433adb931e6f864d97e7c8"
   end
 
   keg_only "this installs several executables which shadow macOS system commands"
@@ -20,6 +31,10 @@ class E2fsprogs < Formula
   depends_on "gettext"
 
   def install
+    # Fix "unknown type name 'loff_t'" issue
+    inreplace "lib/ext2fs/imager.c", "loff_t", "off_t"
+    inreplace "misc/e2fuzz.c", "loff_t", "off_t"
+
     # Enforce MKDIR_P to work around a configure bug
     # see https://github.com/Homebrew/homebrew-core/pull/35339
     # and https://sourceforge.net/p/e2fsprogs/discussion/7053/thread/edec6de279/

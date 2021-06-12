@@ -3,18 +3,22 @@ class Ydcv < Formula
 
   desc "YouDao Console Version"
   homepage "https://github.com/felixonmars/ydcv"
-  url "https://github.com/felixonmars/ydcv/archive/0.7.tar.gz"
-  sha256 "03dd5de36ea8fce3170e678e63fc3694e2718b22bc5e1526e3e07f5c36ec9aa0"
+  url "https://files.pythonhosted.org/packages/1f/29/17124ebfdea8d810774977474a8652018c04c4a6db1ca413189f7e5b9d52/ydcv-0.7.tar.gz"
+  sha256 "53cd59501557496512470e7db5fb14e42ddcb411fe4fa45c00864d919393c1da"
+  license "GPL-3.0"
+  revision 3
+  head "https://github.com/felixonmars/ydcv.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "8c3b86d6f485f64c93716604031b7ab9981bcaae43096b545a753e114e6bd7b9" => :catalina
-    sha256 "d4782bc68e0fe4fcc0d9687d44c9f4cf19188644bc723ad0de21e1c4629c757e" => :mojave
-    sha256 "306a3fba391696ddf6a1031774906786421ae4df2a2466f4b05eb9c2e7c34a57" => :high_sierra
-    sha256 "24bd213b43d60cf2ef49868c3419bf09bce242d82ce78c4cd4d793c01d45676c" => :sierra
+    rebuild 2
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "95ef9e1189ea9279282e41a64a9bf0b50c7e7a377b450d0c1508ae1597b89a91"
+    sha256 cellar: :any_skip_relocation, big_sur:       "329fe285ec1d389d1dd876bd4775327be3781a2c4a336537790b5d43a0bf5449"
+    sha256 cellar: :any_skip_relocation, catalina:      "f6984e690a8d4fab4b893cea60ead8c6cc53358066d1b255e7e49ff952f300cf"
+    sha256 cellar: :any_skip_relocation, mojave:        "606b5e4d75d322b8c5ed787ccdd6729bbce88f7039731a958352d7d0445e1e1f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c85c1e0754c49049a82ffd9ad0c218b0d6c0a9fec3e14628ee989a95f63c4edc"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
     ENV["SETUPTOOLS_SCM_PRETEND_VERSION"] = version
@@ -23,9 +27,10 @@ class Ydcv < Formula
     virtualenv_install_with_resources
   end
 
-  def caveats; <<~EOS
-    You need to add a config for API Key, read more at https://github.com/felixonmars/ydcv
-  EOS
+  def caveats
+    <<~EOS
+      You need to add a config for API Key, read more at https://github.com/felixonmars/ydcv
+    EOS
   end
 
   test do

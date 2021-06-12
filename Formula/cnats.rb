@@ -1,15 +1,16 @@
 class Cnats < Formula
   desc "C client for the NATS messaging system"
   homepage "https://github.com/nats-io/nats.c"
-  url "https://github.com/nats-io/nats.c/archive/v2.1.0.tar.gz"
-  sha256 "1493ae3d790e2ebc4d77c65ef2957e2fb77182d69afeeeb2be1e1e6bee0ca12e"
+  url "https://github.com/nats-io/nats.c/archive/v2.5.0.tar.gz"
+  sha256 "2a3fcba547a36c82ad25b2e9ff18edf5d761024c242b1634b208af48eb59f52e"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "39678d7d1bf583fc5c5812a7dff8626a8a5d4ca8028fb0b8b30a74fafcca82a8" => :catalina
-    sha256 "7c8e7fe9a642ba2e33c0e25b702171b557f29a3dd37921826d16566a0417cf66" => :mojave
-    sha256 "d961682c43b33f7149ed477bdff2246a6449463a2f51c592501eec7096dbbd11" => :high_sierra
-    sha256 "15ee6fcfd9de2f3eeccffdffd586f09fc607ca4ab33af64626040af5d6f6f486" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "1ca08203f353fd313afa34ee69f5f91c980779bc3e8842ec55932c933dbc8ac6"
+    sha256 cellar: :any,                 big_sur:       "c4b31706b10c63793156ec7174fe88665d1d52a5cf40036b3790b6c5e4c8c36d"
+    sha256 cellar: :any,                 catalina:      "f47660174a6996c9dc11459dba19b25b6085b2025ec71a2534dad5f839785a82"
+    sha256 cellar: :any,                 mojave:        "7f240dd1c2df37557eec9cffff09d03b696eab091d8bd15c0328c7ae3b5afe09"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5016b6a7d8888c8744bc248471dcf5722113f58ca0334302f181cee592016bcc"
   end
 
   depends_on "cmake" => :build
@@ -20,7 +21,6 @@ class Cnats < Formula
 
   def install
     system "cmake", ".", "-DCMAKE_INSTALL_PREFIX=#{prefix}",
-                         ("-DNATS_PROTOBUF_LIBRARY=#{Formula["protobuf-c"].lib}/libprotobuf-c.so" unless OS.mac?),
                          "-DBUILD_TESTING=OFF", *std_cmake_args
     system "make", "install"
   end

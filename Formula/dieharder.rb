@@ -1,23 +1,33 @@
 class Dieharder < Formula
   desc "Random number test suite"
-  homepage "https://www.phy.duke.edu/~rgb/General/dieharder.php"
-  url "https://www.phy.duke.edu/~rgb/General/dieharder/dieharder-3.31.1.tgz"
+  homepage "https://webhome.phy.duke.edu/~rgb/General/dieharder.php"
+  url "https://webhome.phy.duke.edu/~rgb/General/dieharder/dieharder-3.31.1.tgz"
   sha256 "6cff0ff8394c553549ac7433359ccfc955fb26794260314620dfa5e4cd4b727f"
   revision 3
 
+  livecheck do
+    url :homepage
+    regex(/href=.*?dieharder[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "3f53c783d640819b446cbf91c3293d47aa0b0c334a630d25f2c5b5b514aeb844" => :catalina
-    sha256 "b7b1bdbb6f105e4286320ad067689d8e3f7a2c7821a53382ebc2007b47d06dc9" => :mojave
-    sha256 "341bdf1e0fce90d69db4e6749ec3ee3b8c5903559e365a19e9f5a8ba2723d403" => :high_sierra
-    sha256 "8a40fb61aef5230ad77b3b851a6e8b6d575ff2adaa747c3b73a75cd203197945" => :sierra
-    sha256 "c73860b6159dcac52f7317e850475c526e7d0ded994adf8d61d8ba920b317aac" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "e0650468410dbd840acddb2cebc9e28e7bdd0293d5c442abb8c95d50c8524735"
+    sha256 cellar: :any, big_sur:       "24603f6e3c5376e294cdcd0d94cc045e48dec3402fd69a3b927ec1291f7b5c26"
+    sha256 cellar: :any, catalina:      "3f53c783d640819b446cbf91c3293d47aa0b0c334a630d25f2c5b5b514aeb844"
+    sha256 cellar: :any, mojave:        "b7b1bdbb6f105e4286320ad067689d8e3f7a2c7821a53382ebc2007b47d06dc9"
+    sha256 cellar: :any, high_sierra:   "341bdf1e0fce90d69db4e6749ec3ee3b8c5903559e365a19e9f5a8ba2723d403"
+    sha256 cellar: :any, sierra:        "8a40fb61aef5230ad77b3b851a6e8b6d575ff2adaa747c3b73a75cd203197945"
+    sha256 cellar: :any, x86_64_linux:  "c73860b6159dcac52f7317e850475c526e7d0ded994adf8d61d8ba920b317aac"
   end
 
   depends_on "gsl"
 
-  # https://aur.archlinux.org/cgit/aur.git/tree/stdint.patch?h=dieharder
-  patch :DATA unless OS.mac?
+  on_linux do
+    patch do
+      url "https://raw.githubusercontent.com/Homebrew/formula-patches/b5dfa6f2b9c5d44cb4bab93ace2e0d7d58465fb0/dieharder/dieharder-linux.patch"
+      sha256 "8c0ab2425c8a315471f809d5ecaebd061985f24019886cba7f856e5aaf72112b"
+    end
+  end
 
   def install
     system "./configure", "--prefix=#{prefix}", "--disable-shared"
@@ -28,15 +38,3 @@ class Dieharder < Formula
     system "#{bin}/dieharder", "-o", "-t", "10"
   end
 end
-
-__END__
---- dieharder-3.31.1/include/dieharder/libdieharder.h  2011-10-14 15:41:37.000000000 +0200
-+++ dieharder-3.31.1/include/dieharder/libdieharder.h.new  2015-03-27 16:34:40.978860858 +0100
-@@ -13,6 +13,7 @@
- #include <stdlib.h>
- #include <stdarg.h>
- #include <string.h>
-+#include <stdint.h>
- #include <sys/time.h>
-
- /* This turns on uint macro in c99 */

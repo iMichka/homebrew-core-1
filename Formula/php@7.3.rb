@@ -1,26 +1,33 @@
 class PhpAT73 < Formula
   desc "General-purpose scripting language"
   homepage "https://www.php.net/"
-  url "https://www.php.net/distributions/php-7.3.13.tar.xz"
-  sha256 "57ac55fe442d2da650abeb9e6fa161bd3a98ba6528c029f076f8bba43dd5c228"
+  # Should only be updated if the new version is announced on the homepage, https://www.php.net/
+  url "https://www.php.net/distributions/php-7.3.28.tar.xz"
+  mirror "https://fossies.org/linux/www/php-7.3.28.tar.xz"
+  sha256 "a2a84dbec8c1eee3f46c5f249eaaa2ecb3f9e7a6f5d0604d2df44ff8d4904dbe"
+  license "PHP-3.01"
+  revision 1
 
   bottle do
-    sha256 "6b4249d889e8680e31bf731656e7ff80dc6e7250092ba51ebc0b1cf99e185780" => :catalina
-    sha256 "f0aa04145c30fa1c74392581e5ecb3bbf249cc3495305814df7384c25011f2f6" => :mojave
-    sha256 "1e6f54cbe8a8413c4c501ce3a07b321d4dab8490cda30599549ec70aea8ddbd2" => :high_sierra
-    sha256 "ec01513fd14c311c4c257b81b374e07c6476be1e83d2b81ab6b98b4b0fd07606" => :x86_64_linux
+    sha256 big_sur:      "d74c1f1882ac00fbb8209ac0f554fccb84fcb185a7124a7eea4b453da9c72848"
+    sha256 catalina:     "54f3ccc8c57bc6e6094eeb51aa15ffaf310f8d5d25654058c15e1b7582a1bfc9"
+    sha256 mojave:       "6bea5fced17992acd7fff5f13322aea118153bbe711f7068722406e5ddafbde4"
+    sha256 x86_64_linux: "343c9196d245b098c010a32ac922009d4d87ed8678a32e3a3e1d918826df6ef6"
   end
 
   keg_only :versioned_formula
 
+  deprecate! date: "2021-12-06", because: :versioned_formula
+
   depends_on "httpd" => [:build, :test]
   depends_on "pkg-config" => :build
+  depends_on "xz" => :build
   depends_on "apr"
   depends_on "apr-util"
   depends_on "argon2"
   depends_on "aspell"
   depends_on "autoconf"
-  depends_on "curl-openssl"
+  depends_on "curl"
   depends_on "freetds"
   depends_on "freetype"
   depends_on "gettext"
@@ -38,23 +45,23 @@ class PhpAT73 < Formula
   depends_on "tidy-html5"
   depends_on "unixodbc"
   depends_on "webp"
-  unless OS.mac?
-    depends_on "xz" => :build
-    depends_on "bzip2"
-    depends_on "libedit"
-    depends_on "libxml2"
-    depends_on "libxslt"
-    depends_on "zlib"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "libedit"
+  uses_from_macos "libxml2"
+  uses_from_macos "libxslt"
+  uses_from_macos "zlib"
+
+  on_macos do
+    # PHP build system incorrectly links system libraries
+    # see https://github.com/php/php-src/pull/3472
+    patch :DATA
   end
 
-  # PHP build system incorrectly links system libraries
-  # see https://github.com/php/php-src/pull/3472
-  patch :DATA if OS.mac?
-
   def install
-    # Ensure that libxml2 will be detected correctly in older MacOS
-    if MacOS.version == :el_capitan || MacOS.version == :sierra
-      ENV["SDKROOT"] = MacOS.sdk_path
+    on_macos do
+      # Ensure that libxml2 will be detected correctly in older MacOS
+      ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version == :el_capitan || MacOS.version == :sierra
     end
 
     # buildconf required due to system library linking bug patch
@@ -89,19 +96,18 @@ class PhpAT73 < Formula
     # Required due to icu4c dependency
     ENV.cxx11
 
-    config_path = etc/"php/#{php_version}"
+    config_path = etc/"php/#{version.major_minor}"
     # Prevent system pear config from inhibiting pear install
     (config_path/"pear.conf").delete if (config_path/"pear.conf").exist?
 
-    # Prevent homebrew from harcoding path to sed shim in phpize script
+    # Prevent homebrew from hardcoding path to sed shim in phpize script
     ENV["lt_cv_path_SED"] = "sed"
 
     # Each extension that is built on Mojave needs a direct reference to the
     # sdk path or it won't find the headers
-    if OS.mac?
+    headers_path = ""
+    on_macos do
       headers_path = "=#{MacOS.sdk_path_if_needed}/usr"
-    else
-      headers_path = ""
     end
 
     args = %W[
@@ -124,6 +130,7 @@ class PhpAT73 < Formula
       --enable-opcache-file
       --enable-pcntl
       --enable-phpdbg
+      --enable-phpdbg-readline
       --enable-phpdbg-webhelper
       --enable-shmop
       --enable-soap
@@ -134,6 +141,7 @@ class PhpAT73 < Formula
       --enable-wddx
       --enable-zip
       --with-apxs2=#{Formula["httpd"].opt_bin}/apxs
+      --with-curl=#{Formula["curl"].opt_prefix}
       --with-fpm-user=_www
       --with-fpm-group=_www
       --with-freetype-dir=#{Formula["freetype"].opt_prefix}
@@ -169,15 +177,17 @@ class PhpAT73 < Formula
       --with-xmlrpc
     ]
 
-    if OS.mac?
+    on_macos do
       args << "--enable-dtrace"
+      args << "--with-ldap-sasl#{headers_path}"
       args << "--with-zlib#{headers_path}"
       args << "--with-bz2#{headers_path}"
       args << "--with-ndbm#{headers_path}"
       args << "--with-libedit#{headers_path}"
       args << "--with-libxml-dir#{headers_path}"
       args << "--with-xsl#{headers_path}"
-    else
+    end
+    on_linux do
       args << "--disable-dtrace"
       args << "--with-zlib=#{Formula["zlib"].opt_prefix}"
       args << "--with-bz2=#{Formula["bzip2"].opt_prefix}"
@@ -194,17 +204,18 @@ class PhpAT73 < Formula
     system "make", "install"
 
     # Allow pecl to install outside of Cellar
-    extension_dir = Utils.popen_read("#{bin}/php-config --extension-dir").chomp
+    extension_dir = Utils.safe_popen_read("#{bin}/php-config", "--extension-dir").chomp
     orig_ext_dir = File.basename(extension_dir)
     inreplace bin/"php-config", lib/"php", prefix/"pecl"
     inreplace "php.ini-development", %r{; ?extension_dir = "\./"},
       "extension_dir = \"#{HOMEBREW_PREFIX}/lib/php/pecl/#{orig_ext_dir}\""
 
     # Use OpenSSL cert bundle
+    openssl = Formula["openssl@1.1"]
     inreplace "php.ini-development", /; ?openssl\.cafile=/,
-      "openssl.cafile = \"#{etc}/openssl@1.1/cert.pem\""
+      "openssl.cafile = \"#{openssl.pkgetc}/cert.pem\""
     inreplace "php.ini-development", /; ?openssl\.capath=/,
-      "openssl.capath = \"#{etc}/openssl@1.1/certs\""
+      "openssl.capath = \"#{openssl.pkgetc}/certs\""
 
     # php 7.3 known bug
     # SO discussion: https://stackoverflow.com/a/53709484/791609
@@ -250,15 +261,15 @@ class PhpAT73 < Formula
     # Custom location for extensions installed via pecl
     pecl_path = HOMEBREW_PREFIX/"lib/php/pecl"
     ln_s pecl_path, prefix/"pecl" unless (prefix/"pecl").exist?
-    extension_dir = Utils.popen_read("#{bin}/php-config --extension-dir").chomp
+    extension_dir = Utils.safe_popen_read("#{bin}/php-config", "--extension-dir").chomp
     php_basename = File.basename(extension_dir)
     php_ext_dir = opt_prefix/"lib/php"/php_basename
 
     # fix pear config to install outside cellar
-    pear_path = HOMEBREW_PREFIX/"share/pear@#{php_version}"
+    pear_path = HOMEBREW_PREFIX/"share/pear@#{version.major_minor}"
     cp_r pkgshare/"pear/.", pear_path
     {
-      "php_ini"  => etc/"php/#{php_version}/php.ini",
+      "php_ini"  => etc/"php/#{version.major_minor}/php.ini",
       "php_dir"  => pear_path,
       "doc_dir"  => pear_path/"doc",
       "ext_dir"  => pecl_path/php_basename,
@@ -279,7 +290,7 @@ class PhpAT73 < Formula
     %w[
       opcache
     ].each do |e|
-      ext_config_path = etc/"php/#{php_version}/conf.d/ext-#{e}.ini"
+      ext_config_path = etc/"php/#{version.major_minor}/conf.d/ext-#{e}.ini"
       extension_type = (e == "opcache") ? "zend_extension" : "extension"
       if ext_config_path.exist?
         inreplace ext_config_path,
@@ -306,65 +317,57 @@ class PhpAT73 < Formula
           DirectoryIndex index.php index.html
 
       The php.ini and php-fpm.ini file can be found in:
-          #{etc}/php/#{php_version}/
+          #{etc}/php/#{version.major_minor}/
     EOS
   end
 
-  def php_version
-    version.to_s.split(".")[0..1].join(".")
-  end
+  plist_options manual: "php-fpm"
 
-  plist_options :manual => "php-fpm"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
-        <true/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_sbin}/php-fpm</string>
-          <string>--nodaemonize</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>WorkingDirectory</key>
-        <string>#{var}</string>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/php-fpm.log</string>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>KeepAlive</key>
+          <true/>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_sbin}/php-fpm</string>
+            <string>--nodaemonize</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>WorkingDirectory</key>
+          <string>#{var}</string>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/php-fpm.log</string>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
-    assert_match /^Zend OPcache$/, shell_output("#{bin}/php -i"),
-      "Zend OPCache extension not loaded"
+    assert_match(/^Zend OPcache$/, shell_output("#{bin}/php -i"),
+      "Zend OPCache extension not loaded")
     # Test related to libxml2 and
     # https://github.com/Homebrew/homebrew-core/issues/28398
-    if OS.mac?
+    on_macos do
       assert_includes MachO::Tools.dylibs("#{bin}/php"),
         "#{Formula["libpq"].opt_lib}/libpq.5.dylib"
     end
+
     system "#{sbin}/php-fpm", "-t"
     system "#{bin}/phpdbg", "-V"
     system "#{bin}/php-cgi", "-m"
     # Prevent SNMP extension to be added
-    assert_no_match /^snmp$/, shell_output("#{bin}/php -m"),
-      "SNMP extension doesn't work reliably with Homebrew on High Sierra"
+    refute_match(/^snmp$/, shell_output("#{bin}/php -m"),
+      "SNMP extension doesn't work reliably with Homebrew on High Sierra")
     begin
-      require "socket"
-
-      server = TCPServer.new(0)
-      port = server.addr[1]
-      server_fpm = TCPServer.new(0)
-      port_fpm = server_fpm.addr[1]
-      server.close
-      server_fpm.close
+      port = free_port
+      port_fpm = free_port
 
       expected_output = /^Hello world!$/
       (testpath/"index.php").write <<~EOS

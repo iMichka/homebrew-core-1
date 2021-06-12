@@ -1,18 +1,24 @@
 class Libseccomp < Formula
   desc "Interface to the Linux Kernel's syscall filtering mechanism"
   homepage "https://github.com/seccomp/libseccomp"
-  url "https://github.com/seccomp/libseccomp/releases/download/v2.4.2/libseccomp-2.4.2.tar.gz"
-  sha256 "b54f27b53884caacc932e75e6b44304ac83586e2abe7a83eca6daecc5440585b"
-  # tag "linux"
+  url "https://github.com/seccomp/libseccomp/releases/download/v2.5.1/libseccomp-2.5.1.tar.gz"
+  sha256 "ee307e383c77aa7995abc5ada544d51c9723ae399768a97667d4cdb3c3a30d55"
+  license "LGPL-2.1-only"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ab6d430d4c758ce3cc55e5ec6ba8609196655bc03988271c25ad086ff54f823e" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "4367b1042229e4a130d0b9452363c36de61c9f0c6fe18e54c15dd4879eee3ad6"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
+  depends_on "gperf" => :build
   depends_on "libtool" => :build
+  depends_on :linux
 
   def install
     system "./configure", "--disable-debug",
@@ -23,9 +29,7 @@ class Libseccomp < Formula
   end
 
   test do
-    ver = version.to_s.split(".")
-    ver_major = ver[0]
-    ver_minor = ver[1]
+    ver_major, ver_minor, = version.to_s.split(".")
 
     (testpath/"test.c").write <<~EOS
       #include <seccomp.h>

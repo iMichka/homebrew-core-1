@@ -2,30 +2,34 @@ class Devspace < Formula
   desc "CLI helps develop/deploy/debug apps with Docker and k8s"
   homepage "https://devspace.cloud/docs"
   url "https://github.com/devspace-cloud/devspace.git",
-    :tag      => "v4.3.1",
-    :revision => "ce8745f1f65a2a8d2efa4791b0be15e081f60337"
+      tag:      "v5.14.0",
+      revision: "b814db5ba766d7c43077ee44f073119b41848e6a"
+  license "Apache-2.0"
+  head "https://github.com/devspace-cloud/devspace.git"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f8a87ba1b21488ef77dc80734732e12de934ea42043da67cd40c6d06edca227e" => :catalina
-    sha256 "a26eb10464e370259ddd8056e97616ba3d80a1d055cea30f1158a58bcc35bdb2" => :mojave
-    sha256 "80eeb389ea7fe64c549e9b6eda0492aff0a49ea5c4da9c15e09358a4869023d2" => :high_sierra
-    sha256 "5d195cfbacf08ce9faaa4016f006b49a9f8456d44aef1be60d74a3988fa9198c" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "050103873ed0883f751ecfd29e7b72e1f29b7304f0ede7f69d4206289c534325"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9d791c564bab4232f27487bb1e10543bd5090763847660c66cb0c0c06f43e957"
+    sha256 cellar: :any_skip_relocation, catalina:      "fa979d3d63d940f32a93e602684158fadab8287af6e2d8de64db554935ea91de"
+    sha256 cellar: :any_skip_relocation, mojave:        "ea7aa4470ccf5c6d4953cadfe8fc2596eda0ca9d682733c2468e7dfc4846d179"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e3ca15714d409005e29a643105b6ce984103006d1e524186bd8921b2edb872a5"
   end
 
   depends_on "go" => :build
   depends_on "kubernetes-cli"
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    dir = buildpath/"src/github.com/devspace-cloud/devspace"
-    dir.install buildpath.children
-
-    cd dir do
-      system "go", "build", "-o", bin/"devspace"
-      prefix.install_metafiles
-    end
+    ldflags = %W[
+      -s -w
+      -X main.commitHash=#{Utils.git_head}
+      -X main.version=#{version}
+    ]
+    system "go", "build", "-ldflags", ldflags.join(" "), *std_go_args
   end
 
   test do

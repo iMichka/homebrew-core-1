@@ -1,16 +1,21 @@
 class Xmrig < Formula
   desc "Monero (XMR) CPU miner"
   homepage "https://github.com/xmrig/xmrig"
-  url "https://github.com/xmrig/xmrig/archive/v5.3.0.tar.gz"
-  sha256 "d8c78021303fdec806a1f2f657d9b95057c1844adf8ebf407591c69b957c4c1e"
+  url "https://github.com/xmrig/xmrig/archive/v6.12.2.tar.gz"
+  sha256 "7baca03d289f108883e5606c1a1d0287baf6a2425def48e5c413200b5db88bfa"
+  license "GPL-3.0-or-later"
   head "https://github.com/xmrig/xmrig.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any
-    sha256 "73d679c72ce2f7e7600646dcd866b80c4cc556189c0ef233fe6e90a880d59a18" => :catalina
-    sha256 "98b5cca6ce442d52aa27d04fade3ca3e3767f2a05f31a336939f4d3c1fc9d112" => :mojave
-    sha256 "a6d0574f089803e91f3c3a5c00dceb68ed428992bf629561575a1e7eefb5b519" => :high_sierra
-    sha256 "4e18d20dc66fcba5871f2de9e06fa4c80426294c3bf23719bd6849f84e206603" => :x86_64_linux
+    sha256 arm64_big_sur: "10fbbd388ef3c2e7f522e72295a889da9c471927ecec7a18ef3cf98feaf574b5"
+    sha256 big_sur:       "abd939cf867917b9fdac412f0e0a2886d8f847eff5e0a0db4e5a7beffae100c0"
+    sha256 catalina:      "d7de732699e3afa96dd4125e054b3b987070912fb33cb66ab64ad3c99cefbf1e"
+    sha256 mojave:        "001d61e8bade0bb74db988334e9c6ae32a451dd037c14b55a8f984263e504e16"
   end
 
   depends_on "cmake" => :build
@@ -36,12 +41,12 @@ class Xmrig < Formula
       read, write = IO.pipe
       pid = fork do
         exec "#{bin}/xmrig", "--no-color", "--max-cpu-usage=1", "--print-time=1",
-             "--threads=1", "--retries=1", "--url=#{test_server}", :out => write
+             "--threads=1", "--retries=1", "--url=#{test_server}", out: write
       end
       start_time=Time.now
       loop do
         assert (Time.now - start_time <= timeout), "No server connect after timeout"
-        break if read.gets.include? "\] \[#{test_server}\] DNS error: \"unknown node or service\""
+        break if read.gets.include? "#{test_server} DNS error: \"unknown node or service\""
       end
     ensure
       Process.kill("SIGINT", pid)

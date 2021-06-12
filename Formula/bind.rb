@@ -1,6 +1,6 @@
 class Bind < Formula
   desc "Implementation of the DNS protocols"
-  homepage "https://www.isc.org/downloads/bind/"
+  homepage "https://www.isc.org/bind/"
 
   # BIND releases with even minor version numbers (9.14.x, 9.16.x, etc) are
   # stable. Odd-numbered minor versions are for testing, and can be unstable
@@ -8,21 +8,33 @@ class Bind < Formula
   # "version_scheme" because someone upgraded to 9.15.0, and required a
   # downgrade.
 
-  url "https://ftp.isc.org/isc/bind/9.14.8/bind-9.14.8.tar.gz"
-  sha256 "e545aa75ced6695a9bf4b591606ef00260fb3c055c2865b299cfe0fe6eeea076"
+  url "https://downloads.isc.org/isc/bind9/9.16.16/bind-9.16.16.tar.xz"
+  sha256 "6c913902adf878e7dc5e229cea94faefc9d40f44775a30213edd08860f761d7b"
+  license "MPL-2.0"
   version_scheme 1
   head "https://gitlab.isc.org/isc-projects/bind9.git"
 
-  bottle do
-    sha256 "9203b586ea98db5e5bd470025bcec3ec2faf4e3b9f1d4c6d7bab1c3896d7eb3d" => :catalina
-    sha256 "a741231331f8fe183b26b3c2ee5142a0ee1a1bdb2d2c967409fc4f95498edbfb" => :mojave
-    sha256 "7ebea9d31d03f4ecec70697dbf4d3e8fa5cd79630f08b251ca5f1a437d2f25c6" => :high_sierra
-    sha256 "5ef43afdf3a849fba183fe125e9a004e322690936815ef8d688283c5759a70ad" => :x86_64_linux
+  # BIND indicates stable releases with an even-numbered minor (e.g., x.2.x)
+  # and the regex below only matches these versions.
+  livecheck do
+    url "https://www.isc.org/download/"
+    regex(/href=.*?bind[._-]v?(\d+\.\d*[02468](?:\.\d+)*)\.t/i)
   end
 
+  bottle do
+    sha256 arm64_big_sur: "1760d6ca4c7828dba00ee1e08d8e5aa29c45e8b6989909e376a6c5addec1cb49"
+    sha256 big_sur:       "d461b3f29beff84605e9de44c3f28bdc5c3623e532c8123c36120c8ea042cf5b"
+    sha256 catalina:      "c92e452d281ea1e8007c398f705c403b186ea2d855250282dd0d7dc43586db35"
+    sha256 mojave:        "574b9afb50b52e8530968ddb03958c156692138943491de472354605c4dd4142"
+    sha256 x86_64_linux:  "196e07407cf6ca3002977953908dfaad620c572cd970532f434a96f87653911e"
+  end
+
+  depends_on "pkg-config" => :build
   depends_on "json-c"
+  depends_on "libidn2"
+  depends_on "libuv"
   depends_on "openssl@1.1"
-  depends_on "python"
+  depends_on "python@3.9"
 
   resource "ply" do
     url "https://files.pythonhosted.org/packages/e5/69/882ee5c9d017149285cab114ebeab373308ef0f874fcdac9beb90e0ac4da/ply-3.11.tar.gz"
@@ -30,166 +42,97 @@ class Bind < Formula
   end
 
   def install
-    xy = Language::Python.major_minor_version "python3"
+    xy = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
     vendor_site_packages = libexec/"vendor/lib/python#{xy}/site-packages"
     ENV.prepend_create_path "PYTHONPATH", vendor_site_packages
     resources.each do |r|
       r.stage do
-        system "python3", *Language::Python.setup_install_args(libexec/"vendor")
+        system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(libexec/"vendor")
       end
     end
 
     # Fix "configure: error: xml2-config returns badness"
-    if MacOS.version == :sierra || MacOS.version == :el_capitan
-      ENV["SDKROOT"] = MacOS.sdk_path
-    end
+    ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version <= :sierra
 
-    system "./configure", "--prefix=#{prefix}",
-                          "--with-openssl=#{Formula["openssl@1.1"].opt_prefix}",
-                          "--with-libjson=#{Formula["json-c"].opt_prefix}",
-                          "--with-python=#{Formula["python"].opt_bin}/python3",
-                          "--with-python-install-dir=#{vendor_site_packages}",
-                          "--without-lmdb",
-                          *("--disable-linux-caps" unless OS.mac?)
+    args = [
+      "--prefix=#{prefix}",
+      "--sysconfdir=#{pkgetc}",
+      "--with-json-c",
+      "--with-openssl=#{Formula["openssl@1.1"].opt_prefix}",
+      "--with-libjson=#{Formula["json-c"].opt_prefix}",
+      "--with-python-install-dir=#{vendor_site_packages}",
+      "--with-python=#{Formula["python@3.9"].opt_bin}/python3",
+      "--without-lmdb",
+      "--with-libidn2=#{Formula["libidn2"].opt_prefix}",
+    ]
+    on_linux do
+      args << "--disable-linux-caps"
+    end
+    system "./configure", *args
 
     system "make"
     system "make", "install"
 
     (buildpath/"named.conf").write named_conf
     system "#{sbin}/rndc-confgen", "-a", "-c", "#{buildpath}/rndc.key"
-    etc.install "named.conf", "rndc.key"
+    pkgetc.install "named.conf", "rndc.key"
   end
 
   def post_install
     (var/"log/named").mkpath
-
-    # Create initial configuration/zone/ca files.
-    # (Mirrors Apple system install from 10.8)
-    unless (var/"named").exist?
-      (var/"named").mkpath
-      (var/"named/localhost.zone").write localhost_zone
-      (var/"named/named.local").write named_local
-    end
+    (var/"named").mkpath
   end
 
-  def named_conf; <<~EOS
-    //
-    // Include keys file
-    //
-    include "#{etc}/rndc.key";
+  def named_conf
+    <<~EOS
+      logging {
+          category default {
+              _default_log;
+          };
+          channel _default_log {
+              file "#{var}/log/named/named.log" versions 10 size 1m;
+              severity info;
+              print-time yes;
+          };
+      };
 
-    // Declares control channels to be used by the rndc utility.
-    //
-    // It is recommended that 127.0.0.1 be the only address used.
-    // This also allows non-privileged users on the local host to manage
-    // your name server.
-
-    //
-    // Default controls
-    //
-    controls {
-        inet 127.0.0.1 port 54 allow { any; }
-        keys { "rndc-key"; };
-    };
-
-    options {
-        directory "#{var}/named";
-        /*
-         * If there is a firewall between you and nameservers you want
-         * to talk to, you might need to uncomment the query-source
-         * directive below.  Previous versions of BIND always asked
-         * questions using port 53, but BIND 8.1 uses an unprivileged
-         * port by default.
-         */
-        // query-source address * port 53;
-    };
-    //
-    // a caching only nameserver config
-    //
-    zone "localhost" IN {
-        type master;
-        file "localhost.zone";
-        allow-update { none; };
-    };
-
-    zone "0.0.127.in-addr.arpa" IN {
-        type master;
-        file "named.local";
-        allow-update { none; };
-    };
-
-    logging {
-            category default {
-                    _default_log;
-            };
-
-            channel _default_log  {
-                    file "#{var}/log/named/named.log";
-                    severity info;
-                    print-time yes;
-            };
-    };
-  EOS
+      options {
+          directory "#{var}/named";
+      };
+    EOS
   end
 
-  def localhost_zone; <<~EOS
-    $TTL    86400
-    $ORIGIN localhost.
-    @            1D IN SOA    @ root (
-                        42        ; serial (d. adams)
-                        3H        ; refresh
-                        15M        ; retry
-                        1W        ; expiry
-                        1D )        ; minimum
+  plist_options startup: true
 
-                1D IN NS    @
-                1D IN A        127.0.0.1
-  EOS
-  end
-
-  def named_local; <<~EOS
-    $TTL    86400
-    @       IN      SOA     localhost. root.localhost.  (
-                                          1997022700 ; Serial
-                                          28800      ; Refresh
-                                          14400      ; Retry
-                                          3600000    ; Expire
-                                          86400 )    ; Minimum
-                  IN      NS      localhost.
-
-    1       IN      PTR     localhost.
-  EOS
-  end
-
-  plist_options :startup => true
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>EnableTransactions</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/named</string>
-        <string>-f</string>
-        <string>-c</string>
-        <string>#{etc}/named.conf</string>
-      </array>
-      <key>ServiceIPC</key>
-      <false/>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>EnableTransactions</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_sbin}/named</string>
+          <string>-f</string>
+          <string>-L</string>
+          <string>#{var}/log/named/named.log</string>
+        </array>
+        <key>ServiceIPC</key>
+        <false/>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
     system bin/"dig", "-v"
     system bin/"dig", "brew.sh"
+    system bin/"dig", "ü.cl"
   end
 end

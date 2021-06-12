@@ -1,19 +1,26 @@
 class Libtiff < Formula
   desc "TIFF library and utilities"
   homepage "https://libtiff.gitlab.io/libtiff/"
-  url "https://download.osgeo.org/libtiff/tiff-4.1.0.tar.gz"
-  mirror "https://fossies.org/linux/misc/tiff-4.1.0.tar.gz"
-  sha256 "5d29f32517dadb6dbcd1255ea5bbc93a2b54b94fbf83653b4d65c7d6775b8634"
+  url "https://download.osgeo.org/libtiff/tiff-4.3.0.tar.gz"
+  mirror "https://fossies.org/linux/misc/tiff-4.3.0.tar.gz"
+  sha256 "0e46e5acb087ce7d1ac53cf4f56a09b221537fc86dfc5daaad1c2e89e1b37ac8"
+  license "libtiff"
+
+  livecheck do
+    url "https://download.osgeo.org/libtiff/"
+    regex(/href=.*?tiff[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "449bd9123e73e4c4eab85b77322d769cc9df0f6adab05e9b9319b012d1215a68" => :catalina
-    sha256 "dd060521aa30fb2f4678c9ebab6362104a9a705d098a90eac4059743c93c8c16" => :mojave
-    sha256 "577c2754b00fc8a5009e08bfd7af630ab4812250508df20a1c92d3c7ae678b94" => :high_sierra
-    sha256 "3ab9a2e801258f6511eba129eddf8068ab3bd0ecd5209277cb2f9744b864bfd6" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "bd25355f2efb850a0e70c9ae208f0cd16caa0bfcaba8931d9ea9d374c5cf050a"
+    sha256 cellar: :any,                 big_sur:       "09f08e1168780c12c8f1526038eb4f4692624c85a9e78099b8ae2c58e39f5289"
+    sha256 cellar: :any,                 catalina:      "e413c1170e33242eb941683d14ae51de594a013b8c6e5151f53b3352358b26fe"
+    sha256 cellar: :any,                 mojave:        "06248bbf04ff5180541a90d60bae68246b5f1665d42909be471fdc9a6781a718"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e213d552390bfd246a1a937dd550f5326cfc379d36654343cbd86cc5b7ac79e7"
   end
 
   depends_on "jpeg"
+
   uses_from_macos "zlib"
 
   def install
@@ -21,6 +28,8 @@ class Libtiff < Formula
       --prefix=#{prefix}
       --disable-dependency-tracking
       --disable-lzma
+      --disable-webp
+      --disable-zstd
       --with-jpeg-include-dir=#{Formula["jpeg"].opt_include}
       --with-jpeg-lib-dir=#{Formula["jpeg"].opt_lib}
       --without-x

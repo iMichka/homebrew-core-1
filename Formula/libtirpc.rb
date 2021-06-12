@@ -1,23 +1,22 @@
 class Libtirpc < Formula
   desc "Port of Sun's Transport-Independent RPC library to Linux"
   homepage "https://sourceforge.net/projects/libtirpc/"
-  url "https://downloads.sourceforge.net/project/libtirpc/libtirpc/1.1.4/libtirpc-1.1.4.tar.bz2"
-  sha256 "2ca529f02292e10c158562295a1ffd95d2ce8af97820e3534fe1b0e3aec7561d"
-  # tag "linux"
+  url "https://downloads.sourceforge.net/project/libtirpc/libtirpc/1.3.2/libtirpc-1.3.2.tar.bz2"
+  sha256 "e24eb88b8ce7db3b7ca6eb80115dd1284abc5ec32a8deccfed2224fc2532b9fd"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "8877610a23ff7fc029060517988cd0d07ad253448840bc6927ab5e6b381c3562" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "53e90dd1589ce7ae92087dfa62bf81b40319feaa7e6974492fe2a8daa5b835c7"
   end
 
-  depends_on "krb5" => :optional unless OS.mac?
+  depends_on "krb5"
+  depends_on :linux
 
   def install
     system "./configure",
       "--disable-dependency-tracking",
       "--disable-silent-rules",
-      "--prefix=#{prefix}",
-      *("--disable-gssapi" if build.without? "krb5")
+      "--prefix=#{prefix}"
     system "make", "install"
   end
 

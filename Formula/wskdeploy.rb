@@ -1,29 +1,22 @@
 class Wskdeploy < Formula
   desc "Apache OpenWhisk project deployment utility"
   homepage "https://openwhisk.apache.org/"
-  url "https://github.com/apache/openwhisk-wskdeploy/archive/1.0.0.tar.gz"
-  sha256 "74c02e8118a123cfad113dc75d5e7d256b18fb80ad9e27b2b95eb74b8677e483"
+  url "https://github.com/apache/openwhisk-wskdeploy/archive/1.2.0.tar.gz"
+  sha256 "bffe6f6ef2167189fc38893943a391aaf7327e9e6b8d27be1cc1c26535c06e86"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3628415e19ddfa9aa4c701f10bdecc2b60a595b8a88beff1fada7174b38517ed" => :catalina
-    sha256 "fa27eb070527a3e4fff0ea62ed16e521b2c7f5482f4ca8c1bb934823e75c856b" => :mojave
-    sha256 "9690c45ee52ba2c4bee9de7075136fd6743f05dcfca445c57f44df940b1fb3e7" => :high_sierra
-    sha256 "4294ee4df38330b2472c54f9439f9e6edee13a810a0f49ed130bc5ae0c73e324" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "87364286a37d26de6a051ba1d0244de932de11058e041e969ea20400560df8e5"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c77d6ad2c5fa8acec45bf9507d840f3de1a125edb5759f6de49427efb454fd38"
+    sha256 cellar: :any_skip_relocation, catalina:      "17ff44da88c60d8c8c3a17fd4e2844c90d1bf7fe460928ae21731da5a7f52740"
+    sha256 cellar: :any_skip_relocation, mojave:        "375d6f828a4a45d398ba11dcee4c60e64651697ee374917db7f2137b4c98cb77"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cd885153d5211d28548dc999625fd57ded5f29be6fe86a485528a10f6ec2ff78"
   end
 
   depends_on "go" => :build
-  depends_on "godep" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/apache/openwhisk-wskdeploy").install buildpath.children
-    cd "src/github.com/apache/openwhisk-wskdeploy" do
-      system "godep", "restore"
-      system "go", "build", "-o", bin/"wskdeploy",
-                   "-ldflags", "-X main.Version=#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-X main.Version=#{version}"
   end
 
   test do

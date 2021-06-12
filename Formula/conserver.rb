@@ -1,20 +1,28 @@
 class Conserver < Formula
   desc "Allows multiple users to watch a serial console at the same time"
   homepage "https://www.conserver.com/"
-  url "https://github.com/conserver/conserver/releases/download/v8.2.4/conserver-8.2.4.tar.gz"
-  sha256 "a591eabb4abb632322d2f3058a2f0bd6502754069a99a153efe2d6d05bd97f6f"
+  url "https://github.com/conserver/conserver/releases/download/v8.2.6/conserver-8.2.6.tar.gz"
+  sha256 "33b976a909c6bce8a1290810e26e92bfa16c39bca19e1f8e06d5d768ae940734"
+  license "BSD-3-Clause"
+  revision 1
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "0543221000d5bc2022b45939bdad3b736931b3a5dc7e15c47a78d18e5cca2395" => :catalina
-    sha256 "cc5c46b8adeeb4eb949f8abeedee67fce87dd1b17677622963619a496b511289" => :mojave
-    sha256 "45f059778b3e32bb6cdcba3f52bb4ad99d3c2271ef0adfb61fc28a0299d3d8a2" => :high_sierra
-    sha256 "972900dc19aeb2beb11371bc9dba0c241c842328dd573d449535529dc5f560ad" => :sierra
-    sha256 "803890e61029fec4e3a75e7e25dd038d7b9ee689457af54dc10e9e7b2c9c26db" => :x86_64_linux
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "818c726d7aef2b761e3ae88b39650e01f74f757acf899f7f351bdd2815d27875"
+    sha256 cellar: :any,                 big_sur:       "84d3aa85edeae0dc29cf8e9f4dded552ab0f9b82dac3b711ecdb8a2bba94115a"
+    sha256 cellar: :any,                 catalina:      "59eded66b17cf4854626060c9c012efa25fe09c5fed47c0c162047a5aac1171e"
+    sha256 cellar: :any,                 mojave:        "ff0421a6796b9913159a910628f97878d2b22956f18e23e8d27bd400e6b611a8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4dfd9e3f1afd9e5452afdabb9ee9a9952a3a345aee04fb0c26d25984b7bd65e5"
+  end
+
+  depends_on "openssl@1.1"
+
   def install
-    system "./configure", "--prefix=#{prefix}"
+    system "./configure", "--prefix=#{prefix}", "--with-openssl", "--with-ipv6"
     system "make"
     system "make", "install"
   end

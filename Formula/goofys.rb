@@ -2,22 +2,26 @@ class Goofys < Formula
   desc "Filey-System interface to Amazon S3"
   homepage "https://github.com/kahing/goofys"
   url "https://github.com/kahing/goofys.git",
-      :tag      => "v0.23.1",
-      :revision => "b720aae5b4845855bb3d06b8ade10585934cd1e2"
+      tag:      "v0.24.0",
+      revision: "45b8d78375af1b24604439d2e60c567654bcdf88"
+  license "Apache-2.0"
   head "https://github.com/kahing/goofys.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "6f61fc7d7e7ce1edf63fce85629a01884084db6274274800a79d9dc5006f593f" => :catalina
-    sha256 "654aef18dc52f479fb33d75096f039b50804a3c61e397326a2bfc3fa71d51b35" => :mojave
-    sha256 "8097c11f0f0b20db1280b2b8616b4de87d9f21d76db2e0ed1c99b8b0db2491cb" => :high_sierra
-    sha256 "dc8fe27f903b4291d9e359b8342c4972a11d60909fcc76ff66c5889c21b51756" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, catalina:     "da054592343f7423d91a3abadbe4d601295b1f74b3a404c36fdb4deb94f7019b"
+    sha256 cellar: :any_skip_relocation, mojave:       "cee50248f9ac4d33ef8ca585ad94e3c9e6226fc464dfad86de2b7f9497b9f2b7"
+    sha256 cellar: :any_skip_relocation, high_sierra:  "eb0a3cfe49104292c16d76dce71db34000b1a7214f660b3cff3a39e4b3ba7a44"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "50aa904c2158d48a4dac55c47de1511f6530592f489aab0b982f32a7d12f6bdb"
   end
 
   depends_on "go" => :build
-  if OS.mac?
-    depends_on :osxfuse
-  else
+
+  on_macos do
+    disable! date: "2021-04-08", because: "requires FUSE"
+  end
+
+  on_linux do
     depends_on "libfuse"
   end
 
@@ -29,9 +33,7 @@ class Goofys < Formula
     ENV["GOPATH"] = gopath
 
     cd gopath/"src/github.com/kahing/goofys" do
-      commit = Utils.popen_read("git rev-parse HEAD").chomp
-      system "go", "build", "-o", "goofys", "-ldflags",
-             "-X main.Version=#{commit}"
+      system "go", "build", "-o", "goofys", "-ldflags", "-X main.Version=#{Utils.git_head}"
       bin.install "goofys"
       prefix.install_metafiles
     end

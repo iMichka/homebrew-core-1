@@ -1,37 +1,42 @@
 class Kakoune < Formula
   desc "Selection-based modal text editor"
   homepage "https://github.com/mawww/kakoune"
-  url "https://github.com/mawww/kakoune/releases/download/v2019.12.10/kakoune-2019.12.10.tar.bz2"
-  sha256 "66ad8d28cecb29b08e5975e659ee91206ca676a0194c730ca4eed026bafa2ff8"
+  url "https://github.com/mawww/kakoune/releases/download/v2020.09.01/kakoune-2020.09.01.tar.bz2"
+  sha256 "861a89c56b5d0ae39628cb706c37a8b55bc289bfbe3c72466ad0e2757ccf0175"
+  license "Unlicense"
+  revision 1 unless OS.mac?
   head "https://github.com/mawww/kakoune.git"
 
-  bottle do
-    cellar :any
-    sha256 "849e54c0a1b459741aef0572a21ee2a64e4fd5a28ea76198e44797d0f8e36e12" => :catalina
-    sha256 "f4c4d121ab6deea47ffa7af2fc14185f411326a4c3e7e0f8394050fd29380f48" => :mojave
-    sha256 "29683bac6ea76120d3a4f4ae6faa6cee7618b6cde34cc0765446af1ec63d0233" => :high_sierra
-    sha256 "39a9f6c14835f07e3106e2fc5fbe77b8781a8e154ba2088209f9b951f55432be" => :x86_64_linux
+  livecheck do
+    url :stable
+    strategy :github_latest
   end
 
-  depends_on "asciidoc" => :build
-  depends_on "docbook-xsl" => :build
-  depends_on :macos => :high_sierra # needs C++17
+  bottle do
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "6a6af6d41f893e851691984867efeee176098f47c881d5fe77d8534bc4086375"
+    sha256 cellar: :any,                 big_sur:       "61064437727a2eb062b89941b25fb46c017d350e8947e867e72f51f591d030ad"
+    sha256 cellar: :any,                 catalina:      "9cb8ffd67651eab6f269daab2bbf4e66adf4f7dad4029a3285631a3615cf1514"
+    sha256 cellar: :any,                 mojave:        "00c9127f14d643eee79fc64d02874bc131dad426fb11580b5d4fa43a3a51007c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8e8062679af31109456606e0183a75f36cca2830bf5dcdd0a1abc8c009216a84"
+  end
+
+  depends_on macos: :high_sierra # needs C++17
   depends_on "ncurses"
 
-  unless OS.mac?
-    fails_with :gcc => "5"
-    fails_with :gcc => "6"
+  uses_from_macos "libxslt" => :build
+
+  on_linux do
     depends_on "binutils" => :build
-    depends_on "libxslt" => :build
     depends_on "linux-headers" => :build
     depends_on "pkg-config" => :build
-    depends_on "gcc@7"
-    depends_on "ncurses"
+    depends_on "gcc"
   end
 
-  def install
-    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
+  fails_with gcc: "5"
+  fails_with gcc: "6"
 
+  def install
     cd "src" do
       system "make", "install", "debug=no", "PREFIX=#{prefix}"
     end

@@ -1,25 +1,22 @@
 class Fsql < Formula
   desc "Search through your filesystem with SQL-esque queries"
   homepage "https://github.com/kashav/fsql"
-  url "https://github.com/kashav/fsql/archive/v0.3.1.tar.gz"
-  sha256 "b88110426a60aa2c48f7b4e52e117a899d43d1bba2614346b729234cd4bd9184"
+  url "https://github.com/kashav/fsql/archive/v0.4.0.tar.gz"
+  sha256 "5f028446e31f1a8be2f8a72cd2c1ae888e748220e4c4ece38a62fd8fe41bf70a"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "de9764e9754827795839738de7d4377786b3532b7a2157806ecf3e145f626146" => :catalina
-    sha256 "7cb63d8939e7af0391938aea8a138daccbaddce50b42802d32e510772e004b9a" => :mojave
-    sha256 "7b4353a346425e4db5d14419c4dbacf6038606778a7ce2b98ddd0fdb7c2ca233" => :high_sierra
-    sha256 "f651c7c2dad44ee6b6f32aa699df223bd427421990f2c2c170d0928b1a31ef87" => :sierra
-    sha256 "34c27b72ead6d99a86b1bb575f5b3c239a0c575ba36b8fa3f66e8eaaa4efa444" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "77ec663d81151aebf469db5626893d130ff21114f603227046999a27ea843f8f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "53d773ca5cba807627e4e3b7cdb36990c18c3b1944c847756c1acf95d99d6af6"
+    sha256 cellar: :any_skip_relocation, catalina:      "c97d021f2047654b1141141bfdaceba40953a39cc150233cb9ec3bb85ee9b675"
+    sha256 cellar: :any_skip_relocation, mojave:        "5d984747c498019e9950c57084e2549417dce8206ab489650fcba917ad7a30af"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d6605d3692e9c63ce0d91a3946c5d40510b6885be06fd33959063ba4deef7693"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/kshvmdn/fsql").install buildpath.children
-    system "go", "build", "-o", bin/"fsql", "github.com/kshvmdn/fsql/cmd/fsql"
+    system "go", "build", *std_go_args, "-ldflags", "-s -w", "./cmd/fsql"
   end
 
   test do

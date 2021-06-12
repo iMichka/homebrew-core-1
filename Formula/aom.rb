@@ -2,16 +2,16 @@ class Aom < Formula
   desc "Codec library for encoding and decoding AV1 video streams"
   homepage "https://aomedia.googlesource.com/aom"
   url "https://aomedia.googlesource.com/aom.git",
-      :tag      => "v1.0.0",
-      :revision => "d14c5bb4f336ef1842046089849dee4a301fbbf0"
+      tag:      "v3.1.1",
+      revision: "7fadc0e77130efb05f52979b0deaba9b6a1bba6d"
+  license "BSD-2-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "1c49d2f8eee438f057d689a3ac68af545e4462ebd2db2fdd9a749fb6a1842da7" => :catalina
-    sha256 "f326a5ea77c38ea80d81c6302d6e2d314a7407d036f881bf4783cf3d757bb473" => :mojave
-    sha256 "fedb7991299e8e84ed4ce94ad3cc161951aa10d3044fc9446009046d17eb1e2f" => :high_sierra
-    sha256 "7410cc63e9fb1228e334b509823a9a3d456a1dad04b4d37904ae6070ee260fca" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "dafc3da3568a3faf64f1fa180176de062fb2e5872bdebb89e6162cb606e411fd"
+    sha256 cellar: :any,                 big_sur:       "f8b17942fbb271c70fbe122f0937cd446acd7f86bcd792668f64fbcfb51d5e96"
+    sha256 cellar: :any,                 catalina:      "839bce0f6c0f486583dae83b50c154272b34dc9bd06bd6efd5a43f4fc91a63cd"
+    sha256 cellar: :any,                 mojave:        "80ca7af4ba75bf8c0ae577eb66bfaf16e7cd564c16f0639c6e50df1427fd6452"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "750d1eb271dcbf2630690dc4172c0884223054a019894d1895e7f97052355656"
   end
 
   depends_on "cmake" => :build
@@ -23,18 +23,17 @@ class Aom < Formula
   end
 
   def install
-    # Work around Xcode 11 clang bug
-    # https://bitbucket.org/multicoreware/x265/issues/514/wrong-code-generated-on-macos-1015
-    ENV.append_to_cflags "-fno-stack-check" if DevelopmentTools.clang_build_version >= 1010
-
     mkdir "macbuild" do
-      system "cmake", "..", *std_cmake_args,
-                      "-DENABLE_DOCS=off",
-                      "-DENABLE_EXAMPLES=on",
-                      "-DENABLE_TESTDATA=off",
-                      "-DENABLE_TESTS=off",
-                      "-DENABLE_TOOLS=off",
-                      *("-DBUILD_SHARED_LIBS=1" unless OS.mac?)
+      args = std_cmake_args.concat(["-DCMAKE_INSTALL_RPATH=#{rpath}",
+                                    "-DENABLE_DOCS=off",
+                                    "-DENABLE_EXAMPLES=on",
+                                    "-DENABLE_TESTDATA=off",
+                                    "-DENABLE_TESTS=off",
+                                    "-DENABLE_TOOLS=off",
+                                    "-DBUILD_SHARED_LIBS=on"])
+      # Runtime CPU detection is not currently enabled for ARM on macOS.
+      args << "-DCONFIG_RUNTIME_CPU_DETECT=0" if Hardware::CPU.arm?
+      system "cmake", "..", *args
 
       system "make", "install"
     end

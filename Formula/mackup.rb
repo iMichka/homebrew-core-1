@@ -3,20 +3,20 @@ class Mackup < Formula
 
   desc "Keep your Mac's application settings in sync"
   homepage "https://github.com/lra/mackup"
-  url "https://github.com/lra/mackup/archive/0.8.27.tar.gz"
-  sha256 "b7d84ea661de27b1d4664bb71e6ab52ef30c6ca180a67435c1d4dea073cb3e4c"
+  url "https://files.pythonhosted.org/packages/ef/39/2da64e9e92092eae9128de719249cdfbfb5e2b56cba842547ce256e03ef4/mackup-0.8.32.tar.gz"
+  sha256 "154c5d78951e20da2ed0ed226b0684d2bc7f5553dd7b465f217fd6caad6e7fef"
+  license "GPL-3.0-or-later"
   head "https://github.com/lra/mackup.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "75c445a02e47bbba500ac30ec951ec84b4009cd9d49c2854bf9fda02e9bdbdc8" => :catalina
-    sha256 "f80bd4765b5a3489d6faa6ef1099ca97478f30ba19d9ba8ce7df33f8e0a6b040" => :mojave
-    sha256 "f0dc845d67a9638952e453f5668da070f879c6af12e703966a4a346f59d32b61" => :high_sierra
-    sha256 "c941c433ddcb1f6deee07ade71d4d3a9f910e229bb01601402377ebca43411fd" => :sierra
-    sha256 "cc6f5c739fcef49632f43e920514bfe366b4fc73b53c2bd9c430a2014c69fba7" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "be968ec450c3e2c28255f2c6e7928404e24498c907a05aed69e5a87e6ae8612e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "24dca4cbc991aad8990c672e7a88fd975f33fefcdb0dbb70f9e6e0b10a19841d"
+    sha256 cellar: :any_skip_relocation, catalina:      "df736bcc51887e9621c00d2948c989db4f1d4b5234ab7e702b49933fc212705e"
+    sha256 cellar: :any_skip_relocation, mojave:        "5f413d937d26828065204eaf532ab280c9d642448a0ee4f280fc667cb03fc9e6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3f3f5aacab36452d5edadc2146a4de02baea7fbc120cddfbab34c5aeb6e80df9"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   resource "docopt" do
     url "https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz"
@@ -24,8 +24,8 @@ class Mackup < Formula
   end
 
   resource "six" do
-    url "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz"
-    sha256 "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+    url "https://files.pythonhosted.org/packages/6b/34/415834bfdafca3c5f451532e8a8d9ba89a21c9743a0c59fbd0205c7f9426/six-1.15.0.tar.gz"
+    sha256 "30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"
   end
 
   def install

@@ -1,25 +1,23 @@
 class Libebml < Formula
   desc "Sort of a sbinary version of XML"
   homepage "https://www.matroska.org/"
-  url "https://dl.matroska.org/downloads/libebml/libebml-1.3.9.tar.xz"
-  sha256 "c6b6c6cd8b20a46203cb5dce636883aef68beb2846f1e4103b660a7da2c9c548"
+  url "https://dl.matroska.org/downloads/libebml/libebml-1.4.2.tar.xz"
+  sha256 "41c7237ce05828fb220f62086018b080af4db4bb142f31bec0022c925889b9f2"
+  license "LGPL-2.1-or-later"
+  revision 2 unless OS.mac?
   head "https://github.com/Matroska-Org/libebml.git"
 
   bottle do
-    cellar :any
-    sha256 "f0db318423ae20fbe075ccccccd7a0affa855a1cc57438ca9f44639bb872e001" => :catalina
-    sha256 "ac543015948d0f4068ffc45c24ae09129ebaef9971d5301ffe43787f3146e4f2" => :mojave
-    sha256 "bf005e877a8b7abdef3fc39c5964ad202ab6797ab1467c3209bc947ac4cdf70a" => :high_sierra
-    sha256 "60249b3b2a0d6b4c18bd5ee8eb9a475b5a8622c5919b0e22962ce2232b691728" => :sierra
-    sha256 "66564d4ca86c090e4809d06745011ac3f0c6772cf24503b2951e0c76d806c3ed" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "1fc990bad774ee2d7ce5d0794effee2529fbd31932854f2a6aa444d8634ce821"
   end
 
   depends_on "cmake" => :build
-  unless OS.mac?
-    fails_with :gcc => "5"
-    fails_with :gcc => "6"
-    depends_on "gcc@7"
+
+  on_linux do
+    depends_on "gcc" => :build
   end
+
+  fails_with gcc: "5"
 
   def install
     mkdir "build" do

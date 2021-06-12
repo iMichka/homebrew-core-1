@@ -1,17 +1,17 @@
 class GoogleBenchmark < Formula
   desc "C++ microbenchmark support library"
   homepage "https://github.com/google/benchmark"
-  url "https://github.com/google/benchmark/archive/v1.5.0.tar.gz"
-  sha256 "3c6a165b6ecc948967a1ead710d4a181d7b0fbcaa183ef7ea84604994966221a"
+  url "https://github.com/google/benchmark/archive/v1.5.4.tar.gz"
+  sha256 "e3adf8c98bb38a198822725c0fc6c0ae4711f16fbbf6aeb311d5ad11e5a081b5"
+  license "Apache-2.0"
   head "https://github.com/google/benchmark.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "6d7902db4dfdcc4a0c6e928fe2ef178238b5e4d4ca0c02f536fd8c94d8f2c7c6" => :catalina
-    sha256 "e2acb14eb43b34f2ccb30ff82a0efd540c3ff0ee9a036a83a00187980457ab17" => :mojave
-    sha256 "d9a78a0c14c161ca9c490605f2800328fc5899ffc98cec09af1bd0622338dcc5" => :high_sierra
-    sha256 "27cfc3243938226aca675a93ec347bb1a15e482ccfb95b356352b2f1391ac4d1" => :sierra
-    sha256 "55d4182180df7164f8cde786393120f8b2a964c4b82a1235b206481e432e8910" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e9bdbe5745c883116f03215a3ee95322109d7ba1d84fe169ce35a4e2f8830861"
+    sha256 cellar: :any_skip_relocation, big_sur:       "0cee370c53f105e333d4442c6c3d639937943e066fe3efd2ab000af4d96de148"
+    sha256 cellar: :any_skip_relocation, catalina:      "86dd7f5118758882564547c788e96cbb424a49e2808dd02fa31d731d2a88e7e8"
+    sha256 cellar: :any_skip_relocation, mojave:        "885d097c80a99675a56d730ca2b59279537b6fa5239bc771c5150312f0d9abd5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "84c7e799d440d82b0e43ee075b790eea7ed7b840d3182ea5620a83be322c9e62"
   end
 
   depends_on "cmake" => :build
@@ -33,7 +33,11 @@ class GoogleBenchmark < Formula
       BENCHMARK(BM_StringCreation);
       BENCHMARK_MAIN();
     EOS
-    flags = [*("-stdlib=libc++" if OS.mac?), "-I#{include}", "-L#{lib}", "-lbenchmark", *("-pthread" if ENV.compiler == :gcc)] + ENV.cflags.to_s.split
+    flags = [*("-stdlib=libc++" if OS.mac?),
+             "-I#{include}",
+             "-L#{lib}",
+             "-lbenchmark",
+             *("-pthread" unless OS.mac?)] + ENV.cflags.to_s.split
     system ENV.cxx, "-o", "test", "test.cpp", *flags
     system "./test"
   end

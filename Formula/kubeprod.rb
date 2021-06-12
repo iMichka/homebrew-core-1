@@ -1,28 +1,23 @@
 class Kubeprod < Formula
   desc "Installer for the Bitnami Kubernetes Production Runtime (BKPR)"
   homepage "https://kubeprod.io"
-  url "https://github.com/bitnami/kube-prod-runtime/archive/v1.3.5.tar.gz"
-  sha256 "1bca77a65fd271c2860b53e720335e253e825d51ae0f4304e58f0b7072f0f9d3"
+  url "https://github.com/bitnami/kube-prod-runtime/archive/v1.8.0.tar.gz"
+  sha256 "cc2fbda4c115d164afcaaabbbef4b5824b9b09b6df95d9cce021aee50c2ad2c1"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "17684a448aa03bf7d106eaaceed9ff05134173d5b20f360e2b567ba4b60ace99" => :catalina
-    sha256 "8bee6fd6efe66a2aa4d98119949418ecff8ca9e9e934dccbe81bf5ba727fb339" => :mojave
-    sha256 "d89ac49c2974596764083cf09a1ed2439b282082c1fc96e7822d38699eb855a8" => :high_sierra
-    sha256 "6b29a81485305140225ac7e88b16b79970ce5664db4b991ee2056f56454fd64c" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "0cf8f68102f72c4f3dc4398baa40bed174c9383fe70d6c092416a2413b59fea7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b5bcbbcfb672ba55f4cc8ff037265ad5609637c680a3913ed70902fcd942446f"
+    sha256 cellar: :any_skip_relocation, catalina:      "d93e5540cc7b2b7a479b69613c9aab0e9809a838cb1241f20650c01c9c37fc56"
+    sha256 cellar: :any_skip_relocation, mojave:        "8eacc39ef3927f4405137db71864e0db6d0b27f97d5c5499f00d5d60ed58eebc"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "bbc97de53c7aa1990225b4013c208cd2c9459c75e9bfd7abfa54c347dace4dff"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["TARGETS"] = OS.mac? ? "darwin/amd64" : "linux/amd64"
-    dir = buildpath/"src/github.com/bitnami/kube-prod-runtime"
-    dir.install buildpath.children
-
-    cd dir do
-      system "make", "-C", "kubeprod", "release", "VERSION=v#{version}"
-      bin.install "kubeprod/_dist/" + ENV["TARGETS"].tr("/", "-") + "/bkpr-v#{version}/kubeprod"
+    cd "kubeprod" do
+      system "go", "build", *std_go_args, "-ldflags", "-X main.version=v#{version}", "-mod=vendor"
     end
   end
 

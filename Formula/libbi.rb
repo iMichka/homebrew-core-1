@@ -3,14 +3,15 @@ class Libbi < Formula
   homepage "https://libbi.org/"
   url "https://github.com/lawmurray/LibBi/archive/1.4.5.tar.gz"
   sha256 "af2b6d30e1502f99a3950d63ceaf7d7275a236f4d81eff337121c24fbb802fbe"
+  license "GPL-2.0-only"
+  revision 3
   head "https://github.com/lawmurray/LibBi.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9375c903bf9980fa04fe6ab1a08fc174dbfdbc60cbf6bf33a4f85c135b4ba356" => :catalina
-    sha256 "9e3385af760fa9d77122311be8cc0da4993e5dbf514fd7449ddc45fef328e31f" => :mojave
-    sha256 "f4777d1ce91c8e1b4a7b56db70ed1a15a605e3817ae063cdd7187ab40167bfed" => :high_sierra
-    sha256 "d1916249f2268c6015852f177d0198b3a96dad65c406e867ab73fbb837e8fa39" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "34ee04c96378c8fa73672109a4746b207e18248c61e44dbbaa7d98c2c2c72067"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9c6abc863ba8197d0cdb660a71ea231afdeee7565742ffe3acca1994d35e2723"
+    sha256 cellar: :any_skip_relocation, catalina:      "bd89e2f8ed4bc533bd0b1b56184ef4ae43d6ae9b4cd17b6568b6087123894774"
+    sha256 cellar: :any_skip_relocation, mojave:        "fa7f5e4ae7a170128fdf8ada72551641779fcee8af3c3f7bcf41244f8ece0e0f"
   end
 
   depends_on "automake"
@@ -18,6 +19,7 @@ class Libbi < Formula
   depends_on "gsl"
   depends_on "netcdf"
   depends_on "qrupdate"
+
   uses_from_macos "perl"
 
   resource "Test::Simple" do
@@ -133,7 +135,7 @@ class Libbi < Formula
     system "make", "install"
 
     pkgshare.install "Test.bi", "test.conf"
-    bin.env_script_all_files(libexec+"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec+"bin", PERL5LIB: ENV["PERL5LIB"])
   end
 
   test do

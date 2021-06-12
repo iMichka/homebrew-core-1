@@ -1,28 +1,22 @@
 class LibcapNg < Formula
   desc "Library for Linux that makes using posix capabilities easy"
   homepage "https://people.redhat.com/sgrubb/libcap-ng"
-  url "https://github.com/stevegrubb/libcap-ng/archive/v0.7.10.tar.gz"
-  sha256 "c3c156a215e5be5430b2f3b8717bbd1afdabe458b6068a8d163e71cefe98fc32"
-  # tag "linux"
+  url "https://github.com/stevegrubb/libcap-ng/archive/v0.8.2.tar.gz"
+  sha256 "65b86885b8d873e55c05bd49427fd370d559b26f0c2089ac9194828e6a2fe233"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "6edc4b31731eb8dc4a4b09f8cf4042857e23c233181eb42c6f9a3fae186599df" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "299f81ad46a4d91a8a89b1cfb5eeb01a216f3568b755aa9b87d1ba7dad80cb26"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
+  depends_on "python@3.9" => :build
   depends_on "swig" => :build
-  depends_on "python" => :build
-  depends_on "m4" => :build
+  depends_on :linux
 
-  # undefined reference to `pthread_atfork'
-  # https://github.com/stevegrubb/libcap-ng/pull/10
-  patch do
-    url "https://github.com/stevegrubb/libcap-ng/commit/b4e3cb9cb74aa5d33ad21a988a1463d75b159b77.patch"
-    sha256 "d414dd225d069a86f34313619eeabf287c6b153d97c4a6554b5840c1ccdbebc1"
-  end
+  uses_from_macos "m4" => :build
 
   def install
     system "./autogen.sh"

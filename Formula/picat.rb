@@ -1,24 +1,28 @@
 class Picat < Formula
   desc "Simple, and yet powerful, logic-based multi-paradigm programming language"
   homepage "http://picat-lang.org/"
-  url "http://picat-lang.org/download/picat26_src.tar.gz"
-  version "2.6.2"
-  sha256 "eb70cf7b1796812e9398077156abd7b4558130cb913ee9186f3625869184c651"
+  url "http://picat-lang.org/download/picat31_src.tar.gz"
+  version "3.1"
+  sha256 "093ca00f74a67a70ed8c5e42f3e3e29a43b761daa3cf9ca7d6bb216c401f4e72"
+  license "MPL-2.0"
+
+  livecheck do
+    url "http://picat-lang.org/download.html"
+    regex(/>\s*?Released version v?(\d+(?:[.#]\d+)+)\s*?,/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1f65a7f14dc8aae1a1c680c9bcabf79f283581def0349564d2a4aa34cdbb0a63" => :mojave
-    sha256 "950628799e8fe03c6c70b5f54e4658502429e7e5c067a230d2e14f0066ef05d2" => :high_sierra
-    sha256 "1260179d1a7beca07fb71423f0a2d8d1b6eacf338ac1aafd077caaa49139acd6" => :sierra
+    sha256 cellar: :any_skip_relocation, big_sur:      "6e50d5fbc8c8ae11541653ad8a46f17c5a7c00b9949b446e167d2524e8edc1f7"
+    sha256 cellar: :any_skip_relocation, catalina:     "9230d26c90deef822d5d54c94bdfee12dd4b6d70130cca70eac02980f3c2ca97"
+    sha256 cellar: :any_skip_relocation, mojave:       "a707f1d3ab71127d7ef235704267e076607abad53a3c129bc5cf0336af9adf78"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "5cde0a0f5650fd347082207df7ba174b5c2f3623e8ab680f4ed958ee2a617211"
   end
 
   def install
-    # Hardcode in Makefile issue is reported to upstream in the official Google Groups
-    # https://groups.google.com/d/msg/picat-lang/0kZYUJKgnkY/3Vig5X1NCAAJ
-    inreplace "emu/Makefile.picat.mac64", "/usr/local/bin/gcc", "gcc"
-    system "make", "-C", "emu", "-f", "Makefile.picat.mac64"
-
-    bin.install "emu/picat_macx" => "picat"
+    ENV.cxx11 unless OS.mac?
+    makefile = OS.mac? ? "Makefile.mac64" : "Makefile.linux64"
+    system "make", "-C", "emu", "-f", makefile
+    bin.install "emu/picat" => "picat"
     prefix.install "lib" => "pi_lib"
     doc.install Dir["doc/*"]
     pkgshare.install "exs"

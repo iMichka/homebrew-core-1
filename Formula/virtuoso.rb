@@ -6,15 +6,16 @@ class Virtuoso < Formula
   # This explicit version should be safe to remove next release.
   version "7.2.5.1"
   sha256 "826477d25a8493a68064919873fb4da4823ebe09537c04ff4d26ba49d9543d64"
+  license "GPL-2.0-only"
   revision 1
   # HEAD is disabled as the below, required patches are not compatible.
 
   bottle do
-    cellar :any
-    sha256 "c4904ae739141d51638c3f33064c85498c20d32169053daa61203ff6706c1fa8" => :catalina
-    sha256 "3a2375ce75d34e6fa2568aeb4bc3ac0239a4052c811eb3afeb7536166b05e67b" => :mojave
-    sha256 "3abcc2f1444324d675af9014ac20555124c875d7e9a4ba9b021fd1ad7c570845" => :high_sierra
-    sha256 "f03a0ddc47b6b550c2057e4bd5f17f1eac0844d49a2e228c13767c9b2f889011" => :x86_64_linux
+    sha256 cellar: :any, big_sur:      "7f6b30ca0a581875e7efede66e4d57c6415b8ae1148a7294eb24cc89f556f2d6"
+    sha256 cellar: :any, catalina:     "c4904ae739141d51638c3f33064c85498c20d32169053daa61203ff6706c1fa8"
+    sha256 cellar: :any, mojave:       "3a2375ce75d34e6fa2568aeb4bc3ac0239a4052c811eb3afeb7536166b05e67b"
+    sha256 cellar: :any, high_sierra:  "3abcc2f1444324d675af9014ac20555124c875d7e9a4ba9b021fd1ad7c570845"
+    sha256 cellar: :any, x86_64_linux: "f03a0ddc47b6b550c2057e4bd5f17f1eac0844d49a2e228c13767c9b2f889011"
   end
 
   depends_on "autoconf" => :build
@@ -23,20 +24,22 @@ class Virtuoso < Formula
   depends_on "gawk" => :build
   depends_on "libtool" => :build
   depends_on "openssl@1.1"
-  unless OS.mac?
-    depends_on "bison" => :build
-    depends_on "flex" => :build
-    depends_on "gperf" => :build
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+  uses_from_macos "gperf" => :build
+
+  on_linux do
     depends_on "net-tools" => :build
   end
 
-  conflicts_with "unixodbc", :because => "Both install `isql` binaries."
+  conflicts_with "unixodbc", because: "both install `isql` binaries"
 
   skip_clean :la
 
   # Support OpenSSL 1.1
   patch do
-    url "https://sources.debian.org/data/main/v/virtuoso-opensource/7.2.5.1+dfsg-2/debian/patches/ssl1.1.patch"
+    url "https://sources.debian.org/data/main/v/virtuoso-opensource/7.2.5.1+dfsg-3/debian/patches/ssl1.1.patch"
     sha256 "9fcaaff5394706fcc448e35e30f89c20fe83f5eb0fbe1411d4b2550d1ec37bf3"
   end
 
@@ -55,10 +58,11 @@ class Virtuoso < Formula
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    NOTE: the Virtuoso server will start up several times on port 1111
-    during the install process.
-  EOS
+  def caveats
+    <<~EOS
+      NOTE: the Virtuoso server will start up several times on port 1111
+      during the install process.
+    EOS
   end
 
   test do

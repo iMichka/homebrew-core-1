@@ -1,32 +1,31 @@
 class X265 < Formula
   desc "H.265/HEVC encoder"
-  homepage "https://bitbucket.org/multicoreware/x265"
-  url "https://bitbucket.org/multicoreware/x265/downloads/x265_3.2.1.tar.gz"
-  sha256 "fb9badcf92364fd3567f8b5aa0e5e952aeea7a39a2b864387cec31e3b58cbbcc"
-  head "https://bitbucket.org/multicoreware/x265", :using => :hg
+  homepage "https://bitbucket.org/multicoreware/x265_git"
+  url "https://bitbucket.org/multicoreware/x265_git/get/3.5.tar.gz"
+  sha256 "5ca3403c08de4716719575ec56c686b1eb55b078c0fe50a064dcf1ac20af1618"
+  license "GPL-2.0-only"
+  head "https://bitbucket.org/multicoreware/x265_git.git"
 
   bottle do
-    cellar :any
-    sha256 "1b0ba2cbc5a5776f28ca0e35e057dea92b3562f023e897c04eee202f8c6a5e41" => :catalina
-    sha256 "69be6670b0f82f1229ebe281e635e2f588c0bf2c45aec9d8a6194a3700cb2563" => :mojave
-    sha256 "4dcc40b0d54784a6f3c3a878bddc79f7cbd657a17e4fd6a1aef0ff7f259e4824" => :high_sierra
-    sha256 "3fdb07aedd7b769f8024575018452b0a18d65bdc41c5223ddd378f4622641be0" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "adc617eed2e065af669994fb5b538195fd46db4ac7b13c7ca2490dc8abaf6466"
+    sha256 cellar: :any,                 big_sur:       "55bb46a5dc1924e59b7fa7bc800a21c0cf21355e48cb38b941d8e786427c70a0"
+    sha256 cellar: :any,                 catalina:      "5e5bc106e1cf971a176dd5b37a61d28769e353f81102c011b4230cc8732eca7a"
+    sha256 cellar: :any,                 mojave:        "c61ebdf9dcd4aedf5da2a7eb2b3a5154fd355c105a19a0471d43a3aa67f3cb88"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "508aa15e1bf47ea21e2e10dc2949374b1b726977f80134b3a016f2d422c6c057"
   end
 
   depends_on "cmake" => :build
-  depends_on "nasm" => :build
+  depends_on "nasm" => :build if Hardware::CPU.intel?
 
   def install
-    # Work around Xcode 11 clang bug
-    # https://bitbucket.org/multicoreware/x265/issues/514/wrong-code-generated-on-macos-1015
-    ENV.append_to_cflags "-fno-stack-check" if DevelopmentTools.clang_build_version >= 1010
-
     # Build based off the script at ./build/linux/multilib.sh
-    args = std_cmake_args + %w[
+    args = std_cmake_args + %W[
       -DLINKED_10BIT=ON
       -DLINKED_12BIT=ON
       -DEXTRA_LINK_FLAGS=-L.
       -DEXTRA_LIB=x265_main10.a;x265_main12.a
+      -DCMAKE_INSTALL_RPATH=#{rpath}
     ]
     high_bit_depth_args = std_cmake_args + %w[
       -DHIGH_BIT_DEPTH=ON -DEXPORT_C_API=OFF
@@ -35,7 +34,7 @@ class X265 < Formula
     (buildpath/"8bit").mkpath
 
     mkdir "10bit" do
-      system "cmake", buildpath/"source", *high_bit_depth_args
+      system "cmake", buildpath/"source", "-DENABLE_HDR10_PLUS=ON", *high_bit_depth_args
       system "make"
       mv "libx265.a", buildpath/"8bit/libx265_main10.a"
     end
@@ -50,14 +49,18 @@ class X265 < Formula
       system "cmake", buildpath/"source", *args
       system "make"
       mv "libx265.a", "libx265_main.a"
-      if OS.mac?
+
+      on_macos do
         system "libtool", "-static", "-o", "libx265.a", "libx265_main.a",
                           "libx265_main10.a", "libx265_main12.a"
-      else
+      end
+
+      on_linux do
         system "ar", "cr", "libx265.a", "libx265_main.a", "libx265_main10.a",
                            "libx265_main12.a"
         system "ranlib", "libx265.a"
       end
+
       system "make", "install"
     end
   end

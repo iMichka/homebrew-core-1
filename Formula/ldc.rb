@@ -1,55 +1,74 @@
 class Ldc < Formula
   desc "Portable D programming language compiler"
   homepage "https://wiki.dlang.org/LDC"
-  url "https://github.com/ldc-developers/ldc/releases/download/v1.17.0/ldc-1.17.0-src.tar.gz"
-  sha256 "6a2fa91a53d954361832591488241c92adb497842069077425d73c9b9d2c4fa9"
-  head "https://github.com/ldc-developers/ldc.git", :shallow => false
+  url "https://github.com/ldc-developers/ldc/releases/download/v1.26.0/ldc-1.26.0-src.tar.gz"
+  sha256 "c18f4c76869f0196b459dcd6196c7eaea1b097cc422cf3771de394f6c0ef7474"
+  license "BSD-3-Clause"
+  head "https://github.com/ldc-developers/ldc.git"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d1a3c150b95503558ef83d8e6dfdad818fa550b97333368178e402ab13cc02fc" => :mojave
-    sha256 "ae7b85fa800d95dcc8815dfafd5716b0d3cf47134d2fc536a2796db8cee11f28" => :high_sierra
-    sha256 "f48a3181863ba8a69c56459512a15fb1f0fcc153250d3cba5374c173a3627d31" => :sierra
+    sha256                               arm64_big_sur: "9a9096334f694a1dc8fa14239896d756497168f45f1bc1aef9f401f99339713a"
+    sha256                               big_sur:       "50995b9707525c112c3251a7a93b2be6ec7c1994b32a76dc3ac3ec84dc197cb3"
+    sha256                               catalina:      "951f37a67f5fe47d96baaafb2549d08011244862a7ab6de747c310c11119b26a"
+    sha256                               mojave:        "fa6bfcf0d2a2927a3421ebd17443a813655a0b44e2d705dac57e733022f354e6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "35cbd01d64d1014810e3913fef5fa27a5d4124da5d064e06f214459b0a586d83"
   end
 
   depends_on "cmake" => :build
   depends_on "libconfig" => :build
+  depends_on "pkg-config" => :build
   depends_on "llvm"
 
+  uses_from_macos "libxml2" => :build
+
+  depends_on "gcc" unless OS.mac?
+
+  fails_with gcc: "5"
+
   resource "ldc-bootstrap" do
-    if OS.mac?
-      url "https://github.com/ldc-developers/ldc/releases/download/v1.17.0/ldc2-1.17.0-osx-x86_64.tar.xz"
-      version "1.17.0"
-      sha256 "fb1fe4e6edba4a8ac590e24abccdd034f11fa11a1bbe4c0f3cdb6083ba069825"
-    else
-      url "https://github.com/ldc-developers/ldc/releases/download/v1.17.0/ldc2-1.17.0-linux-x86_64.tar.xz"
-      version "1.17.0"
-      sha256 "715adbdd614edf926d5f53bb9f8bfa34d0c828aa40077cb627ce064955fd641d"
+    on_macos do
+      if Hardware::CPU.intel?
+        url "https://github.com/ldc-developers/ldc/releases/download/v1.26.0/ldc2-1.26.0-osx-x86_64.tar.xz"
+        sha256 "b5af4e96b70b094711659b27a93406572cbd4ecf7003c1c84445c55c739c06a1"
+      else
+        url "https://github.com/ldc-developers/ldc/releases/download/v1.26.0/ldc2-1.26.0-osx-arm64.tar.xz"
+        sha256 "303930754c819d0f88434813a82122196bf3fe76ea5bd1b0f16d100b540100e6"
+      end
+    end
+
+    on_linux do
+      url "https://github.com/ldc-developers/ldc/releases/download/v1.26.0/ldc2-1.26.0-linux-x86_64.tar.xz"
+      sha256 "06063a92ab2d6c6eebc10a4a9ed4bef3d0214abc9e314e0cd0546ee0b71b341e"
     end
   end
 
   def install
-    # Fix the error:
-    # CMakeFiles/LDCShared.dir/build.make:68: recipe for target 'dmd2/id.h' failed
-    ENV.deparallelize unless OS.mac?
-
     ENV.cxx11
     (buildpath/"ldc-bootstrap").install resource("ldc-bootstrap")
+
+    # Fix ldc-bootstrap/bin/ldmd2: error while loading shared libraries: libxml2.so.2
+    ENV.prepend_path "LD_LIBRARY_PATH", Formula["libxml2"].lib
 
     mkdir "build" do
       args = std_cmake_args + %W[
         -DLLVM_ROOT_DIR=#{Formula["llvm"].opt_prefix}
         -DINCLUDE_INSTALL_DIR=#{include}/dlang/ldc
         -DD_COMPILER=#{buildpath}/ldc-bootstrap/bin/ldmd2
-        -DLDC_WITH_LLD=OFF
-        -DRT_ARCHIVE_WITH_LDC=OFF
       ]
-      # LDC_WITH_LLD see https://github.com/ldc-developers/ldc/releases/tag/v1.4.0 Known issues
-      # RT_ARCHIVE_WITH_LDC see https://github.com/ldc-developers/ldc/issues/2350
 
       system "cmake", "..", *args
       system "make"
       system "make", "install"
+
+      on_macos do
+        # Workaround for https://github.com/ldc-developers/ldc/issues/3670
+        cp Formula["llvm"].opt_lib/"libLLVM.dylib", lib/"libLLVM.dylib"
+      end
     end
   end
 

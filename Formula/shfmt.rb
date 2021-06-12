@@ -1,29 +1,36 @@
 class Shfmt < Formula
   desc "Autoformat shell script source code"
   homepage "https://github.com/mvdan/sh"
-  url "https://github.com/mvdan/sh/archive/v2.6.4.tar.gz"
-  sha256 "72c8e5833e61a31a4595bbd8a77bfb0a8ade9c60603638be70ea801e309d39fe"
+  url "https://github.com/mvdan/sh/archive/v3.3.0.tar.gz"
+  sha256 "9bcdbbfd2f6afc4e885838683396483edcd87ef7eb80faa7def6ff0a10e3be4a"
+  license "BSD-3-Clause"
   head "https://github.com/mvdan/sh.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "31b526255ecd8a4fe944c7ca3d7d757cd55d30235417d84ca39c071f149a0004" => :catalina
-    sha256 "15b43658df24bf448ab0d3373ee75ab6e6af1e101ae684019fd9830a169fc48c" => :mojave
-    sha256 "c18cccddb9678d23261c99b8a9870bc8ac98c74a332f6263eff670561f620a7a" => :high_sierra
-    sha256 "ab8acee13bd584683347201a04cbef8b652fad596bbbc3374d153fb315cd4d88" => :sierra
-    sha256 "96f3154e334a7a6d1797f412b98fd01a0385b789cd5cc19f18970d177fc5bf84" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "37df770767ede3c8bb6ff43006e029250c5c78038aba6f234b237052a1cd1722"
+    sha256 cellar: :any_skip_relocation, big_sur:       "789f53db9def4a6002efc5f37d0919a5c1e0deb104fdb29583d13392e36e5824"
+    sha256 cellar: :any_skip_relocation, catalina:      "ba4a63cdc920a07874901d86abeccbcbb3d4bcb834ed550a02732c0ed878a05d"
+    sha256 cellar: :any_skip_relocation, mojave:        "cbf100be8e2deb0e57781495075d4527e251ecc9972bc2e8c6ecd39237f89988"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "14b720be795cef35a130cf204fd17c3ed2274193ef8de6556cc5c24eb1e0d065"
   end
 
   depends_on "go" => :build
+  depends_on "scdoc" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
+    ENV["CGO_ENABLED"] = "0"
     (buildpath/"src/mvdan.cc").mkpath
     ln_sf buildpath, buildpath/"src/mvdan.cc/sh"
-    system "go", "build", "-a", "-tags", "production brew", "-o", "#{bin}/shfmt", "mvdan.cc/sh/cmd/shfmt"
+    system "go", "build", "-a", "-tags", "production brew", "-ldflags",
+                          "-w -s -extldflags '-static' -X main.version=#{version}",
+                          "-o", "#{bin}/shfmt", "./cmd/shfmt"
+    man1.mkpath
+    system "scdoc < ./cmd/shfmt/shfmt.1.scd > #{man1}/shfmt.1"
   end
 
   test do
+    assert_match version.to_s, shell_output("#{bin}/shfmt  --version")
+
     (testpath/"test").write "\t\techo foo"
     system "#{bin}/shfmt", testpath/"test"
   end

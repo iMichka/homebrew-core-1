@@ -3,20 +3,28 @@ class Ldns < Formula
   homepage "https://nlnetlabs.nl/projects/ldns/"
   url "https://nlnetlabs.nl/downloads/ldns/ldns-1.7.1.tar.gz"
   sha256 "8ac84c16bdca60e710eea75782356f3ac3b55680d40e1530d7cea474ac208229"
-  revision 1
+  license "BSD-3-Clause"
+  revision 3
+
+  # https://nlnetlabs.nl/downloads/ldns/ since the first-party site has a
+  # tendency to lead to an `execution expired` error.
+  livecheck do
+    url "https://github.com/NLnetLabs/ldns.git"
+    regex(/^(?:release-)?v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "62204338590c6474bc213a3cfc9d422aca1ef35a763412cbcd8f9d2a279d3807" => :catalina
-    sha256 "4658a9bdae49915184e10be212a19f11504ca731e66ad8a118a6cb80838a555b" => :mojave
-    sha256 "2f2ee1ff4f7c6513b9c59fcee2d36b44e0421d238cbecbd6c6ed8f5801ba1803" => :high_sierra
-    sha256 "e4fe44eec5ae7b987b264cdbb64a02a7e53a25d1203edc44cb820cd7cc93093c" => :sierra
-    sha256 "6b89f084cd0662179238268ba05309685f0f78708a2636eedbf6a3dd3911b2c8" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "72df9927c731028f56fbbe9962c6effeec5f8581ede570ea22c2d1c702bd7b5a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "998f245038aacbe7e2a953bd4ede86f0175c3c00ea71e3b9a14a134c1d2ca4cd"
+    sha256 cellar: :any_skip_relocation, catalina:      "9143a6b86f643e5d63cf00774619622abaf0f3ee7e7f071f4aab924f15e163ff"
+    sha256 cellar: :any_skip_relocation, mojave:        "51a0ab78e1788d5a13bc0e14d476a0f9d98b565915b04507df88c8b81c64963d"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "86c7687436d1ddb2b41392ee6c5e8f235ffe478d7b7b0d912feaa7a89217e8d5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "00cfbc009d954b2ecc5d0f3c7f58fc7ee140c37cc597f646d1db95330f0bf6a9"
   end
 
   depends_on "swig" => :build
   depends_on "openssl@1.1"
-  uses_from_macos "python@2"
+  depends_on "python@3.9"
 
   def install
     args = %W[
@@ -25,17 +33,20 @@ class Ldns < Formula
       --with-examples
       --with-ssl=#{Formula["openssl@1.1"].opt_prefix}
       --with-pyldns
-      PYTHON_SITE_PKG=#{lib}/python2.7/site-packages
+      PYTHON_SITE_PKG=#{lib}/python3.9/site-packages
       --disable-dane-verify
     ]
 
-    ENV["PYTHON"] = Formula["python@2"].opt_bin/"python2" unless OS.mac?
+    # Fixes: ./contrib/python/ldns_wrapper.c:2746:10: fatal error: 'ldns.h' file not found
+    inreplace "contrib/python/ldns.i", "#include \"ldns.h\"", "#include <ldns/ldns.h>"
+
+    ENV["PYTHON"] = Formula["python@3.9"].opt_bin/"python3"
     system "./configure", *args
 
-    if OS.mac?
+    on_macos do
       inreplace "Makefile" do |s|
         s.change_make_var! "PYTHON_LDFLAGS", "-undefined dynamic_lookup"
-        s.gsub! /(\$\(PYTHON_LDFLAGS\).*) -no-undefined/, "\\1"
+        s.gsub!(/(\$\(PYTHON_LDFLAGS\).*) -no-undefined/, "\\1")
       end
     end
 

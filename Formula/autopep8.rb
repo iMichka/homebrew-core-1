@@ -3,26 +3,32 @@ class Autopep8 < Formula
 
   desc "Automatically formats Python code to conform to the PEP 8 style guide"
   homepage "https://github.com/hhatto/autopep8"
-  url "https://files.pythonhosted.org/packages/45/f3/24b437da561b6af4840c871fbbda32889ca304fc1f7b6cc3ada8b09f394a/autopep8-1.4.4.tar.gz"
-  sha256 "4d8eec30cc81bc5617dbf1218201d770dc35629363547f17577c61683ccfb3ee"
+  url "https://files.pythonhosted.org/packages/77/63/e88f70a614c21c617df0ee3c4752fe7fb66653cba851301d3bcaee4b00ea/autopep8-1.5.7.tar.gz"
+  sha256 "276ced7e9e3cb22e5d7c14748384a5cf5d9002257c0ed50c0e075b68011bb6d0"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bd453270ef227061e272f5756aff21d21c9581204144a46903f71cd673181e85" => :catalina
-    sha256 "f20261fb78a887b3c30a55ae517547b5d6d9c8a1d82a7bbfa04613db0649be16" => :mojave
-    sha256 "1bcfa4d6f774c8c945c8519985138a94b639937bc8f2efe12eb397f8a2bbf5df" => :high_sierra
-    sha256 "c4df65a7a34991e0f1bfaeb567621592e9f8f50f047f562d7044a9badc067798" => :sierra
-    sha256 "a225d08eed035068a5e65e87238a842dea37668203759411315ebfd58a3c1d56" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e01de60b088330ccdf3c99a1144dd2b2e6470d2916490ffd597e170660e2c702"
+    sha256 cellar: :any_skip_relocation, big_sur:       "5e079165ba4d0b9148886ed526d9c8a9be8b637cfd5c74b1ccd52fe87bc6574c"
+    sha256 cellar: :any_skip_relocation, catalina:      "5e079165ba4d0b9148886ed526d9c8a9be8b637cfd5c74b1ccd52fe87bc6574c"
+    sha256 cellar: :any_skip_relocation, mojave:        "5e079165ba4d0b9148886ed526d9c8a9be8b637cfd5c74b1ccd52fe87bc6574c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "57ede9ec5ab981a86bd515552de247faf57b23449776984fbc685769d054f0a3"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
+
+  resource "pycodestyle" do
+    url "https://files.pythonhosted.org/packages/02/b3/c832123f2699892c715fcdfebb1a8fdeffa11bb7b2350e46ecdd76b45a20/pycodestyle-2.7.0.tar.gz"
+    sha256 "c389c1d06bf7904078ca03399a4816f974a1d590090fecea0c63ec26ebaf1cef"
+  end
+
+  resource "toml" do
+    url "https://files.pythonhosted.org/packages/be/ba/1f744cdc819428fc6b5084ec34d9b30660f6f9daaf70eead706e3203ec3c/toml-0.10.2.tar.gz"
+    sha256 "b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"
+  end
 
   def install
-    venv = virtualenv_create(libexec, "python3")
-    system libexec/"bin/pip", "install", "-v", "--no-binary", ":all:",
-                              "--ignore-installed", buildpath
-    system libexec/"bin/pip", "uninstall", "-y", name
-    venv.pip_install_and_link buildpath
+    virtualenv_install_with_resources
   end
 
   test do

@@ -3,17 +3,19 @@ class Fastme < Formula
   homepage "http://www.atgc-montpellier.fr/fastme/"
   url "https://gite.lirmm.fr/atgc/FastME/raw/v2.1.6.1/tarball/fastme-2.1.6.1.tar.gz"
   sha256 "ac05853bc246ccb3d88b8bc075709a82cfe096331b0f4682b639f37df2b30974"
-  revision 1
+  revision OS.mac? ? 3 : 4
 
   bottle do
-    cellar :any
-    sha256 "2d77addf56ac300c3b219b1716b81d1fe1a04ee1759a79cab4d59aeee676a4ec" => :catalina
-    sha256 "65bfd93ee6bdc21881fe342dd289a4c0808a3eb0abb1e04e174c32fd43a0bc77" => :mojave
-    sha256 "eac83026ed4ce4b30511c1f7b79ff032e9c3c607a52d63881951937e210d663c" => :high_sierra
-    sha256 "1a04d48b4a33ad3c854a4d45724f339438455f47e20d870c265b070ec75db08b" => :sierra
+    sha256                               arm64_big_sur: "a63f7a94429ad21604091dbec3fa347d83c81f335a0e112e3a601975c26593f3"
+    sha256 cellar: :any,                 big_sur:       "57efef94306e3b9dcbaa2b91289951b545b4ae49cdfe14fb444903e145485a49"
+    sha256 cellar: :any,                 catalina:      "0024bfdb601cd133d2d7a544fa04bb8ad6650f846eba08310a7d69458432d591"
+    sha256 cellar: :any,                 mojave:        "a685f1feb457d32b6df4444edec59913957347ae5bb3e3374ffedf334d07b210"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e975f7a641a215a4d8c8b0826907dbdc2e05b6cee616bf5ea718f50b850fb0ba"
   end
 
-  depends_on "gcc"
+  on_macos do
+    depends_on "gcc"
+  end
 
   fails_with :clang # no OpenMP support
 

@@ -1,21 +1,32 @@
 class Scala < Formula
   desc "JVM-based programming language"
   homepage "https://www.scala-lang.org/"
-  url "https://downloads.lightbend.com/scala/2.13.1/scala-2.13.1.tgz"
-  mirror "https://www.scala-lang.org/files/archive/scala-2.13.1.tgz"
-  mirror "https://downloads.typesafe.com/scala/2.13.1/scala-2.13.1.tgz"
-  sha256 "6918ccc494e34810a7254ad2c4e6f0e1183784c22e7b4801b7dbc8d1994a04db"
+  url "https://downloads.lightbend.com/scala/2.13.6/scala-2.13.6.tgz"
+  mirror "https://www.scala-lang.org/files/archive/scala-2.13.6.tgz"
+  mirror "https://downloads.typesafe.com/scala/2.13.6/scala-2.13.6.tgz"
+  sha256 "49df92503cd11cc3c649683db368e5878b7e792e40156d2377e52326e935ed43"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url "https://www.scala-lang.org/files/archive/"
+    regex(/href=.*?scala[._-]v?(\d+(?:\.\d+)+)(?:[._-]final)?\.t/i)
+  end
 
-  depends_on :java => "1.8+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "5ff49df5ecafc78236f7a7202b1d21f503ade8a25c0e2cc2ff06a24ad95daa5b"
+  end
+
+  depends_on "openjdk"
 
   def install
+    # Replace `/usr/local` references for uniform bottles
+    inreplace Dir["man/man1/scala{,c}.1"], "/usr/local", HOMEBREW_PREFIX
     rm_f Dir["bin/*.bat"]
     doc.install Dir["doc/*"]
     share.install "man"
     libexec.install "bin", "lib"
-    bin.install_symlink Dir["#{libexec}/bin/*"]
+    bin.install Dir["#{libexec}/bin/*"]
+    bin.env_script_all_files libexec/"bin", Language::Java.overridable_java_home_env
 
     # Set up an IntelliJ compatible symlink farm in 'idea'
     idea = prefix/"idea"
@@ -23,10 +34,11 @@ class Scala < Formula
     idea.install_symlink doc => "doc"
   end
 
-  def caveats; <<~EOS
-    To use with IntelliJ, set the Scala home to:
-      #{opt_prefix}/idea
-  EOS
+  def caveats
+    <<~EOS
+      To use with IntelliJ, set the Scala home to:
+        #{opt_prefix}/idea
+    EOS
   end
 
   test do

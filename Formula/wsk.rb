@@ -1,33 +1,26 @@
 class Wsk < Formula
   desc "OpenWhisk Command-Line Interface (CLI)"
   homepage "https://openwhisk.apache.org/"
-  url "https://github.com/apache/openwhisk-cli/archive/1.0.0.tar.gz"
-  sha256 "31e6fceaa3ae51be7b93d308eb0b68c891277f904c17cf6496e51062f1655332"
+  url "https://github.com/apache/openwhisk-cli/archive/1.2.0.tar.gz"
+  sha256 "cafc57b2f2e29f204c00842541691038abcc4e639dd78485f9c042c93335f286"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "461c8bd630f1fb80859d16f1ef4ec57ba73990febdada45deb0411b66fca044e" => :catalina
-    sha256 "3082ab49e515fa5b534ee3e8f0de9e90a23d7130d9fbf5f469ea5ef3f40c8bd9" => :mojave
-    sha256 "9ea3a295b2eb7b4f622ec8d6065aa5a9cd50285d83df66453e41d2214de6135c" => :high_sierra
-    sha256 "25efcbd20fb8cdddebe9c788ea468cad0f8e9ba9c32480392fd731f85cc9141e" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "67b2725953f3e57cc34a264d08038690152cdebead514185f2727eda86e339d0"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e84a614165531b5d1d4d6ec04eaaa1231c1b829b8c32e64c57ed670c8ccbee29"
+    sha256 cellar: :any_skip_relocation, catalina:      "0018d1080479df041f52d6bb92388048cdb6539864f686b8fd92107626a33227"
+    sha256 cellar: :any_skip_relocation, mojave:        "ef1a2d5b366f2d0fef71e5f9a56cf764c8aff282677046de639efe254d1fc9d8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "39140d3d719b8f075975940c3d1c6e0b5cdafd6cb00b3c3dccf0c2f1d104afc2"
   end
 
   depends_on "go" => :build
   depends_on "go-bindata" => :build
-  depends_on "govendor" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    dir = buildpath/"src/github.com/apache/openwhisk-cli"
-    dir.install buildpath.children
-    cd dir do
-      system "go-bindata", "-pkg", "wski18n", "-o",
-                           "wski18n/i18n_resources.go", "wski18n/resources"
-      system "govendor", "sync"
+    system "go-bindata", "-pkg", "wski18n", "-o",
+                          "wski18n/i18n_resources.go", "wski18n/resources"
 
-      system "go", "build", "-o", bin/"wsk"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args
   end
 
   test do

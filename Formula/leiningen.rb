@@ -1,24 +1,24 @@
 class Leiningen < Formula
   desc "Build tool for Clojure"
   homepage "https://github.com/technomancy/leiningen"
-  url "https://github.com/technomancy/leiningen/archive/2.9.1.tar.gz"
-  sha256 "a4c239b407576f94e2fef5bfa107f0d3f97d0b19c253b08860d9609df4ab8b29"
+  url "https://github.com/technomancy/leiningen/archive/2.9.6.tar.gz"
+  sha256 "2f3b8a7eb710bd3a266975387f216bd4a3bace2f1b0a1f0ae88a93d919d813d9"
+  license "EPL-1.0"
   head "https://github.com/technomancy/leiningen.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "480cf69d0f2f9d43879b0768018ef323426d0cca145e00984d76890c2baaa919" => :catalina
-    sha256 "4b353034cd7bf4825ed9c5a340a20beed7382a8369f9ecd9f7da233e9b36a03a" => :mojave
-    sha256 "4b353034cd7bf4825ed9c5a340a20beed7382a8369f9ecd9f7da233e9b36a03a" => :high_sierra
-    sha256 "f7ebcf91cfac411472d2dfdee71f008bc2ad3d7289b342a98db0916e74b7f615" => :sierra
-    sha256 "2364e3bee0e06f2eb26adaae093c99c71e24e22d2ec86715554bdf221188191b" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "df641c65df341caa49d31b82e2f41c754f9b4bea31d104a4af7236d9ec7a8463"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c6a3bca012d22ac2bfd31f2d63e1205f3e8b14a1a9c273efc4b812233adc1920"
+    sha256 cellar: :any_skip_relocation, catalina:      "c6a3bca012d22ac2bfd31f2d63e1205f3e8b14a1a9c273efc4b812233adc1920"
+    sha256 cellar: :any_skip_relocation, mojave:        "d144459a1bff33c0adbc0de79e97135be0b6fd768a3a7468f5ad484a3c1486f9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "32d5ca6d11a59892b6a27d86b76fed7915b70b61a94d498c8db42e2dbb3e14cb"
   end
 
-  depends_on :java => :test unless OS.mac?
+  depends_on "openjdk"
 
   resource "jar" do
-    url "https://github.com/technomancy/leiningen/releases/download/2.9.1/leiningen-2.9.1-standalone.zip", :using => :nounzip
-    sha256 "ea7c831a4f5c38b6fc3926c6ad32d1d4b9b91bf830a715ecff5a70a18bda55f8"
+    url "https://github.com/technomancy/leiningen/releases/download/2.9.6/leiningen-2.9.6-standalone.zip", using: :nounzip
+    sha256 "41c543f73eec4327dc20e60d5d820fc2a9dc772bc671610b9c385d9c4f5970b8"
   end
 
   def install
@@ -32,16 +32,19 @@ class Leiningen < Formula
       s.change_make_var! "LEIN_JAR", libexec/jar
     end
 
-    bin.install "bin/lein-pkg" => "lein"
+    (libexec/"bin").install "bin/lein-pkg" => "lein"
+    (libexec/"bin/lein").chmod 0755
+    (bin/"lein").write_env_script libexec/"bin/lein", Language::Java.overridable_java_home_env
     bash_completion.install "bash_completion.bash" => "lein-completion.bash"
     zsh_completion.install "zsh_completion.zsh" => "_lein"
   end
 
-  def caveats; <<~EOS
-    Dependencies will be installed to:
-      $HOME/.m2/repository
-    To play around with Clojure run `lein repl` or `lein help`.
-  EOS
+  def caveats
+    <<~EOS
+      Dependencies will be installed to:
+        $HOME/.m2/repository
+      To play around with Clojure run `lein repl` or `lein help`.
+    EOS
   end
 
   test do

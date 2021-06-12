@@ -1,24 +1,26 @@
 class Nspr < Formula
   desc "Platform-neutral API for system-level and libc-like functions"
   homepage "https://developer.mozilla.org/docs/Mozilla/Projects/NSPR"
-  url "https://archive.mozilla.org/pub/nspr/releases/v4.24/src/nspr-4.24.tar.gz"
-  sha256 "90a59a0df6a11528749647fe18401cc7e03881e3e63c309f8c520ce06dd413d0"
+  url "https://archive.mozilla.org/pub/nspr/releases/v4.31/src/nspr-4.31.tar.gz"
+  sha256 "5729da87d5fbf1584b72840751e0c6f329b5d541850cacd1b61652c95015abc8"
+  license "MPL-2.0"
+
+  livecheck do
+    url "https://ftp.mozilla.org/pub/nspr/releases/"
+    regex(%r{href=.*?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "f98f2c3c4a5bbc2e43a2f7ed2cb653206d79827df2a39884395330aef9c5bfb2" => :catalina
-    sha256 "bbec910100b9e29bf7581e0bef0a7ed977b7a8ebad092b92ba1105ead69002e8" => :mojave
-    sha256 "657ed5c99f276bda1c48d6f8be34d5561f1c1579277a7fe4534aee95a2d97ec2" => :high_sierra
-    sha256 "221acbd42e781cf73d688d01c8797f30e401359effcbfb664e14d103ad29a701" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "cc68066c04e374c88ae7d20ebf7093d5a58b1203481272de39554d5b0c46fbfe"
+    sha256 cellar: :any,                 big_sur:       "097bb45f7541b47ecb45f3476da7aa0249f66681255c10a4f6081452083716e1"
+    sha256 cellar: :any,                 catalina:      "683ef5685207c5c368c0ac2f0db3235f5b0f5d30d3fa53fcff1b805f815ab4de"
+    sha256 cellar: :any,                 mojave:        "76cf099f7d02535352ac4bfd5b1c76bde37d891e40923cf0a32e1b8513e011e8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "86cb0fa8a188a302212aaf71f135f0087522a960fda1713d24f618f1665d58fe"
   end
 
   def install
     ENV.deparallelize
     cd "nspr" do
-      # Fixes a bug with linking against CoreFoundation, needed to work with SpiderMonkey
-      # See: https://openradar.appspot.com/7209349
-      inreplace "pr/src/Makefile.in", "-framework CoreServices -framework CoreFoundation", ""
-
       args = %W[
         --disable-debug
         --prefix=#{prefix}

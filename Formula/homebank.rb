@@ -1,15 +1,20 @@
 class Homebank < Formula
   desc "Manage your personal accounts at home"
   homepage "http://homebank.free.fr"
-  url "http://homebank.free.fr/public/homebank-5.2.8.tar.gz"
-  sha256 "fe98a3585a23ed66695a96b9162dbf1872f4fd78c01471019b60786476bc558d"
-  revision 1
+  url "http://homebank.free.fr/public/homebank-5.5.2.tar.gz"
+  sha256 "989ef378e4c9f8234b62bb93d6a4b14bd4c98dc889519838dba1f44f12c51ed2"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "http://homebank.free.fr/public/"
+    regex(/href=.*?homebank[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "4db7d01578a8588f38d2f481830e662b11039bde595c9958e51839d5a4471360" => :catalina
-    sha256 "f6f16efea946ceac7d430f3aef7177454c11b759cc64433ef140b3e209dbb8b7" => :mojave
-    sha256 "4ea21bb9617242f762aee8f92d152b21408c8908a4a7f1e0c7a79fb83bfd6888" => :high_sierra
-    sha256 "4f4f7d692abf0e63ea0aed9c57f63d394cfdaefb0442bd12a6c05c10ee138572" => :x86_64_linux
+    sha256 arm64_big_sur: "4dcbdaefbbc1ca950c46251ac6f4256aa0a2b2192b65f87c6126b6238662eca1"
+    sha256 big_sur:       "1955afa29d38dd9b3e6c163c76aa37956991ccc31a3a045419fa38cbf0ae9a7f"
+    sha256 catalina:      "cacd1016658a98006e90ee2c846be0b8737396345083c0016b3dd4aa79a6d04e"
+    sha256 mojave:        "2fbcca1d33171012b17c4d5e103ae68223ac513cc1c1866a21886eafb892c758"
   end
 
   depends_on "intltool" => :build

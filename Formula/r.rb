@@ -1,14 +1,21 @@
 class R < Formula
   desc "Software environment for statistical computing"
   homepage "https://www.r-project.org/"
-  url "https://cran.r-project.org/src/base/R-3/R-3.6.2.tar.gz"
-  sha256 "bd65a45cddfb88f37370fbcee4ac8dd3f1aebeebe47c2f968fd9770ba2bbc954"
+  url "https://cran.r-project.org/src/base/R-4/R-4.1.0.tar.gz"
+  sha256 "e8e68959d7282ca147360fc9644ada9bd161bab781bab14d33b8999a95182781"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://cran.rstudio.com/banner.shtml"
+    regex(%r{href=(?:["']?|.*?/)R[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "d1d1c643d70a82eae3d702af54502b1446584d560c0e9f59d4814e5598245069" => :catalina
-    sha256 "fcd1dc2749a1b8af36f2fb71ced861ae29edaba1b5924ec3944e25b1227ad142" => :mojave
-    sha256 "b062cbf25e5ed5ea0f27e8b9b7a967ed087876d7b220261e5b152c230aab949a" => :high_sierra
-    sha256 "da0cd9fadf7f325e3c24b7995941610a8f0c6c5544b16752de3c38d4da9564c8" => :x86_64_linux
+    sha256 arm64_big_sur: "bb731e6ec573c08d37da048a4a69411177b58f9d7ad4f340728fcef2e4c3c06e"
+    sha256 big_sur:       "4803c5d4e8888494d62c078b658174a23815efbef798c307f565431fe52eed12"
+    sha256 catalina:      "452a71839e33b5f1868845f54953ddcecfaca5c1cb61e58290130d9b3d9abda1"
+    sha256 mojave:        "cf4d202d1bfd57554ab37830308517045f7841d7061957cf7555600b57917928"
+    sha256 x86_64_linux:  "b5f3d037220dfd7b0bb7166b4bbfca3ee119334925b719a312e0307bd87b70ed"
   end
 
   depends_on "pkg-config" => :build
@@ -17,44 +24,47 @@ class R < Formula
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "openblas"
-  depends_on "pcre"
+  depends_on "pcre2"
   depends_on "readline"
+  depends_on "tcl-tk"
   depends_on "xz"
 
   unless OS.mac?
     depends_on "cairo"
     depends_on "curl"
     depends_on "pango"
-    depends_on "linuxbrew/xorg/xorg"
+    depends_on "libice"
+    depends_on "libx11"
+    depends_on "libxt"
+    depends_on "libtirpc"
   end
 
   # needed to preserve executable permissions on files without shebangs
-  skip_clean "lib/R/bin"
-
-  resource "gss" do
-    url "https://cloud.r-project.org/src/contrib/gss_2.1-10.tar.gz", :using => :nounzip
-    mirror "https://mirror.las.iastate.edu/CRAN/src/contrib/gss_2.1-10.tar.gz"
-    sha256 "26c47ecae6a9b7854a1b531c09f869cf8b813462bd8093e3618e1091ace61ee2"
-  end
+  skip_clean "lib/R/bin", "lib/R/doc"
 
   def install
-    # Fix dyld: lazy symbol binding failed: Symbol not found: _clock_gettime
-    if MacOS.version == "10.11" && MacOS::Xcode.installed? &&
-       MacOS::Xcode.version >= "8.0"
-      ENV["ac_cv_have_decl_clock_gettime"] = "no"
-    end
+    # BLAS detection fails with Xcode 12 due to missing prototype
+    # https://bugs.r-project.org/bugzilla/show_bug.cgi?id=18024
+    ENV.append "CFLAGS", "-Wno-implicit-function-declaration"
 
     args = [
       "--prefix=#{prefix}",
       "--enable-memory-profiling",
-      "--with-lapack",
+      "--with-tcl-config=#{Formula["tcl-tk"].opt_lib}/tclConfig.sh",
+      "--with-tk-config=#{Formula["tcl-tk"].opt_lib}/tkConfig.sh",
+      "--with-blas=-L#{Formula["openblas"].opt_lib} -lopenblas",
       "--enable-R-shlib",
       "--disable-java",
-      "--with-blas=-L#{Formula["openblas"].opt_lib} -lopenblas",
     ]
 
     # don't remember Homebrew's sed shim
     args << "SED=/usr/bin/sed" if File.exist?("/usr/bin/sed")
+
+    if OS.mac?
+      args << "--without-cairo"
+      args << "--without-x"
+      args << "--with-aqua"
+    end
 
     unless OS.mac?
       args << "--libdir=#{lib}" # avoid using lib64 on CentOS
@@ -66,9 +76,17 @@ class R < Formula
     end
 
     # Help CRAN packages find gettext and readline
-    ["gettext", "readline"].each do |f|
+    ["gettext", "readline", "xz"].each do |f|
       ENV.append "CPPFLAGS", "-I#{Formula[f].opt_include}"
       ENV.append "LDFLAGS", "-L#{Formula[f].opt_lib}"
+    end
+
+    # Avoid references to homebrew shims
+    args << "LD=ld" unless OS.mac?
+
+    unless OS.mac?
+      ENV.append "CPPFLAGS", "-I#{Formula["libtirpc"].opt_include}/tirpc"
+      ENV.append "LDFLAGS", "-L#{Formula["libtirpc"].opt_lib}"
     end
 
     system "./configure", *args
@@ -115,9 +133,13 @@ class R < Formula
     dylib_ext = OS.mac? ? ".dylib" : ".so"
     assert_equal "[1] 2", shell_output("#{bin}/Rscript -e 'print(1+1)'").chomp
     assert_equal dylib_ext, shell_output("#{bin}/R CMD config DYLIB_EXT").chomp
-
-    testpath.install resource("gss")
-    system bin/"R", "CMD", "INSTALL", "--library=.", Dir["gss*"].first
+    if OS.mac?
+      assert_equal "[1] \"aqua\"",
+                   shell_output(
+                     "#{bin}/Rscript -e 'library(tcltk)' -e 'tclvalue(.Tcl(\"tk windowingsystem\"))'",
+                   ).chomp
+    end
+    system bin/"Rscript", "-e", "install.packages('gss', '.', 'https://cloud.r-project.org')"
     assert_predicate testpath/"gss/libs/gss.so", :exist?,
                      "Failed to install gss package"
   end

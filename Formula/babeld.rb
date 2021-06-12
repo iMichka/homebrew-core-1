@@ -1,34 +1,37 @@
 class Babeld < Formula
   desc "Loop-avoiding distance-vector routing protocol"
-  homepage "https://www.irif.univ-paris-diderot.fr/~jch/software/babel/"
-  url "https://www.irif.fr/~jch/software/files/babeld-1.9.1.tar.gz"
-  sha256 "1e1b3c01dd929177bc8d027aff1494da75e1e567e1f60df3bb45a78d5f1ca0b4"
+  homepage "https://www.irif.fr/~jch/software/babel/"
+  url "https://www.irif.fr/~jch/software/files/babeld-1.10.tar.gz"
+  sha256 "a5f54a08322640e97399bf4d1411a34319e6e277fbb6fc4966f38a17d72a8dea"
+  license "MIT"
   head "https://github.com/jech/babeld.git"
 
+  livecheck do
+    url "https://www.irif.fr/~jch/software/files/"
+    regex(/href=.*?babeld[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a612df0aed4630d0ecc4dccc471d616df1d825f5beb0e6454c02f8b2122d31e8" => :catalina
-    sha256 "650df4a806dac00287bd3affb40ceb369266d5632ba56453499f2af5b9f602cf" => :mojave
-    sha256 "f58c8fef7012518d8adc3ad381dcb95c42c5e05112fcc07b0c5a9042cd2bfc9b" => :high_sierra
-    sha256 "0fafd0dea78de2848fe73a2fc910a7aa122ed9409d44cd0aa9ab60c72ea3f974" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "84bd566d6b25d9b9a5f76c444c555fba9349457f09736d033903f9fbe576babf"
+    sha256 cellar: :any_skip_relocation, big_sur:       "63a4e1edb9625b5f3e11df84a840979330b0bd3af8d77dec25fe09e92698719f"
+    sha256 cellar: :any_skip_relocation, catalina:      "b6906565df2c7862dd7979ef3599414bc59f0b78b05b0e3a9dbf411ab29fad83"
+    sha256 cellar: :any_skip_relocation, mojave:        "a59602b1643b95845ab9d1b6ecd68d1231ee825ac68fadb577e93d85b9b99ac9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "47467d998e46d7e837d4b226edf4c22c29a8be28973dd56d7ffebffeb4e5437d"
   end
 
   def install
-    system "make" unless OS.mac?
-    system "make", "LDLIBS=''" if OS.mac?
+    on_macos do
+      # LDLIBS='' fixes: ld: library not found for -lrt
+      system "make", "LDLIBS=''"
+    end
+    on_linux do
+      system "make"
+    end
     system "make", "install", "PREFIX=#{prefix}"
   end
 
   test do
     shell_output("#{bin}/babeld -I #{testpath}/test.pid -L #{testpath}/test.log", 1)
-    if OS.mac?
-      expected = <<~EOS
-        Couldn't tweak forwarding knob.: Operation not permitted
-        kernel_setup failed.
-      EOS
-      assert_equal expected, (testpath/"test.log").read
-    else
-      assert_match "kernel_setup failed", (testpath/"test.log").read
-    end
+    assert_match "kernel_setup failed", (testpath/"test.log").read
   end
 end

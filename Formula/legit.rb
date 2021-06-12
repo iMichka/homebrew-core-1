@@ -3,19 +3,22 @@ class Legit < Formula
 
   desc "Command-line interface for Git, optimized for workflow simplicity"
   homepage "https://frostming.github.io/legit/"
-  url "https://files.pythonhosted.org/packages/6b/65/819f84ef3caa4743c834122acb897df29167f6178c9c095d7896f2181387/legit-1.1.0.tar.gz"
-  sha256 "25bd3809d657c9b0bd45a6a230dc7f58a56e6e068159d471ffeadb0cf4677b4d"
-  head "https://github.com/frostming/legit.git", :branch => "master"
+  url "https://files.pythonhosted.org/packages/cb/e4/8cc5904c486241bf2edc4dd84f357fa96686dc85f48eedb835af65f821bf/legit-1.2.0.post0.tar.gz"
+  sha256 "949396b68029a8af405ab20c901902341ef6bd55c7fec6dab71141d63d406b11"
+  license "BSD-3-Clause"
+  revision OS.mac? ? 1 : 2
+  head "https://github.com/frostming/legit.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1f688323badcbca7aabde7b3d6714c143d40a5306de059ecdf7dbf815157143e" => :catalina
-    sha256 "81ff474f13586a2e6e543e24d8bc2c40f29c671fa8fb194de3d5e501fcf2b7a2" => :mojave
-    sha256 "b2b05bde239b036eec589a445c27ada95aca2330b76113bba72c7ad20e482d10" => :high_sierra
-    sha256 "f1fad0fe12fd31753ee495be46b4a3bb1c2c4c898c60d61ab68852ae969ad17a" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b991a34a3b1731bcd71a09aecf6b974b0b2fcb3a8fd42c3d34e7b553f840b640"
+    sha256 cellar: :any_skip_relocation, big_sur:       "73161b2eb5a55db6d984dbf1b1aae96072419b500672bf6d58c0352e840cbc73"
+    sha256 cellar: :any_skip_relocation, catalina:      "3564e73b3de899626951b43275564ad6435816d0ad540c3f6c7941c89f6c6b60"
+    sha256 cellar: :any_skip_relocation, mojave:        "175045954b783f943c2e8b27d5df01d0a8bf21034439f7f9abd99cc8ced744e3"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "b4a46a53103b33f06eefdee01e64f87839b28c41288f96388a7f5e311234115e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "16ee3b086cba066ce4c679a432f3d2f263c9ad3d83786f6ac65563ef8c07fd80"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   resource "args" do
     url "https://files.pythonhosted.org/packages/e5/1c/b701b3f4bd8d3667df8342f311b3efaeab86078a840fb826bd204118cc6b/args-0.1.0.tar.gz"

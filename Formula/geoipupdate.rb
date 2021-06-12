@@ -1,25 +1,24 @@
 class Geoipupdate < Formula
   desc "Automatic updates of GeoIP2 and GeoIP Legacy databases"
   homepage "https://github.com/maxmind/geoipupdate"
-  url "https://github.com/maxmind/geoipupdate/archive/v4.1.5.tar.gz"
-  sha256 "fba0de08136af05038c2375e24f0eb2cfddf46caa2ec946dc1417d72d1108fed"
+  url "https://github.com/maxmind/geoipupdate/archive/v4.7.1.tar.gz"
+  sha256 "e3176325f916571244562a2fec58e0c9ce624f84dbf946616921be8521cbfd94"
+  license "Apache-2.0"
   head "https://github.com/maxmind/geoipupdate.git"
 
   bottle do
-    rebuild 1
-    sha256 "a7fcce24fbb621ebf66a1795ad4686aee730cfe3bce6406b7f2a94be7a48e64e" => :catalina
-    sha256 "26c697322efb8b8338eb2e8bf7cf6ac614c83ce5762b19282efc1657ed111924" => :mojave
-    sha256 "f1f845e316c11b9c62d83f4c251d9a16fa5e831a137c6328b071dff9b6de5359" => :high_sierra
-    sha256 "442f54ed78d3542714cc54bca4dd5c40e505c05024890d698bb63daed3d9a896" => :x86_64_linux
+    sha256 arm64_big_sur: "53815bfd1314c82a2b13af71fdb18e0315b75cf8478a1ffec1a38c500f36c755"
+    sha256 big_sur:       "5fe5376c5e4690b2614bb6de8e9f6849603e5e62cde300dd6744cc52394e7887"
+    sha256 catalina:      "8e6aa341eebc779514e9db7aabfc862d9c56513d26f9058631906654ed1d430a"
+    sha256 mojave:        "548134f2f54d67e3ff04d86c0dcc7b937b06fd05c25e173a1ac11b2826db0b69"
+    sha256 x86_64_linux:  "bad3beb6a5c9a160a4cca5146a07b668c73fe73f31eb5e0cf72521f62c579878"
   end
 
   depends_on "go" => :build
   depends_on "pandoc" => :build
 
-  unless OS.mac?
-    depends_on "curl"
-    depends_on "zlib"
-  end
+  uses_from_macos "curl"
+  uses_from_macos "zlib"
 
   def install
     system "make", "CONFFILE=#{etc}/GeoIP.conf", "DATADIR=#{var}/GeoIP", "VERSION=#{version} (homebrew)"
@@ -32,7 +31,6 @@ class Geoipupdate < Formula
 
   def post_install
     (var/"GeoIP").mkpath
-    system bin/"geoipupdate", "-v"
   end
 
   test do

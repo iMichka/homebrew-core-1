@@ -1,15 +1,16 @@
 class Putty < Formula
   desc "Implementation of Telnet and SSH"
   homepage "https://www.chiark.greenend.org.uk/~sgtatham/putty/"
-  url "https://the.earth.li/~sgtatham/putty/0.73/putty-0.73.tar.gz"
-  sha256 "3db0b5403fb41aecd3aa506611366650d927650b6eb3d839ad4dcc782519df1c"
+  url "https://the.earth.li/~sgtatham/putty/0.75/putty-0.75.tar.gz"
+  sha256 "d3173b037eddbe9349abe978101277b4ba9f9959e25dedd44f87e7b85cc8f9f5"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "37ba26e6b965281083a75044df48335b9dd4eb06c2d3893af3c904ce73df633f" => :catalina
-    sha256 "765e7d374a8f98b1d336e5120fd9e9e07cddd75c0f9ac68fe9bdbde577193620" => :mojave
-    sha256 "cdba0d03e5de13733fcf62307656adba84d872ae5b97cdde77034ef97de5e63f" => :high_sierra
-    sha256 "623c68a6d410e750af7457465f60deb22e1f6417fe85a1325f459f58ce1f781d" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c133fac55c1f754b779ee81f4b8a5b1e21072c39409edcd0d96a723927dc7ac5"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7c3cd8e013706720ba56fcc38107051dd05eb36daeaac785a46c93695641357b"
+    sha256 cellar: :any_skip_relocation, catalina:      "f7913ffc65271e850f1689f3b5cfa0105cfcb72f06697cc9e66a0850dd4dc9f6"
+    sha256 cellar: :any_skip_relocation, mojave:        "79b879541251665356f72102b11cced22a2ed6c56bf7131235b77ac8a91f555c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "98081dcc49550bc19f8c0f9ccf2af02372a69bdc48e9a273428534ee8215ba5e"
   end
 
   head do
@@ -21,9 +22,10 @@ class Putty < Formula
   end
 
   depends_on "pkg-config" => :build
-  depends_on "expect" => :test unless OS.mac?
 
-  conflicts_with "pssh", :because => "both install `pscp` binaries"
+  uses_from_macos "expect" => :test
+
+  conflicts_with "pssh", because: "both install `pscp` binaries"
 
   def install
     if build.head?
@@ -32,10 +34,7 @@ class Putty < Formula
       system "make", "-C", "doc"
     end
 
-    args = %W[
-      --prefix=#{prefix}
-      --disable-silent-rules
-      --disable-dependency-tracking
+    args = std_configure_args + %w[
       --disable-gtktest
       --without-gtk
     ]

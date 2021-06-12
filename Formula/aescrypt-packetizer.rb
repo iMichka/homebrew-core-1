@@ -4,13 +4,19 @@ class AescryptPacketizer < Formula
   url "https://www.aescrypt.com/download/v3/linux/aescrypt-3.14.tgz"
   sha256 "5051394529bf3f99c42b57f755b2269e6abaae8b0e3fd90869c4b0bb58f5f1c7"
 
+  livecheck do
+    url "https://www.aescrypt.com/download/"
+    regex(%r{href=.*?/linux/aescrypt[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1615637765b9c2c4aa26bb5c858962d2b5614d7098aa45ebb8154c839fcde13a" => :catalina
-    sha256 "063038d7a6789ce5052fa1f7bf1be43ab9cd5c4157d5f9d1d37a91382b007958" => :mojave
-    sha256 "ad36c0bff9d673c364b18795669f51329d8e7c5ea862af2ef3614051976cf601" => :high_sierra
-    sha256 "39463bd2c693eaa4060f10e8d663346189ff1ebcc9bfa20971158e9e265b7b1c" => :sierra
-    sha256 "34e5489f89b519308a003cc00a544d184463c19e25a7168a33f96ba0faae499c" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a8c3dda5abdaa6d42a63a7fdd2c38c910b3286404313ef0195cebc50b433503a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ab6619fc5b646e2cd062f887735b95b9ba26b53b684a5d6318f2d99974dc2885"
+    sha256 cellar: :any_skip_relocation, catalina:      "1615637765b9c2c4aa26bb5c858962d2b5614d7098aa45ebb8154c839fcde13a"
+    sha256 cellar: :any_skip_relocation, mojave:        "063038d7a6789ce5052fa1f7bf1be43ab9cd5c4157d5f9d1d37a91382b007958"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "ad36c0bff9d673c364b18795669f51329d8e7c5ea862af2ef3614051976cf601"
+    sha256 cellar: :any_skip_relocation, sierra:        "39463bd2c693eaa4060f10e8d663346189ff1ebcc9bfa20971158e9e265b7b1c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "34e5489f89b519308a003cc00a544d184463c19e25a7168a33f96ba0faae499c"
   end
 
   head do
@@ -21,14 +27,22 @@ class AescryptPacketizer < Formula
     depends_on "libtool" => :build
   end
 
-  depends_on :xcode => :build if OS.mac?
+  depends_on xcode: :build
 
   def install
     if build.head?
       cd "linux"
       system "autoreconf", "-ivf"
-      system "./configure", "prefix=#{prefix}", *("--enable-iconv" if OS.mac?),
-              "--disable-gui"
+
+      args = %W[
+        prefix=#{prefix}
+        --disable-gui
+      ]
+      on_macos do
+        args << "--enable-iconv"
+      end
+
+      system "./configure", *args
       system "make", "install"
     else
       cd "src" do
@@ -45,14 +59,15 @@ class AescryptPacketizer < Formula
     mv "#{bin}/aescrypt_keygen", "#{bin}/paescrypt_keygen"
   end
 
-  def caveats; <<~EOS
-    To avoid conflicting with our other AESCrypt package the binaries
-    have been renamed paescrypt and paescrypt_keygen.
-  EOS
+  def caveats
+    <<~EOS
+      To avoid conflicting with our other AESCrypt package the binaries
+      have been renamed paescrypt and paescrypt_keygen.
+    EOS
   end
 
   test do
-    aescrypt = bin/"#{build.without?("default-names") ? "p" : ""}aescrypt"
+    aescrypt = bin/"paescrypt"
     path = testpath/"secret.txt"
     original_contents = "What grows when it eats, but dies when it drinks?"
     path.write original_contents

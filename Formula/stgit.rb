@@ -1,36 +1,42 @@
 class Stgit < Formula
-  desc "Push/pop utility built on top of Git"
-  homepage "https://github.com/ctmarinas/stgit"
-  url "https://github.com/ctmarinas/stgit/archive/v0.21.tar.gz"
-  sha256 "ba1ccbbc15beccc4648ae3b3a198693be7e6b1b1e330f45605654d56095dac0d"
-  head "https://github.com/ctmarinas/stgit.git"
+  desc "Manage Git commits as a stack of patches"
+  homepage "https://stacked-git.github.io"
+  url "https://github.com/stacked-git/stgit/releases/download/v1.1/stgit-1.1.tar.gz"
+  sha256 "fc9674943c8e5534122ad96646078b4f07b7b69fc202b57eaa9b430ee13f0d9b"
+  license "GPL-2.0-only"
+  head "https://github.com/stacked-git/stgit.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "736d0fb7ba2e2f09acb9f3c12e7a232d975c1f20306b1d6b56dbc8fa9622bb0e" => :catalina
-    sha256 "a8c5a52941bb5c524f97bddf295dbf65b79ec74b4ec5a0d0ebcdb25429e1e03d" => :mojave
-    sha256 "a8c5a52941bb5c524f97bddf295dbf65b79ec74b4ec5a0d0ebcdb25429e1e03d" => :high_sierra
-    sha256 "4ba24cc6d6fb561bd886b78eaefdcf8737b4953501eeb76ecffe9fea0e938985" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "0ed960be4bdf25d344c24317b56ab3a9435c9186bb95bdd037708b126c151e17"
   end
 
-  depends_on "python@2" unless OS.mac?
+  depends_on "asciidoc" => :build
+  depends_on "xmlto" => :build
+  depends_on "python@3.9"
 
   def install
-    ENV["PYTHON"] = "python" # overrides 'python2' built into makefile
+    ENV["PYTHON"] = Formula["python@3.9"].opt_bin/"python3"
+    ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
     system "make", "prefix=#{prefix}", "all"
     system "make", "prefix=#{prefix}", "install"
+    system "make", "prefix=#{prefix}", "install-doc"
+    bash_completion.install "completion/stgit.bash"
+    fish_completion.install "completion/stg.fish"
+    zsh_completion.install "completion/stgit.zsh" => "_stgit"
   end
 
   test do
-    if ENV["CI"]
-      system "git", "config", "--global", "user.email", "you@example.com"
-      system "git", "config", "--global", "user.name", "Your Name"
-    end
     system "git", "init"
+    system "git", "config", "user.name", "BrewTestBot"
+    system "git", "config", "user.email", "brew@test.bot"
     (testpath/"test").write "test"
     system "git", "add", "test"
     system "git", "commit", "--message", "Initial commit", "test"
+    system "#{bin}/stg", "--version"
     system "#{bin}/stg", "init"
+    system "#{bin}/stg", "new", "-m", "patch0"
+    (testpath/"test").append_lines "a change"
+    system "#{bin}/stg", "refresh"
     system "#{bin}/stg", "log"
   end
 end

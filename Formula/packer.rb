@@ -2,40 +2,30 @@ class Packer < Formula
   desc "Tool for creating identical machine images for multiple platforms"
   homepage "https://packer.io"
   url "https://github.com/hashicorp/packer.git",
-      :tag      => "v1.4.5",
-      :revision => "5ddd02d1c0e5d8b1b0e2171d2d40c7d7b5641e68"
+      tag:      "v1.7.2",
+      revision: "1f834e229aa722ea1279ec32503a2ea011f24e03"
+  license "MPL-2.0"
   head "https://github.com/hashicorp/packer.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "08ec8a4a9c53c072150651471e084761287f912e8dc7b47a1672e6b615fc012d" => :catalina
-    sha256 "824bc5c626e4b6924b0447c401f23440f91ef2da893aa929e5473b2442905446" => :mojave
-    sha256 "82512049d11b9f94d77e54cc2f56b704bf66212a1fae9b2374ac15b7f9f3d6ae" => :high_sierra
-    sha256 "5b69ee293fc1c1447af0cbd151a8fbdb84a70090caba2946f3d22fd4b68ede6f" => :x86_64_linux
+  livecheck do
+    url "https://releases.hashicorp.com/packer/"
+    regex(%r{href=.*?v?(\d+(?:\.\d+)+)/?["' >]}i)
   end
 
-  depends_on "coreutils" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e88e6d8e863e5ed50260b8f7507f1ba1a640c4f6e22866c4443bbae7e98a8cb1"
+    sha256 cellar: :any_skip_relocation, big_sur:       "174622d9c8704b7c2ae0bcfb9c4a60ea5ad93be19f4a475d5a09bf1497380e73"
+    sha256 cellar: :any_skip_relocation, catalina:      "c34469ec8c3131098adff53e3b592eb81873fbd62a1108249101a44715ed0c6d"
+    sha256 cellar: :any_skip_relocation, mojave:        "d3d538a52c087d74e4124886f9ccbba3efa4698322d65a1e2c3df79fd8680130"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "dc91b84c26cd9328bb58f71b50a1751b00bcf56ed607f8826386fcc37bb06993"
+  end
+
   depends_on "go" => :build
 
   def install
-    ENV["XC_OS"] = OS.mac? ? "darwin" : "linux"
-    ENV["XC_ARCH"] = "amd64"
-    ENV["GOPATH"] = buildpath
-
-    packerpath = buildpath/"src/github.com/hashicorp/packer"
-    packerpath.install Dir["{*,.git}"]
-
-    cd packerpath do
-      (buildpath/"bin").mkpath
-      if build.head?
-        system "make", "bin"
-      else
-        system "make", "releasebin"
-      end
-      bin.install buildpath/"bin/packer"
-      zsh_completion.install "contrib/zsh-completion/_packer"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args
+    zsh_completion.install "contrib/zsh-completion/_packer"
+    prefix.install_metafiles
   end
 
   test do

@@ -1,26 +1,28 @@
 class GitDelta < Formula
   desc "Syntax-highlighting pager for git and diff output"
   homepage "https://github.com/dandavison/delta"
-  url "https://github.com/dandavison/delta/archive/0.0.15.tar.gz"
-  sha256 "783374ee1e7527e2e30d134c6db6081638d50babfd053917d632c9c5eb1e8e7b"
+  url "https://github.com/dandavison/delta/archive/0.8.0.tar.gz"
+  sha256 "706b55667de221b651b0d938dfbb468112b322ed41a634d3ca5c8bd861b19e8a"
+  license "MIT"
   head "https://github.com/dandavison/delta.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "30fce1792a9f663a036fc17517ff81dc7da6f6d0849d27f1e341ed402c0799d7" => :catalina
-    sha256 "035f3a35e619f7f8b4248b07b9b3edd14df8246d2fbb6c0f8e56522bd9b76a75" => :mojave
-    sha256 "12a7db2b8a6fbef2322133e884cf0ec9ab188827f668ca5385529c51780e1707" => :high_sierra
-    sha256 "f102e18671a0c335a8f9ed7310f77b01deae2090578229a75ae9b15a59180c00" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "afb3426393648cfc5998016283fa1210bb934f259987cda7fc93d59e233a052b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f1e6bcb87e32084c680daf79cbd497fc1cd24e20004972c07c1f788650548ae1"
+    sha256 cellar: :any_skip_relocation, catalina:      "5fcbd1cb8f33bf7e4b2e7e3c7f26dea28e2e37810473ff16779ae5289971f43e"
+    sha256 cellar: :any_skip_relocation, mojave:        "8968b402198735d3258dc815e08ec9b6044258ad9f5d5cb133e60efdb8c86f11"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cd9f646aea23345289b8ce354d99f0a609713205352a3a750afd02bfb9ac9718"
   end
 
   depends_on "rust" => :build
   depends_on "llvm" => :build unless OS.mac?
 
-  conflicts_with "delta", :because => "both install a `delta` binary"
+  uses_from_macos "zlib"
+
+  conflicts_with "delta", because: "both install a `delta` binary"
 
   def install
-    ENV.append_to_cflags "-fno-stack-check" if DevelopmentTools.clang_build_version >= 1010
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
   end
 
   test do

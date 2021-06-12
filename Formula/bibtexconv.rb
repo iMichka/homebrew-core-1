@@ -1,32 +1,29 @@
 class Bibtexconv < Formula
   desc "BibTeX file converter"
   homepage "https://www.uni-due.de/~be0001/bibtexconv/"
-  url "https://www.uni-due.de/~be0001/bibtexconv/download/bibtexconv-1.1.13.tar.gz"
-  sha256 "90d9a65ef6cbb9e61197a54c292105981b5a3528268f76eb61067112332f4538"
-  revision 1
+  url "https://github.com/dreibh/bibtexconv/archive/bibtexconv-1.2.0.tar.gz"
+  sha256 "0ace3aa17eedbc4c4950e5ef8763b1dd58bfa2d33cd00fa2b35f07febb6df940"
+  license "GPL-3.0-or-later"
   head "https://github.com/dreibh/bibtexconv.git"
 
   bottle do
-    cellar :any
-    sha256 "6734b6f8a657a1477aae12078d7bf6acebb2710124fbe470ce070b4fb4c10c4f" => :catalina
-    sha256 "fca5b1120067ca86d540ebd3bc5b71b4e8567bb759962242e4a68369ff6de4e1" => :mojave
-    sha256 "3813b8a7920ee92df6e8c24300f330c197a08f58d279062595783dcdf0c98cfd" => :high_sierra
-    sha256 "d4e1cdb0c6472cb890fe8c6cbe8aa55fc6915e7d479b1b293cad1d777891437d" => :sierra
-    sha256 "3d157517624f4990c9c1df85b970b55bbe58d14874928925fa6c893d8cebb314" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "e1695a1a03185cbf7f50c031cfab3d77777a6c8bd47c88ea1799fd097d4b8dfa"
+    sha256 cellar: :any,                 big_sur:       "aaab664beb497d6f9c7e84e7e3cf72fb68bbd813c3398e7b561b7fd611a5ed8a"
+    sha256 cellar: :any,                 catalina:      "5b9d6cc6d178116fe7e18d87c807cd4427d105e450feb0bd10a1649d64f61ed7"
+    sha256 cellar: :any,                 mojave:        "01522a08151261c2fb84298b690e00ad4699285ccfd2e2b021baedb1b6174bb6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "bdf80cabc3835604b383400ae572060e79c8a6597dfc0acf954803fa1983ab7c"
   end
 
   depends_on "cmake" => :build
   depends_on "openssl@1.1"
-  unless OS.mac?
-    depends_on "bison" => :build
-    depends_on "flex" => :build
-    depends_on "curl"
-  end
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+  uses_from_macos "curl"
 
   def install
-    dylib = OS.mac? ? "dylib" : "so"
     system "cmake", *std_cmake_args,
-	            "-DCRYPTO_LIBRARY=#{Formula["openssl@1.1"].opt_lib}/libcrypto.#{dylib}"
+                    "-DCRYPTO_LIBRARY=#{Formula["openssl@1.1"].opt_lib}/#{shared_library("libcrypto")}"
     system "make", "install"
   end
 

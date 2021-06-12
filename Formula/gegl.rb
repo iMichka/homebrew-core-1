@@ -1,28 +1,28 @@
 class Gegl < Formula
   desc "Graph based image processing framework"
-  homepage "http://www.gegl.org/"
-  url "https://download.gimp.org/pub/gegl/0.4/gegl-0.4.16.tar.bz2"
-  sha256 "0112df690301d9eb993cc48965fc71b7751c9021a4f4ee08fcae366c326b5e5a"
-  revision 2
+  homepage "https://www.gegl.org/"
+  url "https://download.gimp.org/pub/gegl/0.4/gegl-0.4.30.tar.xz"
+  sha256 "c112782cf4096969e23217ccdfabe42284e35d5435ff0c43d40e4c70faeca8dd"
+  license all_of: ["LGPL-3.0-or-later", "GPL-3.0-or-later", "BSD-3-Clause", "MIT"]
+  head "https://gitlab.gnome.org/GNOME/gegl.git"
+
+  livecheck do
+    url "https://download.gimp.org/pub/gegl/0.4/"
+    regex(/href=.*?gegl[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "c85c022cbec147dc1c206c6efaaab0ad1cc9db52b90706a3e131b6918eed7f89" => :catalina
-    sha256 "9a94a1bfa65fc2aab0076a2dc5bdd8f78607c735b6043c5ce8d9aad192e9818f" => :mojave
-    sha256 "b12c213159d53df0bf6777fb81d13bb93ba90683da3142bb38d250d7dfc00d05" => :high_sierra
-    sha256 "22fd034b398955586ff07868178a930858d428e1af957c1921260ff679fea672" => :sierra
-    sha256 "32efdc7a80000f71df87a5d049bf8231ebd2a52b665047c357f6296da6c1247a" => :x86_64_linux
+    sha256 arm64_big_sur: "5368ab13bdacfd48b40469ba260357ab217108018c23425dacc66010d34bdf9c"
+    sha256 big_sur:       "5889e5151f0b0bbc9e4d38cf55f8bf9e4baf4425b909a67dbece558c87761ba1"
+    sha256 catalina:      "ead22977dc586d10fae00ab6d4068bf39726ab8328643c300d7fa9ec18d68d94"
+    sha256 mojave:        "fe3fd1088a249e3e59794d2dc9ea5eb8cef165705d0730b675bd053cae841bd7"
+    sha256 x86_64_linux:  "e50254c58b4e7d2453c13271fff6047942434e25816bb808e87f050356ffd02f"
   end
 
-  head do
-    # Use the Github mirror because official git unreliable.
-    url "https://github.com/GNOME/gegl.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-  end
-
-  depends_on "intltool" => :build
+  depends_on "glib" => :build
+  depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "babl"
   depends_on "gettext"
@@ -31,19 +31,37 @@ class Gegl < Formula
   depends_on "json-glib"
   depends_on "libpng"
 
-  conflicts_with "coreutils", :because => "both install `gcut` binaries"
+  on_linux do
+    depends_on "cairo"
+  end
+
+  conflicts_with "coreutils", because: "both install `gcut` binaries"
 
   def install
-    system "./autogen.sh" if build.head?
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--prefix=#{prefix}",
-                          "--disable-docs",
-                          "--without-cairo",
-                          "--without-jasper",
-                          "--without-umfpack",
-                          "--without-libspiro"
-    system "make", "install"
+    args = std_meson_args + %w[
+      -Dwith-docs=false
+      -Dwith-cairo=false
+      -Dwith-jasper=false
+      -Dwith-umfpack=false
+      -Dwith-libspiro=false
+      --force-fallback-for=libnsgif,poly2tri-c
+    ]
+
+    ### Temporary Fix ###
+    # Temporary fix for a meson bug
+    # Upstream appears to still be deciding on a permanent fix
+    # See: https://gitlab.gnome.org/GNOME/gegl/-/issues/214
+    inreplace "subprojects/poly2tri-c/meson.build",
+      "libpoly2tri_c = static_library('poly2tri-c',",
+      "libpoly2tri_c = static_library('poly2tri-c', 'EMPTYFILE.c',"
+    touch "subprojects/poly2tri-c/EMPTYFILE.c"
+    ### END Temporary Fix ###
+
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
@@ -56,14 +74,13 @@ class Gegl < Formula
         return 0;
       }
     EOS
-    flags = "-I#{include}/gegl-0.4", "-L#{lib}", "-lgegl-0.4"
-    system ENV.cc, *(flags if OS.mac?),
+    system ENV.cc,
            "-I#{Formula["babl"].opt_include}/babl-0.1",
            "-I#{Formula["glib"].opt_include}/glib-2.0",
            "-I#{Formula["glib"].opt_lib}/glib-2.0/include",
            "-L#{Formula["glib"].opt_lib}", "-lgobject-2.0", "-lglib-2.0",
            testpath/"test.c",
-           *(flags unless OS.mac?),
+           "-I#{include}/gegl-0.4", "-L#{lib}", "-lgegl-0.4",
            "-o", testpath/"test"
     system "./test"
   end

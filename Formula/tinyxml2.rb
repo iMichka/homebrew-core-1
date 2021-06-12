@@ -1,23 +1,23 @@
 class Tinyxml2 < Formula
   desc "Improved tinyxml (in memory efficiency and size)"
   homepage "http://grinninglizard.com/tinyxml2"
-  url "https://github.com/leethomason/tinyxml2/archive/7.1.0.tar.gz"
-  sha256 "68ebd396a4220d5a9b5a621c6e9c66349c5cfdf5efaea3f16e3bb92e45f4e2a3"
+  url "https://github.com/leethomason/tinyxml2/archive/9.0.0.tar.gz"
+  sha256 "cc2f1417c308b1f6acc54f88eb70771a0bf65f76282ce5c40e54cfe52952702c"
+  license "Zlib"
   head "https://github.com/leethomason/tinyxml2.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "2326b039acf4a2550a21fab854fc9a03c0583cac2837feab19f3caf03975f09d" => :catalina
-    sha256 "93e79de7e9acda8014942e9fb1fccc8be218af0799e0465752e967adc05d74bb" => :mojave
-    sha256 "b33ac4fad0b064be28130659f32ba3f44cbd16a8a5610d5fdb33026ce7eb5bf5" => :high_sierra
-    sha256 "3519517f7b877558d0e8ff5784970fe30c6c4d2e06b437ef3e1c972f2890056c" => :sierra
-    sha256 "028ac5d437afeed6eca1ae29c7409b50729f8a6cda5d8098e7427bfe45e899a4" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "a5c5e7ea6dcc446b1f7d38441ac4a226afa14b3e5e5eb890d3105edf54f91db6"
+    sha256 cellar: :any,                 big_sur:       "4df58f65bc6629e1884225503622e07f26e52a9690e24a6e959dd1304b11dbb8"
+    sha256 cellar: :any,                 catalina:      "d09e9f6a1833923fea9528a056c663cb5e05b71afacc1fcec7b9b6fbeb30772f"
+    sha256 cellar: :any,                 mojave:        "84db2d094fa220b2269cd97bed3fb50edfd23061f6ab9dece09a82562e73a975"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c3309307a6ddad63d4ef83da82dc33488796775d1aaac1eec0a19d843fc1f9d4"
   end
 
   depends_on "cmake" => :build
 
   def install
-    system "cmake", ".", *std_cmake_args
+    system "cmake", ".", *std_cmake_args, "-Dtinyxml2_SHARED_LIBS=ON"
     system "make", "install"
   end
 

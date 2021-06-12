@@ -1,32 +1,40 @@
 class Usbredir < Formula
   desc "USB traffic redirection library"
   homepage "https://www.spice-space.org"
-  url "https://www.spice-space.org/download/usbredir/usbredir-0.8.0.tar.bz2"
-  sha256 "87bc9c5a81c982517a1bec70dc8d22e15ae197847643d58f20c0ced3c38c5e00"
+  url "https://www.spice-space.org/download/usbredir/usbredir-0.10.0.tar.xz"
+  sha256 "76de718db370d824a833075599a8a035ab284c4a1bf279cca26bb538484d8061"
+  license all_of: ["GPL-2.0-or-later", "LGPL-2.0-or-later"]
 
-  bottle do
-    cellar :any
-    sha256 "c7182aed390cc4cf96e9a99a728129367714b954062b7f92471a6e3864aed244" => :catalina
-    sha256 "579f1db366d50c027cfd6ea92149878b358d86bb6a9d491320e5f7fd62dfd2e8" => :mojave
-    sha256 "0d83ca33451b2c382dcf4b70be515549db139b0960712dc7f213e993ba7973d7" => :high_sierra
-    sha256 "7feac9566048e308877ef3f3d1b93660433dc8f1611e3daf031eaa4dd90c7238" => :sierra
+  livecheck do
+    url "https://www.spice-space.org/download/usbredir/"
+    regex(/href=.*?usbredir[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "libtool" => :build
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "6b3470eeeccaa4755b997102cee313d879e8b91df61c076ecbbc18c4fc572d47"
+    sha256 cellar: :any, big_sur:       "26d2040e073333ad5e1aba9594f88c4450e7a9ee9780c8cc458267bea7e8c7c6"
+    sha256 cellar: :any, catalina:      "1986f37f4c043ee0822fb0cc61049ab57a73871e94e3e64ad1896861be49890b"
+    sha256 cellar: :any, mojave:        "04d2e58a8479304dba8f207283c5f740ea1a74440ecb3780aa4182025b268384"
+    sha256               x86_64_linux:  "f1652e8817e4a79c7669d6a15b6cabb311f6b201f3e2b83be7e78da34b212c3b"
+  end
+
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
+  depends_on "glib"
   depends_on "libusb"
 
-  # Upstream patch, remove for next release
-  # https://gitlab.freedesktop.org/spice/usbredir/issues/9
+  # See https://gitlab.freedesktop.org/spice/usbredir/-/merge_requests/32
+  # Remove when the MR has been merged and included in the release.
   patch do
-    url "https://gitlab.freedesktop.org/spice/usbredir/commit/985e79d5f98d5586d87204317462549332c1dd46.diff"
-    sha256 "21c0da8f6be94764e1e3363f5ed76ed070b5087034420cb17a81da06e4b73f83"
+    url "https://gitlab.freedesktop.org/spice/usbredir/-/commit/be1078847e4e05fffea888544457ef6a75c8f330.diff"
+    sha256 "052b9352625cfefd96a4ef491b3f40b64cee5ddaca0ed0b5205ab6ef2f8882c5"
   end
 
   def install
-    system "./configure", "--disable-silent-rules",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    system "meson", *std_meson_args, ".", "build"
+    system "ninja", "-C", "build", "-v"
+    system "ninja", "-C", "build", "install"
   end
 
   test do

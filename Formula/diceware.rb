@@ -3,25 +3,27 @@ class Diceware < Formula
 
   desc "Passphrases to remember"
   homepage "https://github.com/ulif/diceware"
-  url "https://github.com/ulif/diceware/archive/v0.9.6.tar.gz"
-  sha256 "ff55832e725abff212dec1a2cb6e1c3545ae782b5f49ec91ec870a2b50e1f0e8"
+  url "https://files.pythonhosted.org/packages/d7/af/85373be6b11706fa1392e52d7fcd47df47f661e238251c931d469e62c5bf/diceware-0.9.6.tar.gz"
+  sha256 "7ef924ca05ece8eaa5e2746246ab94600b831f1428c70d231790fee5b5078b4e"
+  license "GPL-3.0"
+  revision OS.mac? ? 3 : 5
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0dedd3230de6b269165e1b6bcc790ac1d97bfb01631ad648573ad66e6569e617" => :catalina
-    sha256 "0337fa5b3f3b8975a3e98dcf2cc547f0b49362bba602c8ae0ba04c6bcd9775fd" => :mojave
-    sha256 "860337c1b1054ebdab64426b10cdcc1b5f508bd327560f78273ccfba348d9e1e" => :high_sierra
-    sha256 "7fd4218db14b490a0b2b0f5372c636dced0801829a16278f7751d3d831f79785" => :sierra
-    sha256 "50c631ffa7306e0099702edef53e35456774b248e0b9a1219f8bd192f3cb94dc" => :x86_64_linux
+    rebuild 2
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ca1614ff22e5504fe1e2ebcdc11ba9e91043e33fe7d43b0d4cba802523604dfe"
+    sha256 cellar: :any_skip_relocation, big_sur:       "79f18254a3631e1cd5e3f1454ba1e8bdb543d40bf3ac32ae7e16a140e1a05691"
+    sha256 cellar: :any_skip_relocation, catalina:      "fd0844df14a177f46686016e0c0c1a3b741da092efc17ee312c1a808c3026ae6"
+    sha256 cellar: :any_skip_relocation, mojave:        "cedb8a95fb39b3de33096f5c42b67c7aa92a79441d09d0477ecaaaeec007fc19"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2694b1727559d8dba9984c677ad2b19b9b377d5f1f2ea168dfae5edc94b16b9d"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
     virtualenv_install_with_resources
   end
 
   test do
-    assert_match(/(\w+)(\-(\w+)){5}/, shell_output("#{bin}/diceware -d-"))
+    assert_match(/(\w+)(-(\w+)){5}/, shell_output("#{bin}/diceware -d-"))
   end
 end

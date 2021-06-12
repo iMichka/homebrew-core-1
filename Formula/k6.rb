@@ -1,37 +1,32 @@
 class K6 < Formula
   desc "Modern load testing tool, using Go and JavaScript"
   homepage "https://k6.io"
-  url "https://github.com/loadimpact/k6.git",
-    :tag      => "v0.26.0",
-    :revision => "aeec9a7fdd73c3278e131926ad31efbd8a5b97d8"
+  url "https://github.com/loadimpact/k6/archive/v0.32.0.tar.gz"
+  sha256 "a13dcbbd15a0d6788be7cf2f25796ae6ee693cdb5b573e646bc54dc37b1686c4"
+  license "AGPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a37347418aa34da56fcf50e4f11eb5735db1f85327ead7755857c2e5c85b6975" => :catalina
-    sha256 "1c5d771e9aba6851616da73b5f95afe7aff9956ffdccb0d772a7eeadd882c1c9" => :mojave
-    sha256 "ef2090e52bbb7a655746392ef06a255b3f848916715ea79d772d08c4f1871308" => :high_sierra
-    sha256 "0eb875d34bec82677157893dbe8593ab4416b52bc7002b8f9fa6d286c62bc4a5" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "717b0f80625e33ef47a7d5f4a52dce79f42ed373fc3c62c157f5605ccd70bc30"
+    sha256 cellar: :any_skip_relocation, big_sur:       "394913b3dd05fb77217b1c81340ad25d64a64b3d054cc9e8c6aa1d0465e5965f"
+    sha256 cellar: :any_skip_relocation, catalina:      "f2a8d52cb9b8f53c509f092d0c81b9bc272161bc36a5cfe44e3ce4e5252c9e11"
+    sha256 cellar: :any_skip_relocation, mojave:        "6cc8120f5db4d8becba48be80bcd98e90d2761651618e42a8f71473f4bf3a7a3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9762543d992fed04081374b8dd06f00cdf457f3f6ba5419fa4f60293e30f2050"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    dir = buildpath/"src/github.com/loadimpact/k6"
-    dir.install buildpath.children
-
-    cd dir do
-      system "dep", "ensure", "-vendor-only"
-      system "go", "build", "-o", bin/"k6"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args
   end
 
   test do
-    output = "Test finished"
-    assert_match output, shell_output("#{bin}/k6 run github.com/loadimpact/k6/samples/http_get.js 2>&1")
+    (testpath/"whatever.js").write <<~EOS
+      export default function() {
+        console.log("whatever");
+      }
+    EOS
+
+    assert_match "whatever", shell_output("#{bin}/k6 run whatever.js 2>&1")
     assert_match version.to_s, shell_output("#{bin}/k6 version")
   end
 end

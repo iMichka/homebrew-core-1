@@ -1,30 +1,24 @@
 class Rke < Formula
   desc "Rancher Kubernetes Engine, a Kubernetes installer that works everywhere"
-  homepage "https://rancher.com/docs/rke/v0.1.x/en/"
-  url "https://github.com/rancher/rke.git",
-      :tag      => "v1.0.0",
-      :revision => "34ad08a715700e02c6614b45a43accb560bced00"
+  homepage "https://rancher.com/docs/rke/latest/en/"
+  url "https://github.com/rancher/rke/archive/v1.2.8.tar.gz"
+  sha256 "c42a8f088884dbe0f2c01756d2fb56780b5e7cc92234f386b773996782423529"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "744e4cd4cbb3a59662ee91d91fcfbe3a8f49db35184dea76b23465e09202aaa4" => :catalina
-    sha256 "c31a0059395e83af323873dea2c39bafd1bf53ce235c63413710fd7f02b7fcfb" => :mojave
-    sha256 "5962ef1a891dad9db7a04d169425d0cf52d2c8a17fd154a00df11210252c60ed" => :high_sierra
-    sha256 "d380b0a38dfad772070ff285672834b27e6085b03bf37a8f9b9d9f743ca9094f" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "54083beed14c0c861225d9ab0699e7a66bfe7b6777a5e4c30d49af4c15eab8b7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "78c70c924911a86b00ecbc11fb2e154641b12014fb267282a67d2ab26ebe40ac"
+    sha256 cellar: :any_skip_relocation, catalina:      "c0eeb73161d08e6e60c99e452d01544c4df218bc94270a5e644c3746e049fc87"
+    sha256 cellar: :any_skip_relocation, mojave:        "5411e2062eac433bf89b2d4970284c8b2eaeca272816fa87e8dd378eed56ac3a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3bc350e32cc67a51f5fb61c8ae5af2943b8dbe78c5cea8fb67a6d2c611f37f7e"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/rancher/rke").install buildpath.children
-
-    cd "src/github.com/rancher/rke" do
-      system "go", "build", "-ldflags",
-             "-w -X main.VERSION=v#{version}",
-             "-o", bin/"rke"
-      prefix.install_metafiles
-    end
+    system "go", "build", "-ldflags",
+            "-w -X main.VERSION=v#{version}",
+            "-o", bin/"rke"
   end
 
   test do

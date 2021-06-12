@@ -1,22 +1,22 @@
 class Fselect < Formula
   desc "Find files with SQL-like queries"
   homepage "https://github.com/jhspetersson/fselect"
-  url "https://github.com/jhspetersson/fselect/archive/0.6.7.tar.gz"
-  sha256 "c044aa34255084f598d4644bb009dcce8d27e52f65584c488721ffb5b980044a"
+  url "https://github.com/jhspetersson/fselect/archive/0.7.5.tar.gz"
+  sha256 "bee5cddfbd5ec254d0d8ec5e045618829d775084d00b8bcf353418beeb31a439"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "db07ab70beaf891be7249f6cb3a457198dabd24f6136edb93725576442ce3f40" => :catalina
-    sha256 "8e4a8e4acb099cc10506050bd7b009a1401960e5a4cb3a476cf4fdb1b68d158a" => :mojave
-    sha256 "1c46725732d77887dd3f9e7103ef1c315ae654ba4b2310f86a49856d91eec8f6" => :high_sierra
-    sha256 "1dd86172cff23c673def564b2e9761ce2fd0c280ef0f773e924c48d6e58ab8f6" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e39a3c58cd521adfa7905a91868a2a7322491fab83461ff5b1c398c6568f01d5"
+    sha256 cellar: :any_skip_relocation, big_sur:       "6a8fa1a4c0836f2b5d2231539041dfbe833b6b0dd570277a9add7e2403d9617e"
+    sha256 cellar: :any_skip_relocation, catalina:      "4823c2b864930f0ad1272aebded125fb07d5c0689740b8fb886e1d3966a6d505"
+    sha256 cellar: :any_skip_relocation, mojave:        "55448eaecbf7bedf267dfa349c01cee1d00872e2e3b5fc7885678f8f7459a853"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "afaa1287c7e0471cca8c1481ff405a415b4b4871cf632a2619e24d3cc327467b"
   end
 
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
   end
 
   test do

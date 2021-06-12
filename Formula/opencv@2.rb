@@ -3,17 +3,20 @@ class OpencvAT2 < Formula
   homepage "https://opencv.org/"
   url "https://github.com/opencv/opencv/archive/2.4.13.7.tar.gz"
   sha256 "192d903588ae2cdceab3d7dc5a5636b023132c8369f184ca89ccec0312ae33d0"
-  revision 6
+  license "BSD-3-Clause"
+  revision 12
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b68bad6fab8c8537c24993081e11f062edd43faa2ad9278e8f365f36042c16fb" => :catalina
-    sha256 "e3a170fef544fcb995f5c4c7b5299230a9d988af25e90fe111536158ff6547b6" => :mojave
-    sha256 "68108126c697cb6782b52e875a5435296c86321e26d6f2a39faa470cd8a8aced" => :high_sierra
-    sha256 "e595d013ca076cdaac892503815806c657810bff38e8608448724b0b0fa666fc" => :x86_64_linux
+    sha256 arm64_big_sur: "80480cb6ead5fdcdb15ff6a15ce76ab6650da02b1d41f29e719afaf311e9cc4c"
+    sha256 big_sur:       "ccca6d5ab6c409984409b978bb1f44d753cb973e0d11dd8721fdda7dffa9713c"
+    sha256 catalina:      "f3d3e73afb743e429cbcfe84c44ef461eedb85fe040a3e2da15979ee3ddabfd3"
+    sha256 mojave:        "04149e97504dff8e9d76258126f403e24dabe31245620091dbc452af6722dc2a"
   end
 
   keg_only :versioned_formula
+
+  # https://www.slideshare.net/EugeneKhvedchenya/opencv-30-latest-news-and-the-roadmap
+  deprecate! date: "2015-02-01", because: :unsupported
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
@@ -22,13 +25,12 @@ class OpencvAT2 < Formula
   depends_on "jpeg"
   depends_on "libpng"
   depends_on "libtiff"
+  depends_on :macos # Due to Python 2
   depends_on "numpy@1.16"
   depends_on "openexr"
-  depends_on "glib" unless OS.mac?
-  uses_from_macos "python@2"
 
   def install
-    dylib = OS.mac? ? "dylib" : "so"
+    ENV.cxx11
     jpeg = Formula["jpeg"]
 
     args = std_cmake_args + %W[
@@ -52,22 +54,25 @@ class OpencvAT2 < Formula
       -DWITH_OPENGL=ON
       -DWITH_TBB=OFF
       -DJPEG_INCLUDE_DIR=#{jpeg.opt_include}
-      -DJPEG_LIBRARY=#{jpeg.opt_lib}/libjpeg.#{dylib}
+      -DJPEG_LIBRARY=#{jpeg.opt_lib}/libjpeg.dylib
       -DENABLE_SSSE3=ON
     ]
 
     py_prefix = `python-config --prefix`.chomp
     py_lib = "#{py_prefix}/lib"
-    args << "-DPYTHON_LIBRARY=#{py_lib}/libpython2.7.#{dylib}"
+    args << "-DPYTHON_LIBRARY=#{py_lib}/libpython2.7.dylib"
     args << "-DPYTHON_INCLUDE_DIR=#{py_prefix}/include/python2.7"
+
+    # Make sure find_program locates system Python
+    # https://github.com/Homebrew/homebrew-science/issues/2302
     args << "-DCMAKE_PREFIX_PATH=#{py_prefix}"
 
-    if MacOS.version.requires_sse42?
-      args << "-DENABLE_SSE41=ON" << "-DENABLE_SSE42=ON"
-    end
+    args << "-DENABLE_SSE41=ON" << "-DENABLE_SSE42=ON" \
+      if Hardware::CPU.intel? && MacOS.version.requires_sse42?
 
     mkdir "build" do
       system "cmake", "..", *args
+      inreplace "modules/core/version_string.inc", "#{HOMEBREW_SHIMS_PATH}/mac/super/", ""
       system "make"
       system "make", "install"
     end

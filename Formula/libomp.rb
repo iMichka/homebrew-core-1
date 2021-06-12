@@ -1,19 +1,26 @@
 class Libomp < Formula
   desc "LLVM's OpenMP runtime library"
   homepage "https://openmp.llvm.org/"
-  url "https://releases.llvm.org/9.0.0/openmp-9.0.0.src.tar.xz"
-  sha256 "9979eb1133066376cc0be29d1682bc0b0e7fb541075b391061679111ae4d3b5b"
+  url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/openmp-12.0.0.src.tar.xz"
+  sha256 "eb1b7022a247332114985ed155a8fb632c28ce7c35a476e2c0caf865150f167d"
+  license "MIT"
+
+  livecheck do
+    url "https://llvm.org/"
+    regex(/LLVM (\d+\.\d+\.\d+)/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "9fd9fde692bb74837400788a60ceb3822fee3560ee4f013f9163710abd3117c1" => :catalina
-    sha256 "fb4cd79b18ce160393ab87bf8c7bea5c1e52d0bb2b26fd70058d5239010e6635" => :mojave
-    sha256 "22213fdebbde7cd5b793203b18280d35b70add744b496751821dd060e5ab1326" => :high_sierra
-    sha256 "6fd0094c6be069f206311671a97de89f0f49df12aaed0d1b25a7182b56e6273f" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "2d2befd8f1ab88eac44e71bf05b4b03172e4b3352cc21d994898874905efadbe"
+    sha256 cellar: :any,                 big_sur:       "fe1e5c0fa8ff667deb348e64e695ac355a43da34c020fa983e081ea67cb5f56c"
+    sha256 cellar: :any,                 catalina:      "33818af9e5fa26153645f63dab95d060fea69757570910d2f86d56eff29a5cf6"
+    sha256 cellar: :any,                 mojave:        "e6ccdea1356c28931543f73ebcc3fa5693056f40a5b04150fd54908fac17109e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b93586c27a3e074227ba5a3360a28a95499294f7615ebce28b3e7d976b033734"
   end
 
   depends_on "cmake" => :build
-  depends_on :macos => :yosemite
+
+  keg_only "provided by LLVM, which is not keg-only on Linux" unless OS.mac?
 
   def install
     # Disable LIBOMP_INSTALL_ALIASES, otherwise the library is installed as

@@ -1,40 +1,45 @@
 class PostgresqlAT94 < Formula
   desc "Object-relational database system"
   homepage "https://www.postgresql.org/"
-  url "https://ftp.postgresql.org/pub/source/v9.4.25/postgresql-9.4.25.tar.bz2"
-  sha256 "cb98afaef4748de76c13202c14198e3e4717adde49fd9c90fdc81da877520928"
+  url "https://ftp.postgresql.org/pub/source/v9.4.26/postgresql-9.4.26.tar.bz2"
+  sha256 "f5c014fc4a5c94e8cf11314cbadcade4d84213cfcc82081c9123e1b8847a20b9"
+  license "PostgreSQL"
+  revision 1 unless OS.mac?
 
   bottle do
-    sha256 "904a5a1def08482696448ba47e237a9d27678b7540ed2a4acd161399e0b44ae3" => :catalina
-    sha256 "0eaaa37ad26cf3b4d63b697ce89633fe5ecde9d469cd093c652189e0a19398d6" => :mojave
-    sha256 "6d2008d12f5c35a11a2c4c3ae4d2753abc06b8af10387ec566673376854dad8c" => :high_sierra
-    sha256 "35be791e79fdc81531f8bcbfbda9d82276c633557fbd6e02c7e7af40de488042" => :x86_64_linux
+    rebuild 3
+    sha256 catalina:     "15217a46087cd4bef0227f5ca941ed843a4e024aafa4e7c7a3ebf746ca8a1344"
+    sha256 mojave:       "4d24193f0f0931c246a86407d3d8208a48b514b8969dc4567b7d62de2becc3ec"
+    sha256 high_sierra:  "2e09355d0bf2f70b5ea9c202f15aadee823902caad5cf35b64c882e4b969e70f"
+    sha256 x86_64_linux: "460cf99b0c2dd7776bcb9611a4c9176a2606d821b7a4a7eab45fe96a28fd80c8"
   end
 
   keg_only :versioned_formula
 
+  # https://www.postgresql.org/support/versioning/
+  deprecate! date: "2020-02-13", because: :unsupported
+
+  depends_on arch: :x86_64
   depends_on "openssl@1.1"
   depends_on "readline"
 
-  unless OS.mac?
-    depends_on "libxslt"
-    depends_on "perl"
-    depends_on "util-linux" # for libuuid
+  uses_from_macos "krb5"
+  uses_from_macos "libxslt"
+  uses_from_macos "openldap"
+  uses_from_macos "perl"
+
+  on_linux do
+    depends_on "linux-pam"
+    depends_on "util-linux"
   end
 
   def install
-    if OS.mac?
-      # Fix "configure: error: readline library not found"
-      if MacOS.version == :sierra || MacOS.version == :el_capitan
-        ENV["SDKROOT"] = MacOS.sdk_path
-      end
-    end
+    # Fix "configure: error: readline library not found"
+    ENV["SDKROOT"] = MacOS.sdk_path if OS.mac? && MacOS.version <= :sierra
 
     ENV.prepend "LDFLAGS", "-L#{Formula["openssl@1.1"].opt_lib} -L#{Formula["readline"].opt_lib}"
     ENV.prepend "CPPFLAGS", "-I#{Formula["openssl@1.1"].opt_include} -I#{Formula["readline"].opt_include}"
-    if OS.mac?
-      ENV.prepend "PG_SYSROOT", MacOS.sdk_path
-    end
+    ENV.prepend "PG_SYSROOT", MacOS.sdk_path if OS.mac?
     ENV.append_to_cflags "-D_XOPEN_SOURCE"
 
     args = %W[
@@ -43,13 +48,18 @@ class PostgresqlAT94 < Formula
       --datadir=#{pkgshare}
       --docdir=#{doc}
       --enable-thread-safety
+      --with-gssapi
+      --with-ldap
       --with-openssl
+      --with-pam
       --with-libxml
       --with-libxslt
       --with-perl
       --with-uuid=e2fs
     ]
     if OS.mac?
+      args << "--with-bonjour"
+
       # The CLT is required to build tcl support on 10.7 and 10.8 because tclConfig.sh is not part of the SDK
       args << "--with-tcl"
       if File.exist?("#{MacOS.sdk_path}/System/Library/Frameworks/Tcl.framework/tclConfig.sh")
@@ -59,14 +69,34 @@ class PostgresqlAT94 < Formula
 
     system "./configure", *args
     system "make", "install-world"
+
+    unless OS.mac?
+      inreplace lib/"pgxs/src/Makefile.global",
+                "LD = #{HOMEBREW_PREFIX}/Homebrew/Library/Homebrew/shims/linux/super/ld",
+                "LD = #{HOMEBREW_PREFIX}/bin/ld"
+    end
   end
 
   def post_install
     (var/"log").mkpath
-    (var/name).mkpath
-    if !Process.euid.zero? && !(File.exist? "#{var}/#{name}/PG_VERSION")
-      system "#{bin}/initdb", "#{var}/#{name}"
-    end
+    postgresql_datadir.mkpath
+
+    # Don't initialize database, it clashes when testing other PostgreSQL versions.
+    return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+
+    system "#{bin}/initdb", postgresql_datadir unless pg_version_exists?
+  end
+
+  def postgresql_datadir
+    var/name
+  end
+
+  def postgresql_log_path
+    var/"log/#{name}.log"
+  end
+
+  def pg_version_exists?
+    (postgresql_datadir/"PG_VERSION").exist?
   end
 
   def caveats
@@ -75,46 +105,45 @@ class PostgresqlAT94 < Formula
       you may need to remove the previous version first. See:
         https://github.com/Homebrew/legacy-homebrew/issues/2510
 
-      To migrate existing data from a previous major version (pre-9.3) of PostgreSQL, see:
-        https://www.postgresql.org/docs/9.3/static/upgrading.html
-
       When installing the postgres gem, including ARCHFLAGS is recommended:
         ARCHFLAGS="-arch x86_64" gem install pg
 
       To install gems without sudo, see the Homebrew documentation:
         https://docs.brew.sh/Gems,-Eggs-and-Perl-Modules
+
+      This formula has created a default database cluster with:
+        initdb #{postgresql_datadir}
+      For more details, read:
+        https://www.postgresql.org/docs/#{version.major}/app-initdb.html
     EOS
   end
 
-  plist_options :manual => "pg_ctl -D #{HOMEBREW_PREFIX}/var/postgresql@9.4 start"
+  plist_options manual: "pg_ctl -D #{HOMEBREW_PREFIX}/var/postgresql@9.4 start"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/postgres</string>
-        <string>-D</string>
-        <string>#{var}/#{name}</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{HOMEBREW_PREFIX}</string>
-      <key>StandardErrorPath</key>
-      <string>#{var}/log/#{name}.log</string>
-    </dict>
-    </plist>
-  EOS
-  end
-
-  test do
-    system "#{bin}/initdb", testpath/"test"
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/postgres</string>
+          <string>-D</string>
+          <string>#{postgresql_datadir}</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>#{HOMEBREW_PREFIX}</string>
+        <key>StandardErrorPath</key>
+        <string>#{postgresql_log_path}</string>
+      </dict>
+      </plist>
+    EOS
   end
 end

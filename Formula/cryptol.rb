@@ -1,28 +1,28 @@
-require "language/haskell"
-
 class Cryptol < Formula
-  include Language::Haskell::Cabal
-
   desc "Domain-specific language for specifying cryptographic algorithms"
   homepage "https://www.cryptol.net/"
-  url "https://hackage.haskell.org/package/cryptol-2.8.0/cryptol-2.8.0.tar.gz"
-  sha256 "b061bf88de09de5034a3707960af01fbcc0425cdbff1085c50c00748df9910bb"
+  url "https://hackage.haskell.org/package/cryptol-2.11.0/cryptol-2.11.0.tar.gz"
+  sha256 "43b7535f5cb792efccddbb3f4c09bd2e922777d19a6537cb3aa27adf69280716"
+  license "BSD-3-Clause"
   head "https://github.com/GaloisInc/cryptol.git"
 
   bottle do
-    sha256 "0aca3e2c29be5d4533e6114f0e7fd774173358f92d0f4e73903d0d536fb54160" => :mojave
-    sha256 "04d3178e67b8836a720d82dc3b88d1c69366aae6f0e7abdb9a1155b7dc31c28c" => :high_sierra
-    sha256 "3c3ffec1e47196b6c1767086fb9cc62e792546476cad5c6b92896eb45db13744" => :sierra
-    sha256 "b5fb735247e6b341317e8c77e072f21ebcfbe6415a4699e6d6c283c776aaec4f" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, big_sur:      "7864c5659f35ee68c4c84683362063dfb2efd8c143b0bb507fbfc3f67661af87"
+    sha256 cellar: :any_skip_relocation, catalina:     "be3298c8389c666439fc38f898e4cd16ea06fc3513977dc65a3cca684a28cde0"
+    sha256 cellar: :any_skip_relocation, mojave:       "105d72cd5224912dfa83599dbf41393878bc3bd71ce9ab5d8056f490bd18e3fd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "55e86348af8da6e3bc8ba6c6e037e8662bbd23623bf93a776335e065f5a5a358"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
   depends_on "z3"
+
   uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
   def install
-    install_cabal_package :using => ["alex", "happy"]
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do

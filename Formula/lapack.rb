@@ -1,21 +1,23 @@
 class Lapack < Formula
   desc "Linear Algebra PACKage"
   homepage "https://www.netlib.org/lapack/"
-  url "https://www.netlib.org/lapack/lapack-3.8.0.tar.gz"
-  sha256 "deb22cc4a6120bff72621155a9917f485f96ef8319ac074a7afbc68aab88bcf6"
-  revision 2
+  url "https://github.com/Reference-LAPACK/lapack/archive/v3.9.1.tar.gz"
+  sha256 "d0085d2caf997ff39299c05d4bacb6f3d27001d25a4cc613d48c1f352b73e7e0"
+  license "BSD-3-Clause"
+  revision 1
   head "https://github.com/Reference-LAPACK/lapack.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9e57f69368a3fb7c750e55bb3770253ac0da38552bdc42ba6ed127cefb8b166a" => :catalina
-    sha256 "fa78953406938636ce45034e192d7611db5f72fbe46a934a2b4072ab2bb3a289" => :mojave
-    sha256 "7de1e297afb68bcbcf867b5b996934e5f5d2278bbf28e95ea8c953cb3f74b0f7" => :high_sierra
-    sha256 "76c5a310ea6e8a78650ab8518a57745b2aac13a93d31a95b66f23181c63c2a24" => :sierra
-    sha256 "8075457d3d0fb7dcc69768b3f66cbb8d613bcc509a316a2f65939c51d797c9cf" => :x86_64_linux
+    sha256                               arm64_big_sur: "b452053345423041c19f00b5146eef0d5e75d0482ab96895cadbc9cd80d03cb3"
+    sha256                               big_sur:       "898f178395b354f8450d31b5341da9d0e5b54078f39ce8567f7de6b5fe0f6082"
+    sha256                               catalina:      "682658f1f6b71fe3c3839da4319a378bcfa1865928e7490485542d2bb77f8e7a"
+    sha256                               mojave:        "4f827cef3e1782d497e0e78564dbee89b25c05c856e526f766c7051febbb093b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f72bb6b18bdb03af03d1d79766beaee628c59f344e1282a1d2e588e50a4bb14c"
   end
 
-  keg_only :provided_by_macos
+  keg_only :shadowed_by_macos, "macOS provides LAPACK in Accelerate.framework"
+
+  keg_only "it conflicts with openblas" unless OS.mac?
 
   depends_on "cmake" => :build
   depends_on "gcc" # for gfortran
@@ -33,7 +35,7 @@ class Lapack < Formula
   end
 
   test do
-    (testpath/"lp.cpp").write <<~EOS
+    (testpath/"lp.c").write <<~EOS
       #include "lapacke.h"
       int main() {
         void *p = LAPACKE_malloc(sizeof(char)*100);
@@ -43,7 +45,7 @@ class Lapack < Formula
         return 0;
       }
     EOS
-    system ENV.cc, "lp.cpp", "-I#{include}", "-L#{lib}", "-llapacke", "-o", "lp"
+    system ENV.cc, "lp.c", "-I#{include}", "-L#{lib}", "-llapacke", "-o", "lp"
     system "./lp"
   end
 end

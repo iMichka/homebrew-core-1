@@ -1,16 +1,21 @@
 class Mysqlxx < Formula
   desc "C++ wrapper for MySQL's C API"
   homepage "https://tangentsoft.com/mysqlpp/home"
-  url "https://tangentsoft.com/mysqlpp/releases/mysql++-3.2.5.tar.gz"
-  sha256 "b780beeb3a9cd9ce6a9043028527484df8e822c58c5274d4d67ec5ba2fc0a778"
-  revision 1
+  url "https://tangentsoft.com/mysqlpp/releases/mysql++-3.3.0.tar.gz"
+  sha256 "449cbc46556cc2cc9f9d6736904169a8df6415f6960528ee658998f96ca0e7cf"
+  license "LGPL-2.1-or-later"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?mysql\+\+[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "657ebf2f50f14f877b6892bbee2c5e92aef47093a22918a9d14b871769d76a30" => :catalina
-    sha256 "0e2b71648130ccac76a5d861e609538ffc697e629db9c352b0f69b513df4aa4e" => :mojave
-    sha256 "a8bb0d5cdc09c45b28b15e6e3de0b20260b8f11f395fb968d1f6a4c931d9a292" => :high_sierra
-    sha256 "b25af7f9049375e1cfeef0759d5e1c367d36ef8a878440b8254c9394c2e61eb6" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "f7a7c4dc1a39553297a0be0dcae8914afee296416318ce447413988d94306906"
+    sha256 cellar: :any,                 big_sur:       "d7957ee5ab8476ac890144b0c64bcd20137867b1266d3e022305a5c4f2c3372a"
+    sha256 cellar: :any,                 catalina:      "14dd4833fb2dbfbefa0267f36ffc828f7306509a2dbd12c6fdec7f6f9173cf81"
+    sha256 cellar: :any,                 mojave:        "d9a31961dea425b21c279b5fb995d242b6201332e4745662e06647631ff98fba"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "eee8ad4141ff320375e5aa246e04d85c27b8243a7003a06b2f1d3e8ee8acfa2d"
   end
 
   depends_on "mysql-client"
@@ -22,6 +27,12 @@ class Mysqlxx < Formula
                           "--with-field-limit=40",
                           "--with-mysql-lib=#{mysql.opt_lib}",
                           "--with-mysql-include=#{mysql.opt_include}/mysql"
+
+    # Delete "version" file incorrectly included as C++20 <version> header
+    # Issue ref: https://tangentsoft.com/mysqlpp/tktview/4ea874fe67e39eb13ed4b41df0c591d26ef0a26c
+    # Remove when fixed upstream
+    rm "version"
+
     system "make", "install"
   end
 

@@ -1,15 +1,19 @@
 class SNail < Formula
   desc "Fork of Heirloom mailx"
   homepage "https://www.sdaoden.eu/code.html"
-  url "https://www.sdaoden.eu/downloads/s-nail-14.9.15.tar.gz"
-  sha256 "4c4bb1dae0fd6edabf1d268ac6a476de9aab3c15b4bbe2141549a11dbf2bae73"
-  revision 1
+  url "https://www.sdaoden.eu/downloads/s-nail-14.9.22.tar.xz"
+  sha256 "e5dfb7d5bcc5d2d1126f2e826569ee0f149aac3f2a8a6b7c23985ffc3a1def0b"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?s-nail[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "36fe062fd83cfc6fc5b7146b0b0be858fcc3180115d95b9ae0f6d567e440f345" => :catalina
-    sha256 "a5d0e4ee44f0effe6ea9b12fc319a6dd4e985f3fbb58e5f085b543b67d74d470" => :mojave
-    sha256 "41a29df9514b5bc54604f7060e29dcaee590f7f3ed99e5c68b8628e736e75087" => :high_sierra
-    sha256 "13a5ac322c72e3a2439a13e7cf287cd8a7f58351072ef225a48775f9c048c9cf" => :sierra
+    sha256 arm64_big_sur: "b8bde9083dd42cef197e98608fc9ce2dc69b3d9cf56ff05268c565ba7acdb67b"
+    sha256 big_sur:       "20825afa468b7d368b71dfc73314412eb9e6930cecd5794f71b527422e63d28c"
+    sha256 catalina:      "e2dd4f1ede94f221fffffce676a2a605edb49235d5bf875e2cad917c9a4d6c73"
+    sha256 mojave:        "1c33bcd338bf27c5f7f3a61e9b6a4070a5cf9e9e7cfefd58afe178959dd35f5a"
   end
 
   depends_on "awk" => :build
@@ -30,8 +34,8 @@ class SNail < Formula
   test do
     ENV["SOURCE_DATE_EPOCH"] = "844221007"
 
-    date1 = Utils.popen_read("date", "-r", "844221007", "+%a %b %e %T %Y")
-    date2 = Utils.popen_read("date", "-r", "844221007", "+%a, %d %b %Y %T %z")
+    date1 = shell_output("date -r 844221007 '+%a %b %e %T %Y'")
+    date2 = shell_output("date -r 844221007 '+%a, %d %b %Y %T %z'")
 
     expected = <<~EOS
       From reproducible_build #{date1.chomp}

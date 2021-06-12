@@ -1,15 +1,16 @@
 class Kubecfg < Formula
   desc "Manage complex enterprise Kubernetes environments as code"
   homepage "https://github.com/bitnami/kubecfg"
-  url "https://github.com/bitnami/kubecfg/archive/v0.14.0.tar.gz"
-  sha256 "6843d456871215d9426aea667178808a6749b329268e3c3385e7be8f5c8d9589"
+  url "https://github.com/bitnami/kubecfg/archive/v0.20.0.tar.gz"
+  sha256 "9085af1ce937d2535a699719c941b7678ae180a6adce9e8f490357d6901cd5b0"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a30297ba6bc068055f803d06ac74d008ca5b5f8011d9ee153df531f9cd3d38f1" => :catalina
-    sha256 "945b67fb4fa66d374a644b02463ddd2eca86ee16cd3adfca27b2d720e9c0415f" => :mojave
-    sha256 "c8cf438c0380015e59bda5b71ab99a2a6fac88bbb114d07735a92cb7f946ba0b" => :high_sierra
-    sha256 "db227fce096f5edf6bb7a9079af559d7c6565000efcc721af2e6e5f3c8380ca2" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a03d07c984d4997badcbc1853baa4fd86c86af02dc9209d02ae9b17cc55a9291"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a6e870ecc92677c0994af7e9ea755deedbdd6c0432be82bd3093f4a71cb09eab"
+    sha256 cellar: :any_skip_relocation, catalina:      "9e3d569d70eead295185ca587d0c4252ccfab6755ba55c7197524b0505d7e67c"
+    sha256 cellar: :any_skip_relocation, mojave:        "3c364b5229c2f67ec49e1e31963394b50cad213bc429028501a9c8dd6c1d2578"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0568b7aad5f1bac6e7b6829f75470e890f58be5dc90e456bdae543a3ee959e08"
   end
 
   depends_on "go" => :build
@@ -24,9 +25,9 @@ class Kubecfg < Formula
       prefix.install_metafiles
     end
 
-    output = Utils.popen_read("#{bin}/kubecfg completion --shell bash")
+    output = Utils.safe_popen_read("#{bin}/kubecfg", "completion", "--shell", "bash")
     (bash_completion/"kubecfg").write output
-    output = Utils.popen_read("#{bin}/kubecfg completion --shell zsh")
+    output = Utils.safe_popen_read("#{bin}/kubecfg", "completion", "--shell", "zsh")
     (zsh_completion/"_kubecfg").write output
   end
 

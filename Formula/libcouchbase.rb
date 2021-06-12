@@ -1,15 +1,17 @@
 class Libcouchbase < Formula
   desc "C library for Couchbase"
-  homepage "https://docs.couchbase.com/c-sdk/2.10/start-using-sdk.html"
-  url "https://packages.couchbase.com/clients/c/libcouchbase-2.10.5.tar.gz"
-  sha256 "9c4834d4041d2951b3cbefcc3b9ed81a1624e88c30cee08edbe4b44535509c5e"
+  homepage "https://docs.couchbase.com/c-sdk/current/hello-world/start-using-sdk.html"
+  url "https://packages.couchbase.com/clients/c/libcouchbase-3.1.3.tar.gz"
+  sha256 "b4aed2c3e4d9d9b89d6f87ae0513d7cffbb0afaa5a58684f2e80e805e1367519"
+  license "Apache-2.0"
   head "https://github.com/couchbase/libcouchbase.git"
 
   bottle do
-    sha256 "10ee13aea694d80723440aaa83a555197b83d1ada575673f73ff763a1e7f2b91" => :catalina
-    sha256 "83c032eacaec50f12e1727661ccf460eefcd63b90d6b609c1ad4dba72cfae7f1" => :mojave
-    sha256 "c6f861d76830fb6fcb351c9e64b268b93c03788d48f29aece8c7a64c583db368" => :high_sierra
-    sha256 "2ce7703166076f259e147d6cdbc42facb8f493673a6082ca327bb37d19665bea" => :x86_64_linux
+    sha256 arm64_big_sur: "72815d6444601b6ffb4961321669a6c806e1efce92c76e6f14a3773eb7c17c30"
+    sha256 big_sur:       "53e18993450e62ce593f0562e954dd62157cf82f2279c44b984fb13a34cf76ac"
+    sha256 catalina:      "1a7d3d96544331a8e43df4400a8e4bd4451350d7a0fe6dcb91fae05bf41ca50c"
+    sha256 mojave:        "d457d270cd478f5a52c33b2de47041033a13da57d618febc98d8c0c152392bfc"
+    sha256 x86_64_linux:  "0aa8bf636a0706672a37bef96a7a37710ebc4fc56f4cddc9c86cff327a0b4a23"
   end
 
   depends_on "cmake" => :build
@@ -30,6 +32,7 @@ class Libcouchbase < Formula
   end
 
   test do
-    system "#{bin}/cbc", "version"
+    assert_match "LCB_ERR_CONNECTION_REFUSED",
+      shell_output("#{bin}/cbc cat document_id -U couchbase://localhost:1 2>&1", 1).strip
   end
 end

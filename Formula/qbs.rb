@@ -1,22 +1,24 @@
 class Qbs < Formula
   desc "Build tool for developing projects across multiple platforms"
   homepage "https://wiki.qt.io/Qbs"
-  url "https://download.qt.io/official_releases/qbs/1.15.0/qbs-src-1.15.0.tar.gz"
-  sha256 "e1dee4bbe0b601c0da16b279b86c4dc881b1b86a6ff0c34fc720685adc1b8ee8"
-  head "https://code.qt.io/qbs/qbs.git"
+  url "https://download.qt.io/official_releases/qbs/1.19.0/qbs-src-1.19.0.tar.gz"
+  sha256 "69ada96bccabf329ca59bbdd15eb706d5be04f0f0813a0fd54aa88ad44344a05"
+  license :cannot_represent
+  head "git://code.qt.io/qbs/qbs.git"
 
   bottle do
-    cellar :any
-    sha256 "352a2649152978b76e705f770b9b05776e1ba08d3dff351870cba802cb96587f" => :catalina
-    sha256 "cdf25dd7562feff28724d4942be0544e7ded717d27c94b03c1e2f4e57ec8e8f9" => :mojave
-    sha256 "f6fa92b740dff2ab60afc3680efcaf9f35392e6a332169cdf8b385e5b0ec88df" => :high_sierra
-    sha256 "a76ea936d51466f2336d39dc6d055dd99d3759abec1089488c8ed008e0b80843" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "b4d74d2e4dc98fef1cfb89c427577a2dd089db3d770db38ba746168d2712bdd1"
+    sha256 cellar: :any, big_sur:       "0e02bd6df4db43c782b258333751ac000a79e8b7cd750c9b0f57845dd054da8f"
+    sha256 cellar: :any, catalina:      "ca244d8a16d468c9c9e5b97ca56f5896df5be74e8b345d28c2fc6776d1d434ef"
+    sha256 cellar: :any, mojave:        "0f3cedebe6f9eaf2ffc9491b37115a8fb84c491d09fc7b4e886d16ebb22590f2"
   end
 
-  depends_on "qt"
+  depends_on "qt@5"
 
   def install
-    system "qmake", "qbs.pro", "-r", "QBS_INSTALL_PREFIX=#{prefix}", "CONFIG+=qbs_disable_rpath"
+    qt5 = Formula["qt@5"].opt_prefix
+    system "#{qt5}/bin/qmake", "qbs.pro", "QBS_INSTALL_PREFIX=#{prefix}", "CONFIG+=qbs_disable_rpath"
+    system "make"
     system "make", "install", "INSTALL_ROOT=/"
   end
 

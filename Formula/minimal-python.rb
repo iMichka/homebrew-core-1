@@ -4,10 +4,9 @@ class MinimalPython < Formula
   url "https://www.python.org/ftp/python/3.7.2/Python-3.7.2.tgz"
   sha256 "f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d"
   revision 1
-  # tag "linux"
 
   bottle do
-    sha256 "f0fb1887b88e5aa46ed6171a2501b0b9a5a16ac13a532b858b8f27c4e60114a8" => :x86_64_linux
+    sha256 x86_64_linux: "f0fb1887b88e5aa46ed6171a2501b0b9a5a16ac13a532b858b8f27c4e60114a8"
   end
 
   keg_only "conflicts with python formula"
@@ -15,10 +14,12 @@ class MinimalPython < Formula
   depends_on "pkg-config" => :build
   depends_on "bzip2"
   depends_on "libffi"
+  depends_on :linux
   depends_on "zlib"
 
   skip_clean "bin/pip3", "bin/pip-3.4", "bin/pip-3.5", "bin/pip-3.6", "bin/pip-3.7"
-  skip_clean "bin/easy_install3", "bin/easy_install-3.4", "bin/easy_install-3.5", "bin/easy_install-3.6", "bin/easy_install-3.7"
+  skip_clean "bin/easy_install3", "bin/easy_install-3.4",
+             "bin/easy_install-3.5", "bin/easy_install-3.6", "bin/easy_install-3.7"
 
   resource "setuptools" do
     url "https://files.pythonhosted.org/packages/c2/f7/c7b501b783e5a74cf1768bc174ee4fb0a8a6ee5af6afa92274ff964703e0/setuptools-40.8.0.zip"
@@ -239,9 +240,6 @@ class MinimalPython < Formula
       Unversioned symlinks `python`, `python-config`, `pip` etc. pointing to
       `python3`, `python3-config`, `pip3` etc., respectively, have been installed into
         #{opt_libexec}/bin
-
-      If you need Homebrew's Python 2.7 run
-        brew install python@2
 
       You can install Python packages with
         pip3 install <package>

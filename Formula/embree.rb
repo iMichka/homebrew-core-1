@@ -1,15 +1,16 @@
 class Embree < Formula
   desc "High-performance ray tracing kernels"
   homepage "https://embree.github.io/"
-  url "https://github.com/embree/embree/archive/v3.6.1.tar.gz"
-  sha256 "1d82b334114d8784a455fc3d33d3a5860101a4a05a93c79b35cc752509234458"
+  url "https://github.com/embree/embree/archive/v3.13.0.tar.gz"
+  sha256 "4d86a69508a7e2eb8710d571096ad024b5174834b84454a8020d3a910af46f4f"
+  license "Apache-2.0"
   head "https://github.com/embree/embree.git"
 
   bottle do
-    cellar :any
-    sha256 "628e4aec747ce33affd67c642de43247d8493248ea62dadabf3bf885ce4c4276" => :mojave
-    sha256 "ddd80cae937699a608b1ead4715f23b6ddab06e12d24b19510cac2a23945e01b" => :high_sierra
-    sha256 "fb337abbd7e2b57f6ecb839b22e59634a7b370273962eca3631f51385d17d01d" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "34ebcc3b29a0d7194d2bd99992e0cdf6a1a65c4359ca069ab2871fd07e91994d"
+    sha256 cellar: :any, big_sur:       "ccb92b5bdc9349ea27dce5ca3d7f439e562a005ee8c9156890e9e87527bd945a"
+    sha256 cellar: :any, catalina:      "a5018cde142cea96f08ccf89e4b653d3a2cf521c8c884abf10b1e9b176f75dd6"
+    sha256 cellar: :any, mojave:        "f31316bbd32d20997392a8bb35d6dfd8e9103e77a46382411d445a92d23f5595"
   end
 
   depends_on "cmake" => :build
@@ -17,15 +18,13 @@ class Embree < Formula
   depends_on "tbb"
 
   def install
-    max_isa = MacOS.version.requires_sse42? ? "SSE4.2" : "SSE2"
-
-    args = std_cmake_args + %W[
+    args = std_cmake_args + %w[
       -DBUILD_TESTING=OFF
       -DEMBREE_IGNORE_CMAKE_CXX_FLAGS=OFF
       -DEMBREE_ISPC_SUPPORT=ON
-      -DEMBREE_MAX_ISA=#{max_isa}
       -DEMBREE_TUTORIALS=OFF
     ]
+    args << "-DEMBREE_MAX_ISA=#{MacOS.version.requires_sse42? ? "SSE4.2" : "SSE2"}" if Hardware::CPU.intel?
 
     mkdir "build" do
       system "cmake", *args, ".."

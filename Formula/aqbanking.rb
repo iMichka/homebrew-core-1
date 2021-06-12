@@ -1,14 +1,20 @@
 class Aqbanking < Formula
   desc "Generic online banking interface"
   homepage "https://www.aquamaniac.de/sites/aqbanking/"
-  url "https://www.aquamaniac.de/rdm/attachments/download/107/aqbanking-5.8.2.tar.gz"
-  sha256 "93ca523fe175e72042db75f8c3fc6255ab058cf82caf52796e15f030809fb15e"
+  url "https://www.aquamaniac.de/rdm/attachments/download/372/aqbanking-6.3.0.tar.gz"
+  sha256 "a0e85da2072c927bc32cfd808caaccfdabe34725e75618b08d8049306d8355cc"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://www.aquamaniac.de/rdm/projects/aqbanking/files"
+    regex(/href=.*?aqbanking[._-](\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "95a5722e1489e556d98a230d56ddf577f31916e9d7d92624122d3b9e47d9db17" => :catalina
-    sha256 "7c2baa7fb1391d73701d3853ff42c2e54c34d08e0924cf8cfac188c65a7098ae" => :mojave
-    sha256 "3486dd0c279143a270b1dcc7522a515a5f911a738d639f71591f800b2afdbfc2" => :high_sierra
-    sha256 "75e86959e6461de20b46cd9706570aee118cc243bbe6b5cb36ff3fb046bf8697" => :sierra
+    sha256 arm64_big_sur: "c4495a9e00075b84f64a787da43fbe268ea8cfc9c7a2494e81839ed4f8234552"
+    sha256 big_sur:       "c238dbb493edc9737ed2ba1964487a20a4907c89a24d9d65cd7725cd33611834"
+    sha256 catalina:      "fa0510399990bf51f9774448c0ee77bbc2d37862a9c1cbdfacfcd7dabd4f08ac"
+    sha256 mojave:        "0aa329621e198dc1ea95057a2ece172946c36f3a60bafec97638d8283fef99b1"
   end
 
   head do
@@ -19,7 +25,6 @@ class Aqbanking < Formula
     depends_on "libtool" => :build
   end
 
-  depends_on "pkg-config" => :build
   depends_on "gettext"
   depends_on "gmp"
   depends_on "gwenhywfar"
@@ -27,16 +32,16 @@ class Aqbanking < Formula
   depends_on "libxml2"
   depends_on "libxmlsec1"
   depends_on "libxslt"
+  depends_on "pkg-config" # aqbanking-config needs pkg-config for execution
 
   def install
     ENV.deparallelize
+    inreplace "aqbanking-config.in.in", "@PKG_CONFIG@", "pkg-config"
     system "autoreconf", "-fiv" if build.head?
     system "./configure", "--disable-debug",
                           "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
-                          "--enable-cli",
-                          "--with-gwen-dir=#{HOMEBREW_PREFIX}"
-    system "make", "check"
+                          "--enable-cli"
     system "make", "install"
   end
 
@@ -47,50 +52,26 @@ class Aqbanking < Formula
       accountInfoList {
         accountInfo {
           char bankCode="110000000"
-          char bankName="STRIPE TEST BANK"
           char accountNumber="000123456789"
-          char accountName="demand deposit"
           char iban="US44110000000000123456789"
           char bic="BYLADEM1001"
-          char owner="JOHN DOE"
           char currency="USD"
-          int  accountType="0"
-          int  accountId="2"
 
-          statusList {
-            status {
-              int  time="1388664000"
-
-              notedBalance {
-                value {
-                  char value="123456%2F100"
-                  char currency="USD"
-                } #value
-
-                int  time="1388664000"
-              } #notedBalance
-            } #status
-
-            status {
-              int  time="1388750400"
-
-              notedBalance {
-                value {
-                  char value="132436%2F100"
-                  char currency="USD"
-                } #value
-
-                int  time="1388750400"
-              } #notedBalance
-            } #status
-          } #statusList
-
-        } # accountInfo
-      } # accountInfoList
+          balanceList {
+            balance {
+              char date="20221212"
+              char value="-11096%2F100%3AUSD"
+              char type="booked"
+            } #balance
+          } #balanceList
+        } #accountInfo
+      } #accountInfoList
     EOS
 
-    match = "Account 110000000 000123456789 STRIPE TEST BANK 03.01.2014 12:00 1324.36 USD"
-    out = shell_output("#{bin}/aqbanking-cli listbal -c #{context}")
+    match = "110000000 000123456789 12.12.2022 -110.96 US44110000000000123456789 BYLADEM1001"
+    out = shell_output("#{bin}/aqbanking-cli -D .aqbanking listbal "\
+                       "-T '$(bankcode) $(accountnumber) $(dateAsString) "\
+                       "$(valueAsString) $(iban) $(bic)' < #{context}")
     assert_match match, out.gsub(/\s+/, " ")
   end
 end

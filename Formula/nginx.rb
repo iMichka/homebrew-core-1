@@ -3,25 +3,36 @@ class Nginx < Formula
   homepage "https://nginx.org/"
   # Use "mainline" releases only (odd minor version number), not "stable"
   # See https://www.nginx.com/blog/nginx-1-12-1-13-released/ for why
-  url "https://nginx.org/download/nginx-1.17.6.tar.gz"
-  sha256 "3cb4a5314dc0ab0a4e8a7b51ae17c027133417a45cc6c5a96e3dd80141c237b6"
-  head "https://hg.nginx.org/nginx/", :using => :hg
+  url "https://nginx.org/download/nginx-1.21.0.tar.gz"
+  sha256 "fe192a4bac2bd3a769e8695cb9fe14a00e57eaceb919095347a83b5b2afc0771"
+  license "BSD-2-Clause"
+  head "https://hg.nginx.org/nginx/", using: :hg
+
+  livecheck do
+    url :homepage
+    regex(%r{nginx[._-]v?(\d+(?:\.\d+)+)</a>\nmainline version}i)
+  end
 
   bottle do
-    sha256 "8ccb0756081f9fc73296ba3a3e68d2f18bc032c39acf0614abc9bfbbceb5e1e2" => :catalina
-    sha256 "515fa67eda022f2b9700e3b244dcc0fa63865cf3a3492d8c887d3736f8584d95" => :mojave
-    sha256 "edebe9590e65be46b341b6764b7e760171bb3f0eb945eec2479113615147a472" => :high_sierra
-    sha256 "ff92c62ec3665ff3a194c35d9d246806e1699f18b340f347d35f1252d00c75f0" => :x86_64_linux
+    sha256 arm64_big_sur: "9d536ee9f8beb5cd1a5b7d72130bf9b17e69ad34e16477f0f55852e3eb4b7fe2"
+    sha256 big_sur:       "d4d16dc1e0c696d0e30a3a636c39528276c5a967a09a0e4be29a813cc01aa3f5"
+    sha256 catalina:      "03f0a7380a44620e47b410dce2da774d5730a8b12cff3b92e1cd064fc3c623bf"
+    sha256 mojave:        "07b8bf7d7e12b3eb92412755690c3c7b58e27f76af1538d13d78b7747a87b584"
+    sha256 x86_64_linux:  "90f53860bfea5cdf32061b521f1b29f5cf042d44e4033457fdc7b002bf5ac5cd"
   end
 
   depends_on "openssl@1.1"
   depends_on "pcre"
-  depends_on "xz" => :build unless OS.mac? # for the tar command in the install step
+
+  uses_from_macos "xz" => :build # for the tar command in the install step
 
   def install
     # keep clean copy of source for compiling dynamic modules e.g. passenger
     (pkgshare/"src").mkpath
-    system "tar", "-cJf", (pkgshare/"src/src.tar.xz"), *("--options" if OS.mac?), *("compression-level=9" if OS.mac?), "."
+    system "tar", "-cJf",
+           (pkgshare/"src/src.tar.xz"),
+           *("--options" if OS.mac?),
+           *("compression-level=9" if OS.mac?), "."
 
     # Changes default port to 8080
     inreplace "conf/nginx.conf" do |s|
@@ -119,9 +130,7 @@ class Nginx < Formula
     # and Homebrew used to suggest the user copy the plist for nginx to their
     # ~/Library/LaunchAgents directory. So we need to have a symlink there
     # for such cases
-    if rack.subdirs.any? { |d| d.join("sbin").directory? }
-      sbin.install_symlink bin/"nginx"
-    end
+    sbin.install_symlink bin/"nginx" if rack.subdirs.any? { |d| d.join("sbin").directory? }
   end
 
   def caveats
@@ -135,30 +144,31 @@ class Nginx < Formula
     EOS
   end
 
-  plist_options :manual => "nginx"
+  plist_options manual: "nginx"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>KeepAlive</key>
-        <false/>
-        <key>ProgramArguments</key>
-        <array>
-            <string>#{opt_bin}/nginx</string>
-            <string>-g</string>
-            <string>daemon off;</string>
-        </array>
-        <key>WorkingDirectory</key>
-        <string>#{HOMEBREW_PREFIX}</string>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>KeepAlive</key>
+          <false/>
+          <key>ProgramArguments</key>
+          <array>
+              <string>#{opt_bin}/nginx</string>
+              <string>-g</string>
+              <string>daemon off;</string>
+          </array>
+          <key>WorkingDirectory</key>
+          <string>#{HOMEBREW_PREFIX}</string>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do

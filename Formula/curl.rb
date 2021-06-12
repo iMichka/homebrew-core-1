@@ -1,22 +1,22 @@
 class Curl < Formula
   desc "Get a file from an HTTP, HTTPS or FTP server"
-  homepage "https://curl.haxx.se/"
-  url "https://curl.haxx.se/download/curl-7.67.0.tar.bz2"
-  mirror "http://curl.mirror.anstey.ca/curl-7.67.0.tar.bz2"
-  sha256 "dd5f6956821a548bf4b44f067a530ce9445cc8094fd3e7e3fc7854815858586c"
-  revision 1 unless OS.mac?
+  homepage "https://curl.se"
+  url "https://curl.se/download/curl-7.77.0.tar.bz2"
+  sha256 "6c0c28868cb82593859fc43b9c8fdb769314c855c05cf1b56b023acf855df8ea"
+  license "curl"
 
-  bottle do
-    cellar :any
-    sha256 "d43bf6905beee288978104f8fa403fe8b5ded820256916f336d2897be5d9872e" => :catalina
-    sha256 "3e1fa3e2435503c0d67b447a4f20294459f90bc9279890ac80590617fe23657b" => :mojave
-    sha256 "d04cf2c4ca107d4a73e44d886727fbd06f988c120eae06e5b9e8d6ab1f61cf59" => :high_sierra
-    sha256 "3da35b009e93e8355751149a12dca1bd2f9564b6d0e174bdbc56125e7f6d1a94" => :x86_64_linux
+  livecheck do
+    url "https://curl.se/download/"
+    regex(/href=.*?curl[._-]v?(.*?)\.t/i)
   end
 
-  pour_bottle? do
-    reason "The bottle needs to be installed into #{Homebrew::DEFAULT_PREFIX} when built with OpenSSL."
-    satisfy { OS.mac? || HOMEBREW_PREFIX.to_s == Homebrew::DEFAULT_PREFIX }
+  bottle do
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "36940ec937de41aefd30d264885e909ac4621f89af69e708ff28e0e6e80b18d4"
+    sha256 cellar: :any,                 big_sur:       "2fea808dd9f8dc2a9bac45870be0a14f2f81243652d2e46d319e36e865543367"
+    sha256 cellar: :any,                 catalina:      "4a549f63ab3fa72db7efa9d2a9a9f886fa093546b93b548346216feb878f5268"
+    sha256 cellar: :any,                 mojave:        "9313777bd2c21e174542c9dd66ee80eb6f4d8f63dae96b5ba4202b957f404b8a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "fed3d3b7164cae5fcc4a2c805099b156532296453bfaa676548b3ef1433e3794"
   end
 
   head do
@@ -30,7 +30,16 @@ class Curl < Formula
   keg_only :provided_by_macos
 
   depends_on "pkg-config" => :build
-  uses_from_macos "openssl@1.1"
+  depends_on "brotli"
+  depends_on "libidn2"
+  depends_on "libssh2"
+  depends_on "nghttp2"
+  depends_on "openldap"
+  depends_on "openssl@1.1"
+  depends_on "rtmpdump"
+  depends_on "zstd"
+
+  uses_from_macos "krb5"
   uses_from_macos "zlib"
 
   def install
@@ -41,20 +50,24 @@ class Curl < Formula
       --disable-dependency-tracking
       --disable-silent-rules
       --prefix=#{prefix}
+      --with-ssl=#{Formula["openssl@1.1"].opt_prefix}
+      --without-ca-bundle
+      --without-ca-path
+      --with-ca-fallback
       --with-secure-transport
+      --with-default-ssl-backend=openssl
+      --with-libidn2
+      --with-librtmp
+      --with-libssh2
+      --without-libpsl
     ]
 
-    if OS.mac?
-      args << "--with-darwinssl"
-      args << "--without-ca-bundle"
-      args << "--without-ca-path"
-    else
-      ENV.prepend_path "PKG_CONFIG_PATH", "#{Formula["openssl@1.1"].opt_lib}/pkgconfig"
-      args << "--with-ssl=#{Formula["openssl@1.1"].opt_prefix}"
-      args << "--with-ca-bundle=#{etc}/openssl@1.1/cert.pem"
-      args << "--with-ca-path=#{etc}/openssl@1.1/certs"
-      args << "--disable-ares"
-      args << "--disable-ldap"
+    on_macos do
+      args << "--with-gssapi"
+    end
+
+    on_linux do
+      args << "--with-gssapi=#{Formula["krb5"].opt_prefix}"
     end
 
     system "./configure", *args

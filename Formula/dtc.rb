@@ -1,24 +1,27 @@
 class Dtc < Formula
   desc "Device tree compiler"
   homepage "https://www.devicetree.org/"
-  url "https://www.kernel.org/pub/software/utils/dtc/dtc-1.5.1.tar.xz"
-  sha256 "660b74039690fc37013660544d09191834efb58503c73c555c5513ba75ab031f"
+  url "https://www.kernel.org/pub/software/utils/dtc/dtc-1.6.1.tar.xz"
+  sha256 "65cec529893659a49a89740bb362f507a3b94fc8cd791e76a8d6a2b6f3203473"
+  license any_of: ["GPL-2.0-or-later", "BSD-2-Clause"]
 
-  bottle do
-    cellar :any
-    sha256 "ef6c457347e0d05b02d4f6cf95e271337901bd771275b28cb07834bc7eae7a70" => :catalina
-    sha256 "f81433bf0b0c539aa98320607475535cc095241a66eedb9706ab46057c5916a4" => :mojave
-    sha256 "a9157293d39e028781397ad121a386d7c3fc61f217f95f0834326e5c0cd591eb" => :high_sierra
-    sha256 "166f31f4093b82f486f74c752e2541e1bdd27399744cce5c0b4a65f36dd1a5de" => :sierra
-    sha256 "8a68490faac4121715eee0a179d27c25505e098e5fa63ee47a017e98e2d6517f" => :x86_64_linux
+  livecheck do
+    url "https://mirrors.edge.kernel.org/pub/software/utils/dtc/"
+    regex(/href=.*?dtc[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  unless OS.mac?
-    depends_on "bison"
-    depends_on "flex"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "3acf8dbcf556c2271a6162ee0d7e6aa4b1e2f2ffb8dd88541d44ed3a96eecdd5"
+    sha256 cellar: :any,                 big_sur:       "eed133a2432f709556facdfb154a34ce5d2bddd6b04c67de73421bee3eb35160"
+    sha256 cellar: :any,                 catalina:      "d1910b920613b43b1be2a70ad950139fcd5e908ab45bc9c68dbaba078c676599"
+    sha256 cellar: :any,                 mojave:        "98c38049acdae747c9939bbe271f4318e35d976687caaf6beea0527592e4274d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "20225ca2fdcdf29d6fff97dddf7a26d39617bf4c6dc6adb3dc1da31f86de47fb"
   end
 
   depends_on "pkg-config" => :build
+
+  uses_from_macos "bison"
+  uses_from_macos "flex"
 
   def install
     inreplace "libfdt/Makefile.libfdt", "libfdt.$(SHAREDLIB_EXT).1", "libfdt.1.$(SHAREDLIB_EXT)"

@@ -1,28 +1,29 @@
 class Libdazzle < Formula
   desc "GNOME companion library to GObject and Gtk+"
   homepage "https://gitlab.gnome.org/GNOME/libdazzle"
-  url "https://download.gnome.org/sources/libdazzle/3.34/libdazzle-3.34.1.tar.xz"
-  sha256 "3d981cbb9d9bb87bfaff7bfd44d9847223b3ef81e69225e4d1f6ac725a669505"
+  url "https://download.gnome.org/sources/libdazzle/3.40/libdazzle-3.40.0.tar.xz"
+  sha256 "dba99a7e65fa6662c012b306e5d0f99ff3b466a46059ea7aa0104aaf65ce4ba5"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "dabdfe35df5b7ffe01e6e89818fbeee63c4f2dd861e7f0091587480f91614908" => :catalina
-    sha256 "3853e35d4389a5db4ed3f403d8dd161c67935aaf17d524bc2dd878675ea4aaea" => :mojave
-    sha256 "5830058a3a0e84af35143d052dacaf41e04229e5ba31847e31982e2b9fdaed7b" => :high_sierra
-    sha256 "927c2dd35c864329f4b4bd22beca001d117fbf881d49242a7e1deb25d3bb76a5" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "bd3d5fe0c3f40cc3046d824af353bd7c8a333a88fb28893df41854a7c9b551d5"
+    sha256 cellar: :any,                 big_sur:       "05b5ef35b6edbae5dee76b55549de030b1876e75a7d2caa3d5f877a6c64c26c8"
+    sha256 cellar: :any,                 catalina:      "28328021ecdcf4eeabc6146a73a4c61652ea214036705a6b0441fabc81c5196b"
+    sha256 cellar: :any,                 mojave:        "0a9f674293a1df2ef75d633392309cd759654f39e973600bc19276763c1290d5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "73f7493498f617ecfbf016393d30dd77a44e710e215f32abe0b86132d73f5e4c"
   end
 
   depends_on "gobject-introspection" => :build
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "vala" => :build
   depends_on "glib"
   depends_on "gtk+3"
 
   def install
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", "-Dwith_vapi=true", ".."
+      system "meson", *std_meson_args, "-Dwith_vapi=true", ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
     end
@@ -94,7 +95,7 @@ class Libdazzle < Formula
       -lpango-1.0
       -lpangocairo-1.0
     ]
-    if OS.mac?
+    on_macos do
       flags << "-lintl"
       flags << "-Wl,-framework"
       flags << "-Wl,CoreFoundation"

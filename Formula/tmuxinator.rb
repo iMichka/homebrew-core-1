@@ -1,20 +1,24 @@
 class Tmuxinator < Formula
   desc "Manage complex tmux sessions easily"
   homepage "https://github.com/tmuxinator/tmuxinator"
-  url "https://github.com/tmuxinator/tmuxinator/archive/v1.1.3.tar.gz"
-  sha256 "84fdc5fff0d76e415cfd165e79cb21682f9dc68e58a771dbe968099956609568"
+  url "https://github.com/tmuxinator/tmuxinator/archive/v2.0.3.tar.gz"
+  sha256 "7ef03f8b23306944170b5951e7db280d1a1c3f1484fc292056f28185224634ab"
+  license "MIT"
   head "https://github.com/tmuxinator/tmuxinator.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bb4389494ccfc00cc1d8d8cf715992a6ba840caf3514585d93746a28bc93fa85" => :catalina
-    sha256 "7d575e145d4894e8cb3811aa26186a8a9038556ce7e8588c24abcab400bdcdff" => :mojave
-    sha256 "2b8723d4a35e4a70d6de828b29a5652677e57ef4ec359c545b5d9e5f2976d8a7" => :high_sierra
-    sha256 "ee4743178885ca35c0d32ac7127d4aaf5c3cd08023b2b07af9583558ba31c9bc" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "62ff7ec6746d01cf90d68ac56a4550e9ed00162ae3625528e433940143b06131"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d6c77802104e9e397dbd796667b7ef78e296a7b243bfd885ce395c648847f321"
+    sha256 cellar: :any_skip_relocation, catalina:      "515f228bfc6d511abf6d5e52a54a1fe006deb6d3d31ab53774c4ce650f91b41c"
+    sha256 cellar: :any_skip_relocation, mojave:        "b3ea4285613f2367e7f75fb1f47e4c370dd1159d99531d19c38f8a80b23e459f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e3bcb768a9eb968bf3567c9afe84ca1b280a02e19e9facf7fc6abe47d6890b9d"
   end
 
   depends_on "ruby"
   depends_on "tmux"
+
+  conflicts_with "tmuxinator-completion", because: "the tmuxinator formula includes completion"
 
   resource "erubis" do
     url "https://rubygems.org/downloads/erubis-2.7.0.gem"
@@ -22,8 +26,8 @@ class Tmuxinator < Formula
   end
 
   resource "thor" do
-    url "https://rubygems.org/downloads/thor-0.20.3.gem"
-    sha256 "49bc217fe28f6af34c6e60b003e3405c27595a55689077d82e9e61d4d3b519fa"
+    url "https://rubygems.org/downloads/thor-1.0.1.gem"
+    sha256 "7572061e3cbe6feee57828670e6a25a66dd397f05c1f8515d49f770a7d9d70f5"
   end
 
   resource "xdg" do
@@ -42,7 +46,7 @@ class Tmuxinator < Formula
     system "gem", "build", "tmuxinator.gemspec"
     system "gem", "install", "--ignore-dependencies", "tmuxinator-#{version}.gem"
     bin.install libexec/"bin/tmuxinator"
-    bin.env_script_all_files(libexec/"bin", :GEM_HOME => ENV["GEM_HOME"])
+    bin.env_script_all_files(libexec/"bin", GEM_HOME: ENV["GEM_HOME"])
 
     bash_completion.install "completion/tmuxinator.bash" => "tmuxinator"
     zsh_completion.install "completion/tmuxinator.zsh" => "_tmuxinator"
@@ -53,10 +57,10 @@ class Tmuxinator < Formula
     version_output = shell_output("#{bin}/tmuxinator version")
     assert_match "tmuxinator #{version}", version_output
 
-    if OS.mac?
-      cmd = "source #{bash_completion}/tmuxinator && complete -p tmuxinator"
+    cmd = if OS.mac?
+      "source #{bash_completion}/tmuxinator && complete -p tmuxinator"
     else
-      cmd = "bash -c \"source #{bash_completion}/tmuxinator && complete -p tmuxinator\""
+      "bash -c \"source #{bash_completion}/tmuxinator && complete -p tmuxinator\""
     end
 
     completion = shell_output(cmd)

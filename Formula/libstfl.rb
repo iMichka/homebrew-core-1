@@ -3,30 +3,37 @@ class Libstfl < Formula
   homepage "http://www.clifford.at/stfl/"
   url "http://www.clifford.at/stfl/stfl-0.24.tar.gz"
   sha256 "d4a7aa181a475aaf8a8914a8ccb2a7ff28919d4c8c0f8a061e17a0c36869c090"
-  revision 8
+  license "LGPL-3.0-or-later"
+  revision 12
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?stfl[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "3d9ad970cb1f4fb003ee51f6c8bba9cdc4e949a9bf9f3abed40287b7d7cffb06" => :catalina
-    sha256 "69c2c6c2c41794fcf12784a4314718def6065bfec14dd15e822e8be245ba2b5b" => :mojave
-    sha256 "3cfbe818441f2f60d24e36a7957c3a27df33e4668060aa045dd8a470c6982f7f" => :high_sierra
-    sha256 "d2b2f9c58980f858a80bc930be71590aae52e09dfe21dbb49047f8e876180305" => :sierra
-    sha256 "e95c1a585bb6e6b543ea2479bf4ccf31885b4bab91549681139a145b3374726e" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "f38715316e6a6a3df8b25e6cd97c742ac2168d608ecdb2bcd7773e3e69117802"
+    sha256 cellar: :any, big_sur:       "9e57ebd3ab126b784b46969fa3c2baf49b4351183274d23f3075370e50735d48"
+    sha256 cellar: :any, catalina:      "ab1e06a1a46305fbcaadca0e490dd6584f149e704f1475e9d5243acebeaff7e1"
+    sha256 cellar: :any, mojave:        "0164c390d3ccad76079fe8b5af6e8cec440036e4e97dd91c5a1c86848832c0ab"
+    sha256 cellar: :any, x86_64_linux:  "bfadcf99c609ca306fa084c9f38f44bad160c2d16136cf7934af8ef9ccb47bee"
   end
 
+  depends_on "python@3.9" => :build
   depends_on "swig" => :build
   depends_on "ruby"
-  unless OS.mac?
-    depends_on "perl"
-    depends_on "python@2"
-  end
+
+  uses_from_macos "perl"
 
   def install
-    if OS.mac?
+    ENV.prepend_path "PATH", Formula["python@3.9"].opt_libexec/"bin"
+
+    ENV.append "LIBS", "-lncurses -lruby"
+
+    on_macos do
       ENV.append "LDLIBS", "-liconv"
-      ENV.append "LIBS", "-lncurses -liconv -lruby"
-    else
-      ENV.append "LIBS", "-lncurses -lruby"
+      ENV.append "LIBS", "-liconv"
     end
 
     %w[
@@ -46,16 +53,22 @@ class Libstfl < Formula
       s.gsub! "libstfl.so", "libstfl.dylib"
     end
 
+    xy = "3.8"
+    python_config = Formula["python@3.9"].opt_libexec/"bin/python-config"
+
     inreplace "python/Makefile.snippet" do |s|
       # Install into the site-packages in the Cellar (so uninstall works)
-      s.change_make_var! "PYTHON_SITEARCH", lib/"python2.7/site-packages"
+      s.change_make_var! "PYTHON_SITEARCH", lib/"python#{xy}/site-packages"
       s.gsub! "lib-dynload/", ""
       s.gsub! "ncursesw", "ncurses"
-      if OS.mac?
-        s.gsub! "gcc", "gcc -undefined dynamic_lookup #{`python-config --cflags`.chomp}"
+
+      on_macos do
+        s.gsub! "gcc", "gcc -undefined dynamic_lookup #{`#{python_config} --cflags`.chomp}"
         s.gsub! "-lncurses", "-lncurses -liconv"
-      else
-        s.gsub! "gcc", "gcc #{`python-config --cflags`.chomp}"
+      end
+
+      on_linux do
+        s.gsub! "gcc", "gcc #{`#{python_config} --cflags`.chomp}"
       end
     end
 

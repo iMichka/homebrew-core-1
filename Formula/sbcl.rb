@@ -1,33 +1,22 @@
 class Sbcl < Formula
   desc "Steel Bank Common Lisp system"
   homepage "http://www.sbcl.org/"
-  url "https://downloads.sourceforge.net/project/sbcl/sbcl/1.5.9/sbcl-1.5.9-source.tar.bz2"
-  sha256 "cbdb0d25e8a4b02b8369a667a289c8f0ce1d4ebb4e565e9191a31f1ae9a4b9b6"
+  url "https://downloads.sourceforge.net/project/sbcl/sbcl/2.1.5/sbcl-2.1.5-source.tar.bz2"
+  sha256 "965807ecd65a9590d68a0ed408b544e7e49a1f6e337ebd2b25e34788bcc8a8c5"
+  license all_of: [:public_domain, "MIT", "Xerox", "BSD-3-Clause"]
+  head "https://git.code.sf.net/p/sbcl/sbcl.git"
 
   bottle do
-    sha256 "39c9f69413fd64f964c1efe321d728a848313b6b57ae8d18ce2521005820321e" => :catalina
-    sha256 "3eb7d1a0620ffb444a3449beea4ba3bde066bc13ed0895e6051aa1ef95aa1a13" => :mojave
-    sha256 "336507866da6badff08141d3e7c84377975daeae1e105a3170c6c12d38e29911" => :high_sierra
-    sha256 "47609c1b5c7d70d8df4e37bd61ae6ea325741f120e585bc3c353832d57226f91" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7523655e1644bfb47716c56adc4597d9ad914ea0e8569c6c9660363020793314"
+    sha256 cellar: :any_skip_relocation, big_sur:       "dc95f64936ebf07065fa3ac6cbc9910aaab350c23f077486b76baa1e56bd7893"
+    sha256 cellar: :any_skip_relocation, catalina:      "109ce34c2faed1b6357dad8c07b6e8dbc700e0408d8afd77683d9804e97a2fa3"
+    sha256 cellar: :any_skip_relocation, mojave:        "665d2dd2ba9613ea902f7435592bf15868052eefe7d81127a4f7ca03b510d35c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "779bc2858d3a65cfe4eee993d967ed99c04587a39643e00d2ab0a15111872bb7"
   end
+
+  depends_on "ecl" => :build
 
   uses_from_macos "zlib"
-
-  # Current binary versions are listed at https://sbcl.sourceforge.io/platform-table.html
-  resource "bootstrap64" do
-    if OS.mac?
-      url "https://downloads.sourceforge.net/project/sbcl/sbcl/1.2.11/sbcl-1.2.11-x86-64-darwin-binary.tar.bz2"
-      sha256 "057d3a1c033fb53deee994c0135110636a04f92d2f88919679864214f77d0452"
-    elsif OS.linux?
-      url "https://downloads.sourceforge.net/project/sbcl/sbcl/1.3.3/sbcl-1.3.3-x86-64-linux-binary.tar.bz2"
-      sha256 "e8b1730c42e4a702f9b4437d9842e91cb680b7246f88118c7443d7753e61da65"
-    end
-  end
-
-  patch :p0 do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/c5ffdb11/sbcl/patch-make-doc.diff"
-    sha256 "7c21c89fd6ec022d4f17670c3253bd33a4ac2784744e4c899c32fbe27203d87e"
-  end
 
   def install
     # Remove non-ASCII values from environment as they cause build failures
@@ -38,12 +27,7 @@ class Sbcl < Formula
       ascii_val =~ /[\x80-\xff]/n
     end
 
-    tmpdir = Pathname.new(Dir.mktmpdir)
-    tmpdir.install resource("bootstrap64")
-
-    command = "#{tmpdir}/src/runtime/sbcl"
-    core = "#{tmpdir}/output/sbcl.core"
-    xc_cmdline = "#{command} --core #{core} --disable-debugger --no-userinit --no-sysinit"
+    xc_cmdline = "ecl --norc"
 
     args = [
       "--prefix=#{prefix}",
@@ -60,7 +44,9 @@ class Sbcl < Formula
     system "sh", "install.sh"
 
     # Install sources
-    bin.env_script_all_files(libexec/"bin", :SBCL_SOURCE_ROOT => pkgshare/"src")
+    bin.env_script_all_files libexec/"bin",
+                             SBCL_SOURCE_ROOT: pkgshare/"src",
+                             SBCL_HOME:        lib/"sbcl"
     pkgshare.install %w[contrib src]
     (lib/"sbcl/sbclrc").write <<~EOS
       (setf (logical-pathname-translations "SYS")

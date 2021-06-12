@@ -1,18 +1,20 @@
 class Snort < Formula
   desc "Flexible Network Intrusion Detection System"
   homepage "https://www.snort.org"
-  url "https://www.snort.org/downloads/snort/snort-2.9.12.tar.gz"
-  mirror "https://distfiles.macports.org/snort/snort-2.9.12.tar.gz"
-  sha256 "7b02e11987c6cb4f6d79d72799ca9ad2b4bd59cc1d96bb7d6c91549f990d99d0"
-  revision 1
+  url "https://www.snort.org/downloads/snort/snort-2.9.17.1.tar.gz"
+  mirror "https://fossies.org/linux/misc/snort-2.9.17.1.tar.gz"
+  sha256 "303d3d5dc5affecfeaad3a331d3163f901d48d960fdd6598cb55c6d1591eed82"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url "https://www.snort.org/downloads"
+    regex(/href=.*?snort[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    rebuild 2
-    sha256 "21333e3b46c2a9e9b64661a891a0d16558c888d9b260b1a713a7583d98e8999c" => :catalina
-    sha256 "a900ea0646b89f1152f16dd0e86df4a5f8bd8de73269653bc4b6629110467bc0" => :mojave
-    sha256 "a69f95c8452769835680ea5410db5c853749539758ebdb7aa38ed5ec1dde2a02" => :high_sierra
-    sha256 "efda5ee2de3d08e52772c5d37d1bdd6e2f17a56afa5c21ede2770c2f03cc0dd9" => :x86_64_linux
+    sha256 cellar: :any, big_sur:  "b37d8c8359f6a93a00db53db85c4d9dc7d064e508b8d18e7aa9e52d1e564085a"
+    sha256 cellar: :any, catalina: "63ce2a1835beb2c93172672f4c470a7517d040cc31f7075ddb2bee2ca7028355"
+    sha256 cellar: :any, mojave:   "56916b49728b2c9d449b31137bea8daf76e5a300d9197f108f3354a42229d512"
   end
 
   depends_on "pkg-config" => :build
@@ -23,8 +25,10 @@ class Snort < Formula
   depends_on "nghttp2"
   depends_on "openssl@1.1"
   depends_on "pcre"
-  depends_on "flex" => :build unless OS.mac?
-  depends_on "bison" => :build unless OS.mac?
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+  uses_from_macos "xz"
 
   def install
     openssl = Formula["openssl@1.1"]
@@ -54,16 +58,20 @@ class Snort < Formula
     system "./configure", *args
     system "make", "install"
 
+    # Currently configuration files in etc have strange permissions which causes postinstall to fail
+    # Reported to upstream: https://lists.snort.org/pipermail/snort-devel/2020-April/011466.html
+    (buildpath/"etc").children.each { |f| chmod 0644, f }
     rm Dir[buildpath/"etc/Makefile*"]
-    (etc/"snort").install Dir[buildpath/"etc/*"]
+    (etc/"snort").install (buildpath/"etc").children
   end
 
-  def caveats; <<~EOS
-    For snort to be functional, you need to update the permissions for /dev/bpf*
-    so that they can be read by non-root users.  This can be done manually using:
-        sudo chmod o+r /dev/bpf*
-    or you could create a startup item to do this for you.
-  EOS
+  def caveats
+    <<~EOS
+      For snort to be functional, you need to update the permissions for /dev/bpf*
+      so that they can be read by non-root users.  This can be done manually using:
+          sudo chmod o+r /dev/bpf*
+      or you could create a startup item to do this for you.
+    EOS
   end
 
   test do

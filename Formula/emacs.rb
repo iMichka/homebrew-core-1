@@ -1,15 +1,17 @@
 class Emacs < Formula
   desc "GNU Emacs text editor"
   homepage "https://www.gnu.org/software/emacs/"
-  url "https://ftp.gnu.org/gnu/emacs/emacs-26.3.tar.xz"
-  mirror "https://ftpmirror.gnu.org/emacs/emacs-26.3.tar.xz"
-  sha256 "4d90e6751ad8967822c6e092db07466b9d383ef1653feb2f95c93e7de66d3485"
+  url "https://ftp.gnu.org/gnu/emacs/emacs-27.2.tar.xz"
+  mirror "https://ftpmirror.gnu.org/emacs/emacs-27.2.tar.xz"
+  sha256 "b4a7cc4e78e63f378624e0919215b910af5bb2a0afc819fad298272e9f40c1b9"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "9ab33f4386ca5f7326a8c28da1324556ec990f682a7ca88641203da0b42dbdae" => :catalina
-    sha256 "8162a26246de7db44c53ea0d0ef0a806140318d19c69e8e5e33aa88ce7e823a8" => :mojave
-    sha256 "6a2629b6deddf99f81abb1990ecd6c87f0242a0eecbb6b6c2e4c3540e421d4c4" => :high_sierra
-    sha256 "2a47477e71766d7dd6b16c29ad5ba71817ed80d06212e3261ef3c776e7e9f5a2" => :sierra
+    sha256 arm64_big_sur: "f08cd18fa19f49b85606cc4a871272ef4ff9da656c4c952bd91ac03a70dbb0e3"
+    sha256 big_sur:       "5d3af874e5acd76ddc881406ed1e7db8b84f96e01812961f3bee347d278a28ac"
+    sha256 catalina:      "53b0d78af688a20e12e89751217c9da81cc9621222f289836d44011762355879"
+    sha256 mojave:        "4b3cd25d5f6977ecad49d9b5ebd2dec3c7e41efa8f4f22d2805917e0024cf3af"
+    sha256 x86_64_linux:  "f126293d40062ae4bded0ee496cd82036293b661a213d77eda965775d7061d37"
   end
 
   head do
@@ -22,15 +24,22 @@ class Emacs < Formula
 
   depends_on "pkg-config" => :build
   depends_on "gnutls"
-  unless OS.mac?
-    depends_on "libxml2"
-    depends_on "ncurses"
+  depends_on "jansson"
+
+  uses_from_macos "libxml2"
+  uses_from_macos "ncurses"
+
+  on_linux do
     depends_on "jpeg"
   end
 
   def install
+    # Mojave uses the Catalina SDK which causes issues like
+    # https://github.com/Homebrew/homebrew-core/issues/46393
+    # https://github.com/Homebrew/homebrew-core/pull/70421
+    ENV["ac_cv_func_aligned_alloc"] = "no" if MacOS.version == :mojave
+
     args = %W[
-      --disable-dependency-tracking
       --disable-silent-rules
       --enable-locallisppath=#{HOMEBREW_PREFIX}/share/emacs/site-lisp
       --infodir=#{info}/emacs
@@ -42,12 +51,21 @@ class Emacs < Formula
       --with-modules
       --without-ns
       --without-imagemagick
+      --without-selinux
     ]
 
     if build.head?
       ENV.prepend_path "PATH", Formula["gnu-sed"].opt_libexec/"gnubin"
       system "./autogen.sh"
     end
+
+    File.write "lisp/site-load.el", <<~EOS
+      (setq exec-path (delete nil
+        (mapcar
+          (lambda (elt)
+            (unless (string-match-p "Homebrew/shims" elt) elt))
+          exec-path)))
+    EOS
 
     system "./configure", *args
     system "make"
@@ -59,27 +77,28 @@ class Emacs < Formula
     (man1/"ctags.1.gz").unlink
   end
 
-  plist_options :manual => "emacs"
+  plist_options manual: "emacs"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/emacs</string>
-        <string>--fg-daemon</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/emacs</string>
+          <string>--fg-daemon</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do

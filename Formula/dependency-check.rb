@@ -1,12 +1,20 @@
 class DependencyCheck < Formula
   desc "OWASP dependency-check"
-  homepage "https://www.owasp.org/index.php/OWASP_Dependency_Check"
-  url "https://dl.bintray.com/jeremy-long/owasp/dependency-check-5.2.4-release.zip"
-  sha256 "2968616fef4f4b85820ba7a05777fc2eab189eddc97eecc695962b0e2cc60c4c"
+  homepage "https://owasp.org/www-project-dependency-check/"
+  url "https://github.com/jeremylong/DependencyCheck/releases/download/v6.2.2/dependency-check-6.2.2-release.zip"
+  sha256 "90673d1a6ec0c33e01fc38e84c0bdceec1b433e3d50ff514d1e9301407c8ab69"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url :homepage
+    regex(/href=.*?dependency-check[._-]v?(\d+(?:\.\d+)+)-release\.zip/i)
+  end
 
-  depends_on :java
+  bottle do
+    sha256 cellar: :any_skip_relocation, all: "2726b06c6ac05579b7ea5286a0e4020e1993a95db3043bbcb26fe5932cdd90d0"
+  end
+
+  depends_on "openjdk"
 
   def install
     rm_f Dir["bin/*.bat"]
@@ -14,8 +22,8 @@ class DependencyCheck < Formula
     chmod 0755, "bin/dependency-check.sh"
     libexec.install Dir["*"]
 
-    mv libexec/"bin/dependency-check.sh", libexec/"bin/dependency-check"
-    bin.install_symlink libexec/"bin/dependency-check"
+    (bin/"dependency-check").write_env_script libexec/"bin/dependency-check.sh",
+      JAVA_HOME: Formula["openjdk"].opt_prefix
 
     (var/"dependencycheck").mkpath
     libexec.install_symlink var/"dependencycheck" => "data"
@@ -28,7 +36,7 @@ class DependencyCheck < Formula
   end
 
   test do
-    output = shell_output("#{libexec}/bin/dependency-check --version").strip
+    output = shell_output("#{bin}/dependency-check --version").strip
     assert_match "Dependency-Check Core version #{version}", output
 
     (testpath/"temp-props.properties").write <<~EOS

@@ -1,27 +1,51 @@
 class Gpsbabel < Formula
   desc "Converts/uploads GPS waypoints, tracks, and routes"
   homepage "https://www.gpsbabel.org/"
-  url "https://github.com/gpsbabel/gpsbabel/archive/gpsbabel_1_6_0.tar.gz"
-  sha256 "ad56796f725dcdb7f52d9a9509d4922f11198c382fe10fc2d6c9efa8159f2090"
+  url "https://github.com/gpsbabel/gpsbabel/archive/gpsbabel_1_7_0.tar.gz"
+  sha256 "30b186631fb43db576b8177385ed5c31a5a15c02a6bc07bae1e0d7af9058a797"
+  license "GPL-2.0"
+  revision 1
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "685947e84880f27a16a442c10456990f9ede1efa8adf723fa217ba7ac5123ff7" => :catalina
-    sha256 "0d5fa17f760e4ff0ebf88bf4b461c1fba6498278edd57ab77caee7576f5c4609" => :mojave
-    sha256 "e147b5217a57fdf32a8073f53718e6423f227e967f9d495cb3a0bc38b5e2ad3a" => :high_sierra
-    sha256 "e982a298816049c9094762699799f238cfc8d7804cf5d72f6816ebd0e8aa414e" => :sierra
-    sha256 "ef937dbb8369b49a27f7a7817cd43d2daa38b650eaa71121f9114de23a1ee32f" => :x86_64_linux
+  livecheck do
+    url :stable
+    regex(/^gpsbabel[._-]v?(\d+(?:[._]\d+)+)$/i)
   end
 
+  bottle do
+    sha256                               big_sur:      "6d5c179704f46781438a06f02a6e83c0d9e5bfa3af0f15b738af0029a4cc56af"
+    sha256                               catalina:     "c71c3f2662684e9c03cac17d2f211b58ee07b3dc64ce74121922cca41d6b303c"
+    sha256                               mojave:       "0a8e9cb2650be7396304d7486975e4ef82dce6e1890f8f54cbbaa0e05ab99991"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "7cf3b559ffebc5a3f0e1add91a9ea550523654b14ded2112a929f781ac1f74c0"
+  end
+
+  depends_on "pkg-config" => :build
   depends_on "libusb"
-  depends_on "qt"
+  depends_on "qt@5"
+  depends_on "shapelib"
+
+  uses_from_macos "zlib"
+
+  # upstream https://github.com/gpsbabel/gpsbabel/pull/611 added support for configuration of third party libraries.
+  patch do
+    url "https://raw.githubusercontent.com/Homebrew/formula-patches/8122e505c149fdb42132a18a9749f7b8c9940b77/gpsbabel/1.7.0.patch"
+    sha256 "8f6572aa8dc3a7b4db028bf75d952d97f7b47de278a91c3cc86bebed608be86a"
+  end
 
   def install
     ENV.cxx11
-    system "./configure", "--disable-debug",
-                          "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    # force use of homebrew libusb-1.0 instead of included version.
+    # force use of homebrew shapelib instead of included version.
+    # force use of system zlib instead of included version.
+    rm_r "mac/libusb"
+    rm_r "shapelib"
+    rm_r "zlib"
+    shapelib = Formula["shapelib"]
+    system "qmake", "GPSBabel.pro",
+           "WITH_LIBUSB=pkgconfig",
+           "WITH_SHAPELIB=custom", "INCLUDEPATH+=#{shapelib.opt_include}", "LIBS+=-L#{shapelib.opt_lib} -lshp",
+           "WITH_ZLIB=pkgconfig"
+    system "make"
+    bin.install "gpsbabel"
   end
 
   test do

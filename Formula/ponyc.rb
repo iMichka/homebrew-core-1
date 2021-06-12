@@ -1,35 +1,34 @@
 class Ponyc < Formula
   desc "Object-oriented, actor-model, capabilities-secure programming language"
   homepage "https://www.ponylang.org/"
-  url "https://github.com/ponylang/ponyc/archive/0.33.1.tar.gz"
-  sha256 "1c7e90e0779f153527dbbbdcd1e409a6d4e1a6ec627000798c1b22f1fcd44d4c"
-  head "https://github.com/ponylang/ponyc.git"
+  url "https://github.com/ponylang/ponyc.git",
+      tag:      "0.41.0",
+      revision: "c0dda326eb1faf0ce67fb1bcdb40430e7a8a807a"
+  license "BSD-2-Clause"
 
   bottle do
-    cellar :any
-    sha256 "eebd0878d40d29f3577dd5e64f2378af43ee2ff6c0efd50b7e4556ed7b076c6f" => :catalina
-    sha256 "9b0c6de10107c3a893cb2988e7229fc45b72f834240631cc7e5d8357e31b1e99" => :mojave
-    sha256 "6439adc43264925cbf10937d095d8097adb3193b5d3dc06a0b15b367b940d313" => :high_sierra
+    sha256 cellar: :any_skip_relocation, big_sur:      "76e24d984ed62f6cda6e06825a44f16dd8aa983a6085fdc5fc183d55a11a8280"
+    sha256 cellar: :any_skip_relocation, catalina:     "093e481ba250758aa8f9805d930783411566cca560fa14b8f40294a7fb75d87f"
+    sha256 cellar: :any_skip_relocation, mojave:       "70e5f4c0d67ba04a7f0986bc2a13e6778bf45dbf78cc831b832cde9bfe1738f3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "3eb84530146e5c2fbf32c88e60c82b2a35577717f160a23ed39d6bdd2feb17b3"
   end
 
-  # https://github.com/ponylang/ponyc/issues/1274
-  # https://github.com/Homebrew/homebrew-core/issues/5346
-  pour_bottle? do
-    reason <<~EOS
-      The bottle requires Xcode/CLT 8.0 or later to work properly.
-    EOS
-    satisfy { !OS.mac? || DevelopmentTools.clang_build_version >= 800 }
-  end
+  depends_on "cmake" => :build
 
-  depends_on :macos => :yosemite if OS.mac?
-  depends_on "llvm@7"
-  depends_on "pcre2"
+  uses_from_macos "zlib"
 
   def install
     ENV.cxx11
-    ENV["LLVM_CONFIG"] = "#{Formula["llvm@7"].opt_bin}/llvm-config"
-    system "make", "install", "verbose=1", "config=release",
-           "ponydir=#{prefix}", "prefix="
+
+    unless OS.mac?
+      inreplace "CMakeLists.txt", "PONY_COMPILER=\"${CMAKE_C_COMPILER}\"", "PONY_COMPILER=\"/usr/bin/gcc\""
+    end
+
+    ENV["MAKEFLAGS"] = "build_flags=-j#{ENV.make_jobs}"
+    system "make", "libs"
+    system "make", "configure"
+    system "make", "build"
+    system "make", "install", "DESTDIR=#{prefix}"
   end
 
   test do

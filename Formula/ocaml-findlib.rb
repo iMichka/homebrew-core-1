@@ -1,31 +1,43 @@
 class OcamlFindlib < Formula
   desc "OCaml library manager"
   homepage "http://projects.camlcity.org/projects/findlib.html"
-  url "http://download.camlcity.org/download/findlib-1.8.1.tar.gz"
-  sha256 "8e85cfa57e8745715432df3116697c8f41cb24b5ec16d1d5acd25e0196d34303"
+  url "http://download.camlcity.org/download/findlib-1.9.1.tar.gz"
+  sha256 "2b42b8bd54488d64c4bf3cb7054b4b37bd30c1dc12bd431ea1e4d7ad8a980fe2"
+  license "MIT"
   revision 1
 
+  livecheck do
+    url "http://download.camlcity.org/download/"
+    regex(/href=.*?findlib[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    rebuild 1
-    sha256 "2a3c79c6edf1956bf90c7884e6ee6cdf09ccc55ca8786c5c788b66e158ad5e70" => :catalina
-    sha256 "cf2039ac10218c3ba103ae2755493607643a60d0b56c4328ce064e8c72d7f86d" => :mojave
-    sha256 "edd8dbf4b6366bd6c046a34747c8926bbc6e91b1b38fd50efaf3d13de9134ecb" => :high_sierra
-    sha256 "f55b61472fd6e93d4791db8273d9b51f919317abf4815521db8ae16dec085fb5" => :x86_64_linux
+    sha256 arm64_big_sur: "747fcd3b425c998c45b5f83aaa72bab0a06a584ee409284447824472058a737e"
+    sha256 big_sur:       "908202a20c99ce1e3021a2f415d876f59d8d65912df486d4085ca01b93b17e7a"
+    sha256 catalina:      "64e0d27b20e1b6ea55beda463d21701bb96688bd9dbda5b5e66095eddd25ef49"
+    sha256 mojave:        "e236f3f0d85b74fc8ced41f56cf5caae52d6ef5f542b26dc27563a1db1ecbccf"
+    sha256 x86_64_linux:  "b99b721df82fffcfc78cd48e6787b85df921d3f8906e57f416764f6c3b701e7c"
   end
 
   depends_on "ocaml"
-  depends_on "m4" => :build unless OS.mac?
+
+  uses_from_macos "m4" => :build
 
   def install
+    # Specify HOMEBREW_PREFIX here so those are the values baked into the compile,
+    # rather than the Cellar
     system "./configure", "-bindir", bin,
                           "-mandir", man,
-                          "-sitelib", lib/"ocaml",
+                          "-sitelib", HOMEBREW_PREFIX/"lib/ocaml",
                           "-config", etc/"findlib.conf",
-                          "-no-topfind"
+                          "-no-camlp4"
+
     system "make", "all"
     system "make", "opt"
-    inreplace "findlib.conf", prefix, HOMEBREW_PREFIX
-    system "make", "install"
+
+    # Override the above paths for the install step only
+    system "make", "install", "OCAML_SITELIB=#{lib}/ocaml",
+                              "OCAML_CORE_STDLIB=#{lib}/ocaml"
 
     # Avoid conflict with ocaml-num package
     rm_rf Dir[lib/"ocaml/num", lib/"ocaml/num-top"]

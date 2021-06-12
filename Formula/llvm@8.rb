@@ -5,39 +5,39 @@ class LlvmAT8 < Formula
   homepage "https://llvm.org/"
   url "https://github.com/llvm/llvm-project/releases/download/llvmorg-8.0.1/llvm-8.0.1.src.tar.xz"
   sha256 "44787a6d02f7140f145e2250d56c9f849334e11f9ae379827510ed72f12b75e7"
-  revision 1
+  license "NCSA"
+  revision OS.mac? ? 3 : 6
 
   bottle do
-    cellar :any
-    sha256 "0180eb097783edfefe0670935facf912b9044934cd2c8a087bdcc1229130a4ee" => :catalina
-    sha256 "92105eeabbeafff55733385ea82b8e1e5dae89e8a8050a0de31a8e30367164c6" => :mojave
-    sha256 "30efcbdc61cd36e3fbd03c7f2ff411be5638c8540de9d491ed77a30d5ab2e3c9" => :high_sierra
+    sha256 cellar: :any,                 catalina:     "ab099d84e5f0a58ea37172fd85753336d855fc25e9459ceff12ddc2dbb56ef71"
+    sha256 cellar: :any,                 mojave:       "ee795cbebce64f79bbcf7c42526093df7bd2e5e986a721197bca5cf6c822e87a"
+    sha256 cellar: :any,                 high_sierra:  "3f80b7119307b128b1e3ae8a2fea97a9878afb5a7436a7d35615b1e743bc7622"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "07ea4bc3f35de1c6c556c807a3fec03002c931be73bce52e9277e6588b42ee49"
   end
 
   # Clang cannot find system headers if Xcode CLT is not installed
-  pour_bottle? do
-    reason "The bottle needs the Xcode CLT to be installed."
-    satisfy { !OS.mac? || MacOS::CLT.installed? }
-  end
+  pour_bottle? only_if: :clt_installed
 
   keg_only :versioned_formula
 
   # https://llvm.org/docs/GettingStarted.html#requirement
   depends_on "cmake" => :build
-  depends_on :xcode => :build if OS.mac?
+  depends_on xcode: :build
+  depends_on arch: :x86_64
   depends_on "libffi"
   depends_on "swig"
 
   unless OS.mac?
-    depends_on "gcc" # needed for libstdc++
-    depends_on "glibc" => (Formula["glibc"].installed? || OS::Linux::Glibc.system_version < Formula["glibc"].version) ? :recommended : :optional
+    if Formula["glibc"].any_version_installed? || OS::Linux::Glibc.system_version < Formula["glibc"].version
+      depends_on "glibc"
+    end
     depends_on "binutils" # needed for gold and strip
     depends_on "libedit" # llvm requires <histedit.h>
     depends_on "libelf" # openmp requires <gelf.h>
     depends_on "ncurses"
     depends_on "libxml2"
     depends_on "zlib"
-    depends_on "python@2"
+    depends_on "python@3.8"
   end
 
   resource "clang" do
@@ -46,9 +46,17 @@ class LlvmAT8 < Formula
 
     unless OS.mac?
       patch do
-        url "https://gist.githubusercontent.com/iMichka/https://gist.githubusercontent.com/iMichka/a5d88f6bbe1f62fc43dc040282234452/raw/430616d646260e47360d9cba0901ac2876007350/clang8?full_index=1"
+        url "https://gist.githubusercontent.com/iMichka/a5d88f6bbe1f62fc43dc040282234452/raw/430616d646260e47360d9cba0901ac2876007350/clang8?full_index=1"
         sha256 "a7403c5a3ea2edddb7c1cb70274396f4c31d6b7c37aa1e4e4edaca3d1b78300f"
       end
+    end
+  end
+
+  unless OS.mac?
+    patch :p2 do
+      # Fixes MicrosoftDemangleNodes.h:14:17: error: found ':' in nested-name-specifier, expected '::'
+      url "https://github.com/llvm/llvm-project/commit/b288d90b39f4b905c02092a9bfcfd6d78f99b191.patch?full_index=1"
+      sha256 "2028d52e1a39326bb48fb7463132bbfe7fb4fa18f1adfeea9c3ed0320ed49564"
     end
   end
 
@@ -118,17 +126,6 @@ class LlvmAT8 < Formula
     # can almost be treated as an entirely different build from llvm.
     ENV.permit_arch_flags
 
-    unless OS.mac?
-      # see https://llvm.org/docs/HowToCrossCompileBuiltinsOnArm.html#the-cmake-try-compile-stage-fails
-      # Basically, the stage1 clang will try to locate a gcc toolchain and often
-      # get the default from /usr/local, which might contains an old version of
-      # gcc that can't build compiler-rt. This fixes the problem and, unlike
-      # setting the main project's cmake option -DGCC_INSTALL_PREFIX, avoid
-      # hardcoding the gcc path into the binary
-      inreplace "projects/compiler-rt/CMakeLists.txt", /(cmake_minimum_required.*\n)/,
-        "\\1add_compile_options(\"--gcc-toolchain=#{Formula["gcc"].opt_prefix}\")"
-    end
-
     args = %W[
       -DLIBOMP_ARCH=x86_64
       -DLINK_POLLY_INTO_TOOLS=ON
@@ -137,6 +134,7 @@ class LlvmAT8 < Formula
       -DLLVM_ENABLE_EH=ON
       -DLLVM_ENABLE_FFI=ON
       -DLLVM_ENABLE_RTTI=ON
+      -DCLANG_ANALYZER_ENABLE_Z3_SOLVER=OFF
       -DLLVM_INCLUDE_DOCS=OFF
       -DLLVM_INSTALL_UTILS=ON
       -DLLVM_OPTIMIZED_TABLEGEN=ON
@@ -179,8 +177,9 @@ class LlvmAT8 < Formula
     man1.install_symlink share/"clang/tools/scan-build/man/scan-build.1"
 
     # install llvm python bindings
-    (lib/"python2.7/site-packages").install buildpath/"bindings/python/llvm"
-    (lib/"python2.7/site-packages").install buildpath/"tools/clang/bindings/python/clang"
+    xz = OS.mac? ? "2.7": "3.8"
+    (lib/"python#{xz}/site-packages").install buildpath/"bindings/python/llvm"
+    (lib/"python#{xz}/site-packages").install buildpath/"tools/clang/bindings/python/clang"
 
     unless OS.mac?
       # Strip executables/libraries/object files to reduce their size
@@ -191,10 +190,11 @@ class LlvmAT8 < Formula
     end
   end
 
-  def caveats; <<~EOS
-    To use the bundled libc++ please add the following LDFLAGS:
-      LDFLAGS="-L#{opt_lib} -Wl,-rpath,#{opt_lib}"
-  EOS
+  def caveats
+    <<~EOS
+      To use the bundled libc++ please add the following LDFLAGS:
+        LDFLAGS="-L#{opt_lib} -Wl,-rpath,#{opt_lib}"
+    EOS
   end
 
   test do
@@ -217,6 +217,7 @@ class LlvmAT8 < Formula
 
     system "#{bin}/clang", "-L#{lib}", "-fopenmp", "-nobuiltininc",
                            "-I#{lib}/clang/#{clean_version}/include",
+                           *("-Wl,-rpath=#{lib}" unless OS.mac?),
                            "omptest.c", "-o", "omptest", *ENV["LDFLAGS"].split
     testresult = shell_output("./omptest")
 
@@ -321,6 +322,6 @@ class LlvmAT8 < Formula
       EOS
       assert_equal "int main() { printf(\"Hello world!\"); }\n",
         shell_output("#{bin}/clang-format -style=google clangformattest.c")
-    end # OS.mac?
+    end
   end
 end

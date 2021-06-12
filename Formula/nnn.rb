@@ -1,19 +1,22 @@
 class Nnn < Formula
   desc "Tiny, lightning fast, feature-packed file manager"
   homepage "https://github.com/jarun/nnn"
-  url "https://github.com/jarun/nnn/archive/v2.8.1.tar.gz"
-  sha256 "cadf9cf8038433aeeb50a777180ad4b309ac7d2fec81c7da177ddca515812f06"
+  url "https://github.com/jarun/nnn/archive/v4.1.1.tar.gz"
+  sha256 "f0e02668da6324c12c39db35fe5c26bd45f3e02e5684a351b8ce8a357419ceba"
+  license "BSD-2-Clause"
   head "https://github.com/jarun/nnn.git"
 
   bottle do
-    cellar :any
-    sha256 "ceaa1d0df4e726017c45a50c07cb463338aebedb7ef078aaf02df7a9ba559fba" => :catalina
-    sha256 "05fee70609df45e3f9ebc99df751bbe20eb373691caeb4d1e89c1d2c0c24812f" => :mojave
-    sha256 "b4700186efd6ab8984bd788100b7b5e78702a7ab2bea50cf1177499ba752c191" => :high_sierra
-    sha256 "5fee312a74f8ed70e1d0876010bcdae745ab65ac38d6d3dfed02b0c6b18fb97f" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "cb56c6154458ccdf3ae64561deceb4ed9bbcad6a4f3780ea3ced54c338e55208"
+    sha256 cellar: :any,                 big_sur:       "aa36cd7119f453030b9f22491161591d2829d84323b2c0b48a6943f43c696c1c"
+    sha256 cellar: :any,                 catalina:      "74b507cd2385f85cabaabb1f0bc552908266e6fe1b69053c38920ed173a8b86f"
+    sha256 cellar: :any,                 mojave:        "b9a20a6da7f9dcbaaa7605602df38df2d826d1118e01b9bdba40eccfa628900c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5ee55c27f8a66e1a8175cd3f2d544481e8727a5d4996df3d0f213bf1e76da0c4"
   end
 
+  depends_on "gnu-sed"
   depends_on "readline"
+
   uses_from_macos "ncurses"
 
   def install
@@ -25,16 +28,21 @@ class Nnn < Formula
   end
 
   test do
-    # Test fails on CI: Input/output error @ io_fread - /dev/pts/0
-    # Fixing it involves pty/ruby voodoo, which is not worth spending time on
-    return if ENV["CI"]
+    on_linux do
+      # Test fails on CI: Input/output error @ io_fread - /dev/pts/0
+      # Fixing it involves pty/ruby voodoo, which is not worth spending time on
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
 
     # Testing this curses app requires a pty
     require "pty"
 
-    PTY.spawn(bin/"nnn") do |r, w, _pid|
-      w.write "q"
-      assert_match testpath.realpath.to_s, r.read
+    (testpath/"testdir").mkdir
+    cd testpath/"testdir" do
+      PTY.spawn(bin/"nnn") do |r, w, _pid|
+        w.write "q"
+        assert_match "~/testdir", r.read
+      end
     end
   end
 end

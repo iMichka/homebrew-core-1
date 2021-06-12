@@ -1,40 +1,33 @@
 class GccAT49 < Formula
-  def osmajor
-    `uname -r`.chomp
-  end
-
-  desc "The GNU Compiler Collection"
+  desc "GNU Compiler Collection"
   homepage "https://gcc.gnu.org/"
   url "https://ftp.gnu.org/gnu/gcc/gcc-4.9.4/gcc-4.9.4.tar.bz2"
   mirror "https://ftpmirror.gnu.org/gcc/gcc-4.9.4/gcc-4.9.4.tar.bz2"
   sha256 "6c11d292cd01b294f9f84c9a59c230d80e9e4a47e5c6355f046bb36d4f358092"
-  revision 1
+  revision 2
 
-  # gcc is designed to be portable.
   bottle do
-    cellar :any
-    sha256 "0c4f2650325b060bf72beafd78dabab80973ee4ab330d4de16eb648b88225096" => :high_sierra
-    sha256 "01a231e69b3c3e10a9e6aa99b5cbb6077eb1a011660bbbf06871ee262b6f31e6" => :sierra
-    sha256 "1c407f31d58ab8e41230a83c6ffd1d77503c0c6528ccbc182f6888c23c5fb972" => :el_capitan
-    sha256 "7b96ca4423b15494935fc775503132602637fae4fd773c4fe1f773738afb1205" => :x86_64_linux
+    sha256 cellar: :any, high_sierra:  "cb153d98245bcbe4809dc19adf688f642285154b19fe907c7de3cb71652b0ec6"
+    sha256 cellar: :any, x86_64_linux: "9d6f97e68f4bf869afcdc773a5ddcc705e14bb6742e0f2932c5b2c3d4bdb5548"
   end
 
   # The bottles are built on systems with the CLT installed, and do not work
   # out of the box on Xcode-only systems due to an incorrect sysroot.
-  pour_bottle? do
-    reason "The bottle needs the Xcode CLT to be installed."
-    satisfy { !OS.mac? || MacOS::CLT.installed? }
-  end
+  pour_bottle? only_if: :clt_installed
 
-  depends_on :maximum_macos => [:high_sierra, :build]
+  # https://gcc.gnu.org/gcc-4.9/
+  deprecate! date: "2021-04-11", because: :deprecated_upstream
+
+  depends_on maximum_macos: [:high_sierra, :build]
+
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "binutils"
+  end
 
   # GCC bootstraps itself, so it is OK to have an incompatible C++ stdlib
   cxxstdlib_check :skip
-
-  unless OS.mac?
-    depends_on "binutils"
-    depends_on "zlib"
-  end
 
   resource "gmp" do
     url "https://ftp.gnu.org/gnu/gmp/gmp-4.3.2.tar.bz2"
@@ -67,7 +60,7 @@ class GccAT49 < Formula
   end
 
   resource "cloog" do
-    url "https://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.4.tar.gz"
+    url "http://www.bastoul.net/cloog/pages/download/count.php3?url=./cloog-0.18.4.tar.gz"
     mirror "https://mirrorservice.org/sites/archive.ubuntu.com/ubuntu/pool/main/c/cloog/cloog_0.18.4.orig.tar.gz"
     sha256 "325adf3710ce2229b7eeb9e84d3b539556d093ae860027185e7af8a8b00a750e"
   end
@@ -96,22 +89,12 @@ class GccAT49 < Formula
     # Build dependencies in-tree, to avoid having versioned formulas
     resources.each { |r| r.stage(buildpath/r.name) }
 
-    version_suffix = version.to_s.slice(/\d\.\d/)
+    version_suffix = version.major_minor.to_s
 
-    args = []
-    if OS.mac?
-      args += [
-        "--build=#{arch}-apple-darwin#{osmajor}",
-        "--with-system-zlib",
-        "--with-bugurl=https://github.com/Homebrew/homebrew-core/issues",
-      ]
-    else
-      args << "--with-bugurl=https://github.com/Homebrew/linuxbrew-core/issues"
+    # Change the default directory name for 64-bit libraries to `lib`
+    # http://www.linuxfromscratch.org/lfs/view/development/chapter06/gcc.html
+    inreplace "gcc/config/i386/t-linux64", "m64=../lib64", "m64=." unless OS.mac?
 
-      # Change the default directory name for 64-bit libraries to `lib`
-      # http://www.linuxfromscratch.org/lfs/view/development/chapter06/gcc.html
-      inreplace "gcc/config/i386/t-linux64", "m64=../lib64", "m64=."
-    end
     args = [
       "--prefix=#{prefix}",
       "--libdir=#{lib}/gcc/#{version_suffix}",
@@ -130,33 +113,35 @@ class GccAT49 < Formula
       # raise errors. But still a good idea to include.
       "--disable-werror",
       "--with-pkgversion=Homebrew GCC #{pkg_version} #{build.used_options*" "}".strip,
+      "--with-bugurl=#{tap.issues_url}",
       # Even when suffixes are appended, the info pages conflict when
       # install-info is run.
       "MAKEINFO=missing",
       "--disable-nls",
+      "--enable-multilib",
     ]
 
-    if OS.mac?
-      args << "--build=x86_64-apple-darwin#{osmajor}"
-      args << "--enable-multilib"
-    else
+    on_macos do
+      args << "--build=x86_64-apple-darwin#{OS.kernel_version}"
+      args << "--with-system-zlib"
+
+      # System headers may not be in /usr/include
+      sdk = MacOS.sdk_path_if_needed
+      if sdk
+        args << "--with-native-system-header-dir=/usr/include"
+        args << "--with-sysroot=#{sdk}"
+      end
+
+      # Ensure correct install names when linking against libgcc_s;
+      # see discussion in https://github.com/Homebrew/homebrew/pull/34303
+      inreplace "libgcc/config/t-slibgcc-darwin", "@shlib_slibdir@", "#{HOMEBREW_PREFIX}/lib/gcc/#{version_suffix}"
+    end
+
+    on_linux do
       args << "--disable-multilib"
     end
 
-    ENV["CPPFLAGS"] = "-I#{Formula["zlib"].include}" unless OS.mac?
-
-    # Ensure correct install names when linking against libgcc_s;
-    # see discussion in https://github.com/Homebrew/homebrew/pull/34303
-    inreplace "libgcc/config/t-slibgcc-darwin", "@shlib_slibdir@", "#{HOMEBREW_PREFIX}/lib/gcc/#{version_suffix}"
-
     mkdir "build" do
-      if OS.mac? && !MacOS::CLT.installed?
-        # For Xcode-only systems, we need to tell the sysroot path.
-        # "native-system-headers" will be appended
-        args << "--with-native-system-header-dir=/usr/include"
-        args << "--with-sysroot=#{MacOS.sdk_path}"
-      end
-
       system "../configure", *args
       system "make", "bootstrap"
 
@@ -190,17 +175,17 @@ class GccAT49 < Formula
   def post_install
     unless OS.mac?
       gcc = bin/"gcc-4.9"
-      libgcc = Pathname.new(Utils.popen_read(gcc, "-print-libgcc-file-name")).parent
+      libgcc = Pathname.new(Utils.safe_popen_read(gcc, "-print-libgcc-file-name")).parent
       raise "command failed: #{gcc} -print-libgcc-file-name" if $CHILD_STATUS.exitstatus.nonzero?
 
       glibc = Formula["glibc"]
       glibc_installed = glibc.any_version_installed?
 
       # Symlink crt1.o and friends where gcc can find it.
-      if glibc_installed
-        crtdir = glibc.opt_lib
+      crtdir = if glibc_installed
+        glibc.opt_lib
       else
-        crtdir = Pathname.new(Utils.popen_read("/usr/bin/cc", "-print-file-name=crti.o")).parent
+        Pathname.new(Utils.safe_popen_read("/usr/bin/cc", "-print-file-name=crti.o")).parent
       end
       ln_sf Dir[crtdir/"*crt?.o"], libgcc
 
@@ -217,14 +202,14 @@ class GccAT49 < Formula
 
       # Locate the native system header dirs if user uses system glibc
       unless glibc_installed
-        target = Utils.popen_read(gcc, "-print-multiarch").chomp
+        target = Utils.safe_popen_read(gcc, "-print-multiarch").chomp
         raise "command failed: #{gcc} -print-multiarch" if $CHILD_STATUS.exitstatus.nonzero?
 
         system_header_dirs += ["/usr/include/#{target}", "/usr/include"]
       end
 
       # Save a backup of the default specs file
-      specs_string = Utils.popen_read(gcc, "-dumpspecs")
+      specs_string = Utils.safe_popen_read(gcc, "-dumpspecs")
       raise "command failed: #{gcc} -dumpspecs" if $CHILD_STATUS.exitstatus.nonzero?
 
       specs_orig.write specs_string
@@ -268,7 +253,7 @@ class GccAT49 < Formula
         return 0;
       }
     EOS
-    system bin/"gcc-4.9", "-o", "hello-c", "hello-c.c"
+    system bin/"gcc-#{version.major_minor}", "-o", "hello-c", "hello-c.c"
     assert_equal "Hello, world!\n", `./hello-c`
   end
 end

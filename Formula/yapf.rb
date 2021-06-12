@@ -3,17 +3,19 @@ class Yapf < Formula
 
   desc "Formatter for python code"
   homepage "https://github.com/google/yapf"
-  url "https://files.pythonhosted.org/packages/8e/1e/730a64d83e1b6a64bb8efa5358fc8e9418e6c2d19862523dce22be1040ed/yapf-0.29.0.tar.gz"
-  sha256 "712e23c468506bf12cadd10169f852572ecc61b266258422d45aaf4ad7ef43de"
+  url "https://files.pythonhosted.org/packages/85/60/8532f7ca17cea13de00e80e2fe1e6bd59a9379856706a027536b19daf0d3/yapf-0.31.0.tar.gz"
+  sha256 "408fb9a2b254c302f49db83c59f9aa0b4b0fd0ec25be3a5c51181327922ff63d"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "3c8ed0da14d9c9deffe008f7de41ba3574df0b3dcff3477e988c9b58884184ab" => :catalina
-    sha256 "8ffbfe8a3b6b474dcae1822e64ccbca54fd344cc5b080f018bc51adb33956510" => :mojave
-    sha256 "326436e6bc974790bf36de06e7ea7070d3d0bcaf52b14e2067727c3e95ee47dc" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "47e90fbe675d07d273b421a8313d1321104ae9edb8287a16b4cf14faa4ca5cf7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f2961b0fc70a7c6606769d55ca60329902e9cd2d32b78d8551740870805cb232"
+    sha256 cellar: :any_skip_relocation, catalina:      "758d20404a5f18909269e0264cc8138e8d8a91af9200ace5c1bb3ded925dfedb"
+    sha256 cellar: :any_skip_relocation, mojave:        "0f417b3d8e112b8de9224583fb8fd0dd5fad955e167b2baae9c6d07a00733477"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "fa9cf0d2877dbdb1337afb85c45d9113c166e30c7ebfd0236aaa00b4ed9e0c6e"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
     virtualenv_install_with_resources

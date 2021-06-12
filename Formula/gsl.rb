@@ -1,17 +1,17 @@
 class Gsl < Formula
   desc "Numerical library for C and C++"
   homepage "https://www.gnu.org/software/gsl/"
-  url "https://ftp.gnu.org/gnu/gsl/gsl-2.6.tar.gz"
-  mirror "https://ftpmirror.gnu.org/gsl/gsl-2.6.tar.gz"
-  sha256 "b782339fc7a38fe17689cb39966c4d821236c28018b6593ddb6fd59ee40786a8"
+  url "https://ftp.gnu.org/gnu/gsl/gsl-2.7.tar.gz"
+  mirror "https://ftpmirror.gnu.org/gsl/gsl-2.7.tar.gz"
+  sha256 "efbbf3785da0e53038be7907500628b466152dbc3c173a87de1b5eba2e23602b"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "5972e8669b2560124278b43788a002e3ff22f024c761750a1a33b41d2002f292" => :catalina
-    sha256 "6c88a066c85f76c93a20f6e3256fb9022d6e7db828d184be5b42fd0b322ca7b8" => :mojave
-    sha256 "8213b1a73d038e499223ccae6d04afe6eb2d9455e327d9558351cf47a0431b84" => :high_sierra
-    sha256 "8515f26e5a06a99097e87dc9b88ee79787b95448ab67f09b449aee4b0d67bdba" => :sierra
-    sha256 "afe8e13b6a156ffa43fa58c9f3a9187d5c7f4a1d8eff8c92a7112ff13ffc536d" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "440a395f89375c90f383f84681dd5472463bee84319996c58fe58af0d75f5909"
+    sha256 cellar: :any,                 big_sur:       "ea2a8b743f1a4825c5f8991a0f7bc16e805b846c0c5c8f35995ca3a730d7ad3a"
+    sha256 cellar: :any,                 catalina:      "ed733561136f1dd07e3ce164a3c0e0d7857c98158349ca6481bee4bd71f422b7"
+    sha256 cellar: :any,                 mojave:        "6bc76e54e0a4db8d8993605bf7662f1076e46ade1ee6c59424a44248b0c72a87"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0b83d664557598a1bbf7bfdde1fd93ea17a5d199af45fef4a1cfeb0e3102a594"
   end
 
   def install

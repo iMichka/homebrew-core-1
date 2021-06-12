@@ -1,38 +1,32 @@
 class Hugo < Formula
   desc "Configurable static site generator"
   homepage "https://gohugo.io/"
-  url "https://github.com/gohugoio/hugo/archive/v0.61.0.tar.gz"
-  sha256 "adba2d279818bd99096f01fecbdfd12b58333f0a7bfca73b42ec6fbac3500387"
+  url "https://github.com/gohugoio/hugo/archive/v0.83.1.tar.gz"
+  sha256 "2abc273ffb79576c9347c80d443154db26be9ae15b6ae66f9b75056c3a285157"
+  license "Apache-2.0"
   head "https://github.com/gohugoio/hugo.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ffb3e8c81f9a1b76deea15d0578103f977d480e6d5df8cc4192c81de59dbe6ed" => :catalina
-    sha256 "b10b5de8ecb0f7fa89a7c64b267a15ac080fc963afb090950d3e27f9ff5936e8" => :mojave
-    sha256 "0c31ac21fd9a18e35c18c84644efa27e55eec372acc05175c65eed261de32f17" => :high_sierra
-    sha256 "4568f23805bc61f8ec7d485d14e1c6c41812d22a2305659be96cd67f845d0020" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f5997a1858e300787cd6e2e01ff8f87f0d3233f42af4becc040448ce06524d53"
+    sha256 cellar: :any_skip_relocation, big_sur:       "32ad322954e9c2962849495c88c88e461d21a0a7d3bfa3aa4892ee34f569bf81"
+    sha256 cellar: :any_skip_relocation, catalina:      "99078c665152420113fac08aaea7bdf2f8fe230696b724448bb9f2244cfdec55"
+    sha256 cellar: :any_skip_relocation, mojave:        "a45ae895351a549639b40bdbb2a630e8a11ffb68d78a0aa7577faedce4c011d4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "ab99dbb9bb2ac1df5d581666ab26ad66166810e7e9580feccee50d31383ace97"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = HOMEBREW_CACHE/"go_cache"
-    (buildpath/"src/github.com/gohugoio/hugo").install buildpath.children
+    system "go", "build", *std_go_args, "-tags", "extended"
 
-    cd "src/github.com/gohugoio/hugo" do
-      system "go", "build", "-o", bin/"hugo", "-tags", "extended", "main.go"
+    # Build bash completion
+    system bin/"hugo", "gen", "autocomplete", "--completionfile=hugo.sh"
+    bash_completion.install "hugo.sh"
 
-      # Build bash completion
-      system bin/"hugo", "gen", "autocomplete", "--completionfile=hugo.sh"
-      bash_completion.install "hugo.sh"
-
-      # Build man pages; target dir man/ is hardcoded :(
-      (Pathname.pwd/"man").mkpath
-      system bin/"hugo", "gen", "man"
-      man1.install Dir["man/*.1"]
-
-      prefix.install_metafiles
-    end
+    # Build man pages; target dir man/ is hardcoded :(
+    (Pathname.pwd/"man").mkpath
+    system bin/"hugo", "gen", "man"
+    man1.install Dir["man/*.1"]
   end
 
   test do

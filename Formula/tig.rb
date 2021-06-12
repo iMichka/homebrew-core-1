@@ -1,15 +1,16 @@
 class Tig < Formula
   desc "Text interface for Git repositories"
   homepage "https://jonas.github.io/tig/"
-  url "https://github.com/jonas/tig/releases/download/tig-2.5.0/tig-2.5.0.tar.gz"
-  sha256 "ff537c67af9201e7e7276ce8a0ff9961e9d9c6a8a78790f5817124bd7755aef4"
+  url "https://github.com/jonas/tig/releases/download/tig-2.5.4/tig-2.5.4.tar.gz"
+  sha256 "c48284d30287a6365f8a4750eb0b122e78689a1aef8ce1d2961b6843ac246aa7"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "03f5fc99e3763dc90dd4e2a3445fb9e4a65a2db790b8aa40c1d56cd08d1d5f6f" => :catalina
-    sha256 "5fbd4ddf058724d51f88221bb54f949dd79941d7654f63881c62bf9768a7e12e" => :mojave
-    sha256 "8c85a68d1ff0400649e18b47160152ea1220e72afa6217d916462ecc7053bf14" => :high_sierra
-    sha256 "59da4af7f43462c73fd4fbe10e5d4e71357996da96cefa0cdcffee6cf23440d7" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "ca3273a9bb53f6b060ce4ccbffaf82308d90d833a7120505a55f877b6f197592"
+    sha256 cellar: :any,                 big_sur:       "506b2d47105b97ba9d04f3b91a45e9a164dd409fc1fd58655bf3015bb1403e0b"
+    sha256 cellar: :any,                 catalina:      "5afa0c1a9dcb4d851f88db05b0f911e70014abb6d64b43d1b1e56f12452d233a"
+    sha256 cellar: :any,                 mojave:        "c2dff759957d7b62f5ab947e6637c428c9352c244faeb6f8e02918f8c9587771"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a71079791b2ff79c307250f00163c3320ba6c242f4115892fa490d78a71196f9"
   end
 
   head do
@@ -36,12 +37,13 @@ class Tig < Formula
     cp "#{bash_completion}/tig-completion.bash", zsh_completion
   end
 
-  def caveats; <<~EOS
-    A sample of the default configuration has been installed to:
-      #{opt_pkgshare}/examples/tigrc
-    to override the system-wide default configuration, copy the sample to:
-      #{etc}/tigrc
-  EOS
+  def caveats
+    <<~EOS
+      A sample of the default configuration has been installed to:
+        #{opt_pkgshare}/examples/tigrc
+      to override the system-wide default configuration, copy the sample to:
+        #{etc}/tigrc
+    EOS
   end
 
   test do

@@ -3,8 +3,7 @@ class Dockutil < Formula
   homepage "https://github.com/kcrawford/dockutil"
   url "https://github.com/kcrawford/dockutil/archive/2.0.5.tar.gz"
   sha256 "6dbbc1467caaab977bf4c9f2d106ceadfedd954b6a4848c54c925aff81159a65"
-
-  bottle :unneeded
+  license "Apache-2.0"
 
   depends_on :macos
 

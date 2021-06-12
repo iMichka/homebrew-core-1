@@ -1,30 +1,32 @@
 class Dar < Formula
   desc "Backup directory tree and files"
   homepage "http://dar.linux.free.fr/doc/index.html"
-  url "https://downloads.sourceforge.net/project/dar/dar/2.5.16/dar-2.5.16.tar.gz"
-  sha256 "e957c97101a17dc91dca00078457f225d2fa375d0db0ead7a64035378d4fc33b"
+  url "https://downloads.sourceforge.net/project/dar/dar/2.7.1/dar-2.7.1.tar.gz"
+  sha256 "76dade8adbeb817ffc78bf592c8200487ab5650234cf539539a9cbc5d346beef"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/dar[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "6d643ec441c9ed7da176da5ce56413c918b7cad23d5ae6cd995766698461aa26" => :catalina
-    sha256 "3009db4f526f3657c3008475df42b5e1759ad9964c513f541de3c3c05e971ffb" => :mojave
-    sha256 "b872b6741e38ea818e1836fd218733331219c15acfb84a638dc213eec8925f6e" => :high_sierra
-    sha256 "263659de5c6418cadae4d2bbe71c4b45c14d7d5e91ae1fa62a8e2c7e8b3a2fd5" => :sierra
+    sha256 cellar: :any, big_sur:  "89f145997e301eb51ed6fadbd3c0583113499204f56fdf9032b016c4020fa947"
+    sha256 cellar: :any, catalina: "af73f8c79627e84c8d36cb079dfd598d943278f0b73fd68b873f45872124409c"
+    sha256 cellar: :any, mojave:   "ef0298ac3f4143f7b15d3ca7a0e2e873d6ee0b28cb1d0066c9ff46e4fd2144a6"
   end
 
   depends_on "upx" => :build
   depends_on "libgcrypt"
   depends_on "lzo"
-  depends_on :macos => :el_capitan # needs thread-local storage
 
   def install
-    ENV.cxx11
+    # Need to set due to upstream issue: https://github.com/Edrusb/DAR/issues/29
+    ENV.append "CXXFLAGS", "-std=c++14"
 
     system "./configure", "--prefix=#{prefix}",
                           "--disable-build-html",
                           "--disable-dar-static",
-                          "--disable-debug",
                           "--disable-dependency-tracking",
                           "--disable-libxz-linking",
                           "--enable-mode=64"

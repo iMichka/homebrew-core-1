@@ -1,28 +1,35 @@
 class WireguardTools < Formula
   desc "Tools for the WireGuard secure network tunnel"
   homepage "https://www.wireguard.com/"
-  # Please only update version when the tools have been modified/updated,
-  # since the Linux module aspect isn't of utility for us.
-  url "https://git.zx2c4.com/WireGuard/snapshot/WireGuard-0.0.20191219.tar.xz"
-  sha256 "5aba6f0c38e97faa0b155623ba594bb0e4bd5e29deacd8d5ed8bda8d8283b0e7"
-  head "https://git.zx2c4.com/WireGuard", :using => :git
+  url "https://git.zx2c4.com/wireguard-tools/snapshot/wireguard-tools-1.0.20210424.tar.xz"
+  sha256 "b288b0c43871d919629d7e77846ef0b47f8eeaa9ebc9cedeee8233fc6cc376ad"
+  license "GPL-2.0-only"
+  head "https://git.zx2c4.com/wireguard-tools.git"
+
+  livecheck do
+    url :head
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a1b7da4446cf1660b0c29d3ed3cacf9db5c6fba70d174c718aae69d4d3cae5de" => :catalina
-    sha256 "64f13166f0bdc97d7685f26343bb25de53027d935e9ec750ce2b59c49033eda8" => :mojave
-    sha256 "37ffbc30f283c5d47e015b08be14f71b42402eafb2da38a08cca9119d3e89e8e" => :high_sierra
-    sha256 "bb09c77820909cc97ac3b9cd56f85bb7d302df1305dec82c4203c8fcc10ecc1d" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "30909b7220b43135eb3a0d37677ffc86245016b6c3f5d672dbffab01673172da"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1f153d66ddac6cbafa6877e29af6ae58b32abd63331c372f86fa72e5d0a6a0e9"
+    sha256 cellar: :any_skip_relocation, catalina:      "59c67c1becf7d8d52f666094c71404e4f1bd133747bfdad717145a14a1c2a04f"
+    sha256 cellar: :any_skip_relocation, mojave:        "99745e645ddbed286defa52eeb6862325a09be2aab48fa04b23dec6686513a1a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "26218d695ce15bded3d159663ad24db87da536b88740ad5066e33796f8e4afe5"
   end
 
   depends_on "bash"
   depends_on "wireguard-go"
-  depends_on "libmnl" unless OS.mac?
+
+  on_linux do
+    depends_on "libmnl"
+  end
 
   def install
     system "make", "BASHCOMPDIR=#{bash_completion}", "WITH_BASHCOMPLETION=yes", "WITH_WGQUICK=yes",
                    "WITH_SYSTEMDUNITS=no", "PREFIX=#{prefix}", "SYSCONFDIR=#{prefix}/etc",
-                   "-C", "src/tools", "install"
+                   "-C", "src", "install"
   end
 
   test do

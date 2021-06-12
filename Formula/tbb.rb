@@ -1,67 +1,104 @@
 class Tbb < Formula
   desc "Rich and complete approach to parallelism in C++"
-  homepage "https://www.threadingbuildingblocks.org/"
-  url "https://github.com/intel/tbb/archive/2019_U9.tar.gz"
-  version "2019_U9"
-  sha256 "15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe"
+  homepage "https://github.com/oneapi-src/oneTBB"
+  url "https://github.com/oneapi-src/oneTBB/archive/refs/tags/v2021.2.0.tar.gz"
+  sha256 "cee20b0a71d977416f3e3b4ec643ee4f38cedeb2a9ff015303431dd9d8d79854"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "9930012416851dbb157a1abce3a59f26c218619a017f99200bfbc2e370624933" => :catalina
-    sha256 "bec3f4a74f11597bd96a0c3c1fa42613520b24520df2d97aab1c88104262ea9f" => :mojave
-    sha256 "aa922d1192175b983a9c7ba84b5131afd5a7426775e52e4d64521f5f14e2dce9" => :high_sierra
-    sha256 "ae73b3e543e8a3ad8e53efe5a172944ea6254c21200767d69becba1736f74079" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "ba72825f50e15920519d42f3486448b3801b3c9de30dd0914d776032ffa42c04"
   end
 
   depends_on "cmake" => :build
   depends_on "swig" => :build
-  depends_on "python"
+  depends_on "python@3.9"
+
+  # Fix installation of Python components
+  # See https://github.com/oneapi-src/oneTBB/issues/343
+  patch :DATA
 
   def install
-    compiler = (ENV.compiler == :clang) ? "clang" : "gcc"
-    args = %W[tbb_build_prefix=BUILDPREFIX compiler=#{compiler}]
+    args = *std_cmake_args + %w[
+      -DTBB_TEST=OFF
+      -DTBB4PY_BUILD=ON
+    ]
 
-    # Fix /usr/bin/ld: cannot find -lirml by building rml
-    system "make", "rml", *args unless OS.mac?
-
-    system "make", *args
-    if OS.mac?
-      lib.install Dir["build/BUILDPREFIX_release/*.dylib"]
-    else
-      lib.install Dir["build/BUILDPREFIX_release/*.so*"]
+    mkdir "build" do
+      system "cmake", "..", *args
+      system "make"
+      system "make", "install"
     end
-
-    # Build and install static libraries
-    system "make", "tbb_build_prefix=BUILDPREFIX", "compiler=#{compiler}",
-                   "extra_inc=big_iron.inc"
-    lib.install Dir["build/BUILDPREFIX_release/*.a"]
-    include.install "include/tbb"
 
     cd "python" do
+      ENV.append_path "CMAKE_PREFIX_PATH", prefix.to_s
+      on_macos do
+        ENV["LDFLAGS"] = "-rpath #{opt_lib}"
+      end
+
       ENV["TBBROOT"] = prefix
-      system "python3", *Language::Python.setup_install_args(prefix)
+      system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(prefix)
     end
 
-    system "cmake", "-DINSTALL_DIR=lib/cmake/TBB",
-                    "-DSYSTEM_NAME=Darwin",
-                    "-DTBB_VERSION_FILE=#{include}/tbb/tbb_stddef.h",
-                    "-P", "cmake/tbb_config_installer.cmake"
-
-    (lib/"cmake"/"TBB").install Dir["lib/cmake/TBB/*.cmake"]
+    on_linux do
+      inreplace prefix/"rml/CMakeFiles/irml.dir/flags.make",
+                "#{HOMEBREW_LIBRARY}/Homebrew/shims/linux/super/g++-5",
+                "/usr/bin/c++"
+      inreplace prefix/"rml/CMakeFiles/irml.dir/build.make",
+                "#{HOMEBREW_LIBRARY}/Homebrew/shims/linux/super/g++-5",
+                "/usr/bin/c++"
+      inreplace prefix/"rml/CMakeFiles/irml.dir/link.txt",
+                "#{HOMEBREW_LIBRARY}/Homebrew/shims/linux/super/g++-5",
+                "/usr/bin/c++"
+    end
   end
 
   test do
-    (testpath/"test.cpp").write <<~EOS
-      #include <tbb/task_scheduler_init.h>
+    (testpath/"sum1-100.cpp").write <<~EOS
       #include <iostream>
+      #include <tbb/blocked_range.h>
+      #include <tbb/parallel_reduce.h>
 
       int main()
       {
-        std::cout << tbb::task_scheduler_init::default_num_threads();
+        auto total = tbb::parallel_reduce(
+          tbb::blocked_range<int>(0, 100),
+          0.0,
+          [&](tbb::blocked_range<int> r, int running_total)
+          {
+            for (int i=r.begin(); i < r.end(); ++i) {
+              running_total += i + 1;
+            }
+
+            return running_total;
+          }, std::plus<int>()
+        );
+
+        std::cout << total << std::endl;
         return 0;
       }
     EOS
-    system ENV.cxx, "test.cpp", "-L#{lib}", "-ltbb", "-o", "test"
-    system "./test"
+
+    system ENV.cxx, "sum1-100.cpp", "--std=c++14", "-L#{lib}", "-ltbb", "-o", "sum1-100"
+    assert_equal "5050", shell_output("./sum1-100").chomp
+
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import tbb"
   end
 end
+
+__END__
+diff --git a/python/CMakeLists.txt b/python/CMakeLists.txt
+index da4f4f93..6c95bcde 100644
+--- a/python/CMakeLists.txt
++++ b/python/CMakeLists.txt
+@@ -49,8 +49,8 @@ add_test(NAME python_test
+                  -DPYTHON_MODULE_BUILD_PATH=${PYTHON_BUILD_WORK_DIR}/build
+                  -P ${PROJECT_SOURCE_DIR}/cmake/python/test_launcher.cmake)
+
+-install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_BUILD_WORK_DIR}/build/lib/
+-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
++install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${PYTHON_BUILD_WORK_DIR}/
++        DESTINATION .
+         COMPONENT tbb4py)
+
+ if (UNIX AND NOT APPLE)

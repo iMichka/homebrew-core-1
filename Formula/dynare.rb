@@ -1,19 +1,24 @@
 class Dynare < Formula
   desc "Platform for economic models, particularly DSGE and OLG models"
   homepage "https://www.dynare.org/"
-  url "https://www.dynare.org/release/source/dynare-4.5.7.tar.xz"
-  sha256 "9224ec5279d79d55d91a01ed90022e484f66ce93d56ca6d52933163f538715d4"
-  revision 7
+  url "https://www.dynare.org/release/source/dynare-4.6.4.tar.xz"
+  sha256 "3c2e0069a3e5c23866130d5c73c3da840a38612baa2aa3d90f42e3d984abad80"
+  license "GPL-3.0-or-later"
+  revision 1
+
+  livecheck do
+    url "https://www.dynare.org/download/"
+    regex(/href=.*?dynare[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "1099b6c5697d797b8e0d9e6464e5cf31c625fbbe0fd1642ea10c05d4bb3f9bc0" => :catalina
-    sha256 "52558399745d3774b47395b96fa891408421f86db422fe6ea0cb33b287a47075" => :mojave
-    sha256 "0a743dfda6443744fed3aae2068746c73b8eb4a489107c105b8c98b8bb9942d8" => :high_sierra
+    sha256 cellar: :any, big_sur:  "a0770121a50b112cb0150b87d01ca88eabb3fa124def357e6e1e23286cd84d03"
+    sha256 cellar: :any, catalina: "896a6815d1108c078fbe7d2553b8b427bdc10d5d1f24ca1e9454b157be52c316"
+    sha256 cellar: :any, mojave:   "348711581bac6ec005d46668875e4087cccef16ed57af7165d32522d6b5b5ed7"
   end
 
   head do
-    url "https://github.com/DynareTeam/dynare.git"
+    url "https://git.dynare.org/Dynare/dynare.git"
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
@@ -24,7 +29,7 @@ class Dynare < Formula
   depends_on "boost" => :build
   depends_on "cweb" => :build
   depends_on "fftw"
-  depends_on "gcc" # for gfortran
+  depends_on "gcc"
   depends_on "gsl"
   depends_on "hdf5"
   depends_on "libmatio"
@@ -33,9 +38,19 @@ class Dynare < Formula
   depends_on "openblas"
   depends_on "suite-sparse"
 
+  resource "io" do
+    url "https://octave.sourceforge.io/download.php?package=io-2.6.3.tar.gz", using: :nounzip
+    sha256 "6bc63c6498d79cada01a6c4446f793536e0bb416ddec2a5201dd8d741d459e10"
+  end
+
   resource "slicot" do
     url "https://deb.debian.org/debian/pool/main/s/slicot/slicot_5.0+20101122.orig.tar.gz"
     sha256 "fa80f7c75dab6bfaca93c3b374c774fd87876f34fba969af9133eeaea5f39a3d"
+  end
+
+  resource "statistics" do
+    url "https://octave.sourceforge.io/download.php?package=statistics-1.4.2.tar.gz", using: :nounzip
+    sha256 "7976814f837508e70367548bfb0a6d30aa9e447d4e3a66914d069efb07876247"
   end
 
   def install
@@ -48,28 +63,58 @@ class Dynare < Formula
       system "make", "lib", "OPTS=-fPIC -fdefault-integer-8",
              "FORTRAN=gfortran", "LOADER=gfortran",
              "SLICOTLIB=../libslicot64_pic.a"
-      (buildpath/"slicot").install "libslicot_pic.a", "libslicot64_pic.a"
+      (buildpath/"slicot/lib").install "libslicot_pic.a", "libslicot64_pic.a"
     end
+
+    # GCC is the only compiler supported by upstream
+    # https://git.dynare.org/Dynare/dynare/-/blob/master/README.md#general-instructions
+    gcc = Formula["gcc"]
+    gcc_major_ver = gcc.any_installed_version.major
+    ENV["CC"] = Formula["gcc"].opt_bin/"gcc-#{gcc_major_ver}"
+    ENV["CXX"] = Formula["gcc"].opt_bin/"g++-#{gcc_major_ver}"
+    ENV.append "LDFLAGS", "-static-libgcc"
 
     system "autoreconf", "-fvi" if build.head?
     system "./configure", "--disable-debug",
                           "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}",
+                          "--disable-doc",
                           "--disable-matlab",
+                          "--with-boost=#{Formula["boost"].prefix}",
+                          "--with-gsl=#{Formula["gsl"].prefix}",
+                          "--with-matio=#{Formula["libmatio"].prefix}",
                           "--with-slicot=#{buildpath}/slicot"
-    system "make", "install"
+
+    # Octave hardcodes its paths which causes problems on GCC minor version bumps
+    flibs = "-L#{gcc.lib}/gcc/#{gcc_major_ver} -lgfortran -lquadmath -lm"
+    system "make", "install", "FLIBS=#{flibs}"
   end
 
-  def caveats; <<~EOS
-    To get started with Dynare, open Octave and type
-      addpath #{opt_lib}/dynare/matlab
-  EOS
+  def caveats
+    <<~EOS
+      To get started with Dynare, open Octave and type
+        addpath #{opt_lib}/dynare/matlab
+    EOS
   end
 
   test do
+    ENV.cxx11
+
+    statistics = resource("statistics")
+    io = resource("io")
+    testpath.install statistics, io
+
     cp lib/"dynare/examples/bkk.mod", testpath
-    system Formula["octave"].opt_bin/"octave", "--no-gui", "-H", "--path",
-           "#{lib}/dynare/matlab", "--eval", "dynare bkk.mod console"
+
+    (testpath/"dyn_test.m").write <<~EOS
+      pkg prefix #{testpath}/octave
+      pkg install io-#{io.version}.tar.gz
+      pkg install statistics-#{statistics.version}.tar.gz
+      dynare bkk.mod console
+    EOS
+
+    system Formula["octave"].opt_bin/"octave", "--no-gui",
+           "-H", "--path", "#{lib}/dynare/matlab", "dyn_test.m"
   end
 end

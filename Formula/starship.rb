@@ -1,22 +1,40 @@
 class Starship < Formula
-  desc "The cross-shell prompt for astronauts"
+  desc "Cross-shell prompt for astronauts"
   homepage "https://starship.rs"
-  url "https://github.com/starship/starship/archive/v0.32.1.tar.gz"
-  sha256 "f5c16becf2fbfb0a9a6d47ded655db2be2d8cb0b5e5f7899b8e23c5e2d356810"
+  url "https://github.com/starship/starship/archive/v0.54.0.tar.gz"
+  sha256 "0756926b48d4923fe36bcb5e0149bbe08375ed72c28f9221ad4daad4676b8d9f"
+  license "ISC"
   head "https://github.com/starship/starship.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b1a720c62ddc724ec1907541c883e19001f00ef3df3ee90636698f2e333573a6" => :catalina
-    sha256 "f4fd53fc452556ffc9fb31dc159948e3777912396c7d34a1797896b705351a3a" => :mojave
-    sha256 "8e0807cb1feb61d73c6519d44b95c4839d03d316d246b721a76d674130f97d76" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "31903635888839b61e44b2188f62537d3518f6a843eba736099c6893e1e218e7"
+    sha256 cellar: :any_skip_relocation, big_sur:       "067e82cacc903f629080dfba420ce399746687462ace76b2ff6647b817214b43"
+    sha256 cellar: :any_skip_relocation, catalina:      "925141ca99c499ac594ca573107137dfab155829993bb59e12baddcd95892508"
+    sha256 cellar: :any_skip_relocation, mojave:        "e1a2acdeaafb837ededbeed7aaee2e242fd2433985d6b3fb261858db4a64ad6f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a19adcc7d8db338b7cdea19387277437fe8cf214be28688e34c69a7bbb618872"
   end
 
   depends_on "rust" => :build
-  depends_on "zlib" unless OS.mac?
+  depends_on "openssl@1.1"
+
+  uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "pkg-config" => :build
+    depends_on "dbus"
+  end
 
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", "--features", "notify-rust", *std_cargo_args
+
+    bash_output = Utils.safe_popen_read("#{bin}/starship", "completions", "bash")
+    (bash_completion/"starship").write bash_output
+
+    zsh_output = Utils.safe_popen_read("#{bin}/starship", "completions", "zsh")
+    (zsh_completion/"_starship").write zsh_output
+
+    fish_output = Utils.safe_popen_read("#{bin}/starship", "completions", "fish")
+    (fish_completion/"starship.fish").write fish_output
   end
 
   test do

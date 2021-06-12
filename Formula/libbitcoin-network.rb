@@ -3,14 +3,14 @@ class LibbitcoinNetwork < Formula
   homepage "https://github.com/libbitcoin/libbitcoin-network"
   url "https://github.com/libbitcoin/libbitcoin-network/archive/v3.6.0.tar.gz"
   sha256 "68d36577d44f7319280c446a5327a072eb20749dfa859c0e1ac768304c9dd93a"
-  revision 1
+  license "AGPL-3.0"
+  revision 2
 
   bottle do
-    cellar :any
-    sha256 "7cfd1e7d27efaa5a097c5b9b3a7560504a9b25cb5b65b1d9111ac8312fe16656" => :catalina
-    sha256 "8e4f39b82eb02eaba960d02dd78783e70dbe190566e3b978d4000c95f3b211d8" => :mojave
-    sha256 "4f641ea3e82b0ec336172a3cfb87f4cc5750390f57fcd73fd15c85cbf6a5356f" => :high_sierra
-    sha256 "4619c4f9515111e430c671fd580fdf5c8547a75b82d1ea88ae6c2e250446c242" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "424e25564e199005eb3944f8e682ac6c07803833494b9b89df2175e93b7ba34b"
+    sha256 cellar: :any, big_sur:       "21053287aadad7716c0b0471778e8b88d542d8b8628e505f917ffd20f8ebe78c"
+    sha256 cellar: :any, catalina:      "6ab4e56e5f996fe7441564b5998b4bd7ef7350fb6cfc5dda22b0efd55d64ef80"
+    sha256 cellar: :any, mojave:        "3f856ae06429e04d02fafefd40ad3ec6732f0b644e126fc3f5f3d42ad92c7e2f"
   end
 
   depends_on "autoconf" => :build
@@ -20,16 +20,19 @@ class LibbitcoinNetwork < Formula
   depends_on "libbitcoin"
 
   def install
+    ENV.cxx11
     ENV.prepend_path "PKG_CONFIG_PATH", Formula["libbitcoin"].opt_libexec/"lib/pkgconfig"
 
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
   end
 
   test do
+    boost = Formula["boost"]
     (testpath/"test.cpp").write <<~EOS
       #include <bitcoin/network.hpp>
       int main() {
@@ -43,7 +46,7 @@ class LibbitcoinNetwork < Formula
     system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test",
                     "-L#{Formula["libbitcoin"].opt_lib}", "-lbitcoin",
                     "-L#{lib}", "-lbitcoin-network",
-                    "-L#{Formula["boost"].opt_lib}", "-lboost_system"
+                    "-L#{boost.opt_lib}", "-lboost_system"
     system "./test"
   end
 end

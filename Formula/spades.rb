@@ -1,34 +1,46 @@
 class Spades < Formula
+  include Language::Python::Shebang
+
   desc "De novo genome sequence assembly"
-  homepage "http://cab.spbu.ru/software/spades/"
-  url "http://cab.spbu.ru/files/release3.13.0/SPAdes-3.13.0.tar.gz"
-  mirror "https://github.com/ablab/spades/releases/download/v3.13.0/SPAdes-3.13.0.tar.gz"
-  sha256 "c63442248c4c712603979fa70503c2bff82354f005acda2abc42dd5598427040"
-  revision 1
+  homepage "https://cab.spbu.ru/software/spades/"
+  url "https://cab.spbu.ru/files/release3.15.2/SPAdes-3.15.2.tar.gz"
+  mirror "https://github.com/ablab/spades/releases/download/v3.15.2/SPAdes-3.15.2.tar.gz"
+  sha256 "e93b43951a814dc7bd6a246e1e863bbad6aac4bfe1928569402c131b2af99d0d"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url "https://cab.spbu.ru/files/?C=M&O=D"
+    regex(%r{href=.*?release(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "f79562a627e66647a7013f989e257f3ed33023daf7cbc9f836fecb0356766aa7" => :catalina
-    sha256 "6eff79211afd0a5f2a3194db28a630bfa53cec5b968dc810e65bbaefce55fae4" => :mojave
-    sha256 "ef7d029efa28d81c236a428f40c0780b074827b50e5618cc328b4cfffdc7e579" => :high_sierra
-    sha256 "8418d4226f398f2853500eb3fea5788d58b392202101934a4fba502f7c77efcd" => :sierra
-    sha256 "a198e95082ad7fa73c0e1ec501341d2924280802ff954db00834095a34739d81" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, big_sur:  "34af086650bb5899077627835d762cfefbf3eb91c455cd5b06366a66f79ce9f4"
+    sha256 cellar: :any_skip_relocation, catalina: "a8b73043b7c26aa1279b91345022ac31446498af30624562fc2d925097d84cc4"
+    sha256 cellar: :any_skip_relocation, mojave:   "a8afd9fcf696ec82d6faefb29b79751a930eabe8dbf19df053fb1c36a780d6bd"
   end
 
   depends_on "cmake" => :build
-  depends_on "gcc"
-  unless OS.mac?
-    depends_on "bzip2"
-    depends_on "python@2" => :test
+  depends_on "python@3.9"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
+  on_macos do
+    depends_on "libomp"
   end
 
-  fails_with :clang # no OpenMP support
+  on_linux do
+    depends_on "jemalloc"
+    depends_on "readline"
+  end
 
   def install
     mkdir "src/build" do
       system "cmake", "..", *std_cmake_args
       system "make", "install"
     end
+    bin.find { |f| rewrite_shebang detected_python_shebang, f }
   end
 
   test do

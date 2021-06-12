@@ -1,24 +1,34 @@
 class Bazel < Formula
   desc "Google's own build tool"
   homepage "https://bazel.build/"
-  url "https://github.com/bazelbuild/bazel/releases/download/2.0.0/bazel-2.0.0-dist.zip"
-  sha256 "724da3c656f68e787a86ebb9844773aa1c2e3a873cc39462a8f1b336153d6cbb"
+  url "https://github.com/bazelbuild/bazel/releases/download/4.1.0/bazel-4.1.0-dist.zip"
+  sha256 "f377d755c96a50f6bd2f423562598d822f43356783330a0b780ad442864d6eeb"
+  license "Apache-2.0"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "ad8b72428a6127b3417e90e26a4d0534cb0c65c22e158e958ddc1e9341a4f0bd" => :catalina
-    sha256 "424204a2aabeb6f6323bcf2909a64015137590c309e0e382ce053edfd9aeeac6" => :mojave
-    sha256 "f276a2424d4e6ed6ac5c65771f0370bec4382d8930c75e093703f65cf87803e8" => :high_sierra
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "python" => :build
-  depends_on :java => "1.8"
-  depends_on :macos => :yosemite if OS.mac?
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c823b4c4e41a2aa9b36c25ae8c4c2983cb06c29f1b8198974815c24edd19712c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "68ba1b9ef6eb74c9d64d4c71ecfef8008585deba136a86afa9ffa488c322646e"
+    sha256 cellar: :any_skip_relocation, catalina:      "37cb81e7d6d5b60b5866a5eb57fbff26fa2dc9e37accab99d862a298adea3204"
+    sha256 cellar: :any_skip_relocation, mojave:        "dbd4edf845b075e517442522bc2dd12f993d16d3b895f06dbf2024bd933754cf"
+  end
+
+  depends_on "python@3.9" => :build
+  depends_on "openjdk@11"
+
+  uses_from_macos "zip"
 
   def install
     ENV["EMBED_LABEL"] = "#{version}-homebrew"
     # Force Bazel ./compile.sh to put its temporary files in the buildpath
     ENV["BAZEL_WRKDIR"] = buildpath/"work"
+    # Force Bazel to use openjdk@11
+    ENV["JAVA_HOME"] = Formula["openjdk@11"].opt_libexec/"openjdk.jdk/Contents/Home"
+    ENV["EXTRA_BAZEL_ARGS"] = "--host_javabase=@local_jdk//:jdk"
 
     (buildpath/"sources").install buildpath.children
 
@@ -28,20 +38,16 @@ class Bazel < Formula
              "--output_user_root",
              buildpath/"output_user_root",
              "build",
-             "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-             "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-             "--host_javabase=@bazel_tools//tools/jdk:jdk",
-             "--javabase=@bazel_tools//tools/jdk:jdk",
              "scripts:bash_completion"
 
       bin.install "scripts/packages/bazel.sh" => "bazel"
+      ln_s libexec/"bin/bazel-real", bin/"bazel-#{version}"
       (libexec/"bin").install "output/bazel" => "bazel-real"
-      bin.env_script_all_files(libexec/"bin", Language::Java.java_home_env("1.8"))
+      bin.env_script_all_files(libexec/"bin",
+        JAVA_HOME: Formula["openjdk@11"].opt_libexec/"openjdk.jdk/Contents/Home")
 
       bash_completion.install "bazel-bin/scripts/bazel-complete.bash"
       zsh_completion.install "scripts/zsh_completion/_bazel"
-
-      prefix.install_metafiles
     end
   end
 
@@ -66,11 +72,20 @@ class Bazel < Formula
 
     system bin/"bazel",
            "build",
-           "--host_java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-           "--java_toolchain=@bazel_tools//tools/jdk:toolchain_hostjdk8",
-           "--host_javabase=@bazel_tools//tools/jdk:jdk",
-           "--javabase=@bazel_tools//tools/jdk:jdk",
            "//:bazel-test"
     assert_equal "Hi!\n", pipe_output("bazel-bin/bazel-test")
+
+    # Verify that `bazel` invokes Bazel's wrapper script, which delegates to
+    # project-specific `tools/bazel` if present. Invoking `bazel-VERSION`
+    # bypasses this behavior.
+    (testpath/"tools"/"bazel").write <<~EOS
+      #!/bin/bash
+      echo "stub-wrapper"
+      exit 1
+    EOS
+    (testpath/"tools/bazel").chmod 0755
+
+    assert_equal "stub-wrapper\n", shell_output("#{bin}/bazel --version", 1)
+    assert_equal "bazel #{version}-homebrew\n", shell_output("#{bin}/bazel-#{version} --version")
   end
 end

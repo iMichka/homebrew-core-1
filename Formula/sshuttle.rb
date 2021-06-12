@@ -3,21 +3,25 @@ class Sshuttle < Formula
 
   desc "Proxy server that works as a poor man's VPN"
   homepage "https://github.com/sshuttle/sshuttle"
-  url "https://github.com/sshuttle/sshuttle.git",
-      :tag      => "v0.78.5",
-      :revision => "752a95310198886515577463a4a7e36d7f218018"
+  url "https://files.pythonhosted.org/packages/e9/4b/51d6aaa900a6a13efb380b0a084a327c41aad28a267d4c1f074cb2e41baa/sshuttle-1.0.5.tar.gz"
+  sha256 "fd8c691aac2cb80933aae7f94d9d9e271a820efc5c48e73408f1a90da426a1bd"
+  license "LGPL-2.1-or-later"
   head "https://github.com/sshuttle/sshuttle.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "107aecff3f7504b0eab9d370aca884bc13f24df4ff6b55a2b8e4d8664ba985a2" => :catalina
-    sha256 "dff7259d647fd392e53de03660ece7be96452882938f387c199938f8054f4c2b" => :mojave
-    sha256 "28f3d7fc8858779cb6020908302fb185810d574e8023e935b8410d0660973d49" => :high_sierra
-    sha256 "04e8f60acb5131f58a0fbe66d7c8d847c4d423db3edb2671ff1319fc499a2c5f" => :sierra
-    sha256 "05999eb4b26f48b94a43d32e0835501ea9498b1b2cedf98ec46cc8a84b251fd0" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d567ae9a98102b13d91ee38945352677712db52539892713315ad0b1c5a3649a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c9e76a2c946a5093591707b85b66c8201b693af597f79534d14d2e6101e20cff"
+    sha256 cellar: :any_skip_relocation, catalina:      "b80986476eb84c3cded3910bb7ef5210407cadf6716b277e8d3341c9413be7a8"
+    sha256 cellar: :any_skip_relocation, mojave:        "5f3e98db1083312557436f54752aa0eb0d300dadb66a73cecb228b892578617c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "eb795ad75ee7ac83cb8e12a7638e4272184f582d521f1801744f9aa181dcddbd"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
+
+  resource "psutil" do
+    url "https://files.pythonhosted.org/packages/e1/b0/7276de53321c12981717490516b7e612364f2cb372ee8901bd4a66a000d7/psutil-5.8.0.tar.gz"
+    sha256 "0c9ccb99ab76025f2f0bbecf341d4656e9c1351db8cc8a03ccd62e318ab4b5c6"
+  end
 
   def install
     # Building the docs requires installing

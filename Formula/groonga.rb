@@ -1,14 +1,21 @@
 class Groonga < Formula
   desc "Fulltext search engine and column store"
-  homepage "http://groonga.org/"
-  url "https://packages.groonga.org/source/groonga/groonga-9.0.9.tar.gz"
-  sha256 "09767f0295b3321d8b41802c5a190ac3b0118f4b9106422754b448f4d801ae2b"
+  homepage "https://groonga.org/"
+  url "https://packages.groonga.org/source/groonga/groonga-11.0.3.tar.gz"
+  sha256 "a1895ce8f4812e8bcdb0458373a786a4323ce53e9b4c7801bf103f3d93f76905"
+  license "LGPL-2.1-or-later"
+
+  livecheck do
+    url :homepage
+    regex(%r{>v?(\d+(?:\.\d+)+)</a> is the latest release}i)
+  end
 
   bottle do
-    sha256 "7cc47428e69cc70693de3ffdf41e599500a2b78c9f6a3397e26c5d6eb886e096" => :catalina
-    sha256 "15904cb411f3f0dc1407d7eede5f49f0fd0e84f514ec6f6f460d5a3c99f042b2" => :mojave
-    sha256 "ea3e616ff592f84e63484289198c2d32977b67533409bb256c2339381f8fdf14" => :high_sierra
-    sha256 "b04ef2b64c283dad5ff285e36bf1d1bfdde0ac2edf1a1dc9f034698bb47afe04" => :x86_64_linux
+    sha256 arm64_big_sur: "f9a8c009007e218c3321a1f2cd45f92e69c4d5fb1816b47e87ee07b04ad7258a"
+    sha256 big_sur:       "5876afcfff64e32cc776edc9fea83156a1ecd8291ce8ab39abdb9c7bf054ebb8"
+    sha256 catalina:      "051eb330121cda09efd9ebadbb6abe163d91431687d2a5a1e23ab4267a84d1c9"
+    sha256 mojave:        "e1aad6d547a57bf2cc02c7645cfa120ef5256069d11326e9b4700ea8a62c37b3"
+    sha256 x86_64_linux:  "c426b2cded11a6f5c7352127d28795eb48bae41cabe94e5284d1a1714e87dfc5"
   end
 
   head do
@@ -24,6 +31,10 @@ class Groonga < Formula
   depends_on "msgpack"
   depends_on "openssl@1.1"
   depends_on "pcre"
+
+  on_linux do
+    depends_on "glib"
+  end
 
   link_overwrite "lib/groonga/plugins/normalizers/"
   link_overwrite "share/doc/groonga-normalizer-mysql/"
@@ -50,8 +61,10 @@ class Groonga < Formula
       system "./autogen.sh"
     end
 
-    system "./configure", *args
-    system "make", "install"
+    mkdir "builddir" do
+      system "../configure", *args
+      system "make", "install"
+    end
 
     resource("groonga-normalizer-mysql").stage do
       ENV.prepend_path "PATH", bin

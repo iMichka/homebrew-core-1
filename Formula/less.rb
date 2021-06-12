@@ -1,25 +1,36 @@
 class Less < Formula
   desc "Pager program similar to more"
-  homepage "http://www.greenwoodsoftware.com/less/index.html"
-  url "https://ftp.gnu.org/gnu/less/less-530.tar.gz"
-  mirror "https://ftpmirror.gnu.org/less/less-530.tar.gz"
-  sha256 "503f91ab0af4846f34f0444ab71c4b286123f0044a4964f1ae781486c617f2e2"
+  homepage "https://www.greenwoodsoftware.com/less/index.html"
+  url "https://www.greenwoodsoftware.com/less/less-581.2.tar.gz"
+  sha256 "ce34b47caf20a99740672bf560fc48d5d663c5e78e67bc254e616b9537d5d83b"
+  license "GPL-3.0-or-later"
   revision 1
 
-  bottle do
-    cellar :any
-    sha256 "e9c850a28846a39541fd76e5159071527e8db94258a809da968cf69e42277d48" => :catalina
-    sha256 "f005662a0d661c28540163078807f4b518a6e6a2e8c86a5a0a0993eb6c4c4ad5" => :mojave
-    sha256 "f9896f9b0e0fb82dcbafd312a93d05061a2aa6f451592b30ca833dbdfb2b38c0" => :high_sierra
-    sha256 "a123eef24eeb7839ed0b7a3b0d53d17402c72576554fecaad81743e550b49107" => :sierra
-    sha256 "27daed7eeff7366e60a0f662ef1b3b01b893e06525485c48946c8847dccbbc96" => :x86_64_linux
+  livecheck do
+    url :homepage
+    regex(/less[._-]v?(\d+(?:\.\d+)*).+?released.+?general use/i)
   end
 
-  depends_on "pcre"
-  uses_from_macos "ncurses"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "f23024af4d1356f53bb5878fbbb41bd5da0943db524e9317a5f1e90a3ae88af2"
+    sha256 cellar: :any,                 big_sur:       "3a13526e660b8d2b6725a48000be76f4d79e4178e516c137b807968e0faabdd8"
+    sha256 cellar: :any,                 catalina:      "e92c22994edb092737b72ea43911063ae2fdafe8b98692fbcadaced1f0b31f74"
+    sha256 cellar: :any,                 mojave:        "ac57fc123c84d43490749f55e7e6ed0605821fbbe62fc0d503c71c00f568137b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7bc638308519841b55b3d41e59c4f8503b2a22a6fcf3fce663d7d72e131a42d8"
+  end
+
+  head do
+    url "https://github.com/gwsw/less.git"
+    depends_on "autoconf" => :build
+    uses_from_macos "perl" => :build
+  end
+
+  depends_on "ncurses"
+  depends_on "pcre2"
 
   def install
-    system "./configure", "--prefix=#{prefix}", "--with-regex=pcre"
+    system "make", "-f", "Makefile.aut", "distfiles" if build.head?
+    system "./configure", "--prefix=#{prefix}", "--with-regex=pcre2"
     system "make", "install"
   end
 

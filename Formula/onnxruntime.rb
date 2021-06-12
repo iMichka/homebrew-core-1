@@ -2,23 +2,37 @@ class Onnxruntime < Formula
   desc "Cross-platform, high performance scoring engine for ML models"
   homepage "https://github.com/microsoft/onnxruntime"
   url "https://github.com/microsoft/onnxruntime.git",
-      :revision => "b783805f957c88f97b2b4398e2ace138fbdf831b"
-  version "1.0.0"
+      tag:      "v1.7.2",
+      revision: "5bc92dff16b0ddd5063b717fb8522ca2ad023cb0"
+  license "MIT"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "1d6f94a87818b90686f8de273d9498c053c96fb0563b4946b9d7334ae4a06446" => :catalina
-    sha256 "b0e197272aad07a88f86daf4907ed8799342cd317da7adb105832f2674ac176f" => :mojave
-    sha256 "a7328414d688e4d82f97d9fae55268c369db64cafd4c3a75203c616321441c17" => :high_sierra
-    sha256 "75cf85ad8b6f7fa4398cf6a708ba9bad1a6479e3b0e30707979e83242e55d034" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "30a3ce923c1fa618be19422dc681c58cc09cb6a6f68bd1975c2aecf79193e968"
+    sha256 cellar: :any,                 big_sur:       "2c3ac3e4dedae160f330c2bc9e20935e87782beca92dff0cb45fc4e3cea030f0"
+    sha256 cellar: :any,                 catalina:      "ee9e6022aa52a6b9b17c4d8369843fe14cc49a2623af62c66862f814d05e12d9"
+    sha256 cellar: :any,                 mojave:        "1065d75cd9a1aa4c05a7475f65cf67e3f71ed3e3494234f91e7e375f2bb60972"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6ef0ad0719adef27b19c4c65b931d2338bc8652dd18715ef81a8100540f77e1d"
   end
 
   depends_on "cmake" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
 
   def install
+    cmake_args = %W[
+      -Donnxruntime_RUN_ONNX_TESTS=OFF
+      -Donnxruntime_GENERATE_TEST_REPORTS=OFF
+      -DPYTHON_EXECUTABLE=#{Formula["python@3.9"].opt_bin}/python3
+      -Donnxruntime_BUILD_SHARED_LIB=ON
+      -Donnxruntime_BUILD_UNIT_TESTS=OFF
+    ]
+
     mkdir "build" do
-      system "cmake", "../cmake", "-Donnxruntime_BUILD_SHARED_LIB=ON", *std_cmake_args
+      system "cmake", "../cmake", *std_cmake_args, *cmake_args
       system "make", "install"
     end
   end

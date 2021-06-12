@@ -8,7 +8,13 @@ class Pow < Formula
 
   # Linux is not supported and the DNS handling rules only work on macOS
   # see https://github.com/basecamp/pow/wiki/FAQ#is-linux-supported
+  deprecate! date: "2021-04-21", because: :repo_archived
+
   depends_on :macos
+
+  # The related GitHub repository (basecamp/pow) was archived sometime between
+  # 2018-06-11 and 2019-04-10 (referencing Wayback Machine snapshots)
+
   depends_on "node"
 
   def install

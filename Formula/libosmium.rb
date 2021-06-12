@@ -1,24 +1,25 @@
 class Libosmium < Formula
   desc "Fast and flexible C++ library for working with OpenStreetMap data"
   homepage "https://osmcode.org/libosmium/"
-  url "https://github.com/osmcode/libosmium/archive/v2.15.4.tar.gz"
-  sha256 "402247f7764bc20c061fa7d9fad15fc85459b7ce4f420274de78c94d05ddf260"
+  url "https://github.com/osmcode/libosmium/archive/v2.17.0.tar.gz"
+  sha256 "4a7672d7caf4da3bc68619912b298462370c423c697871a0be6273c6686e10d6"
+  license "BSL-1.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5f28c305b9a1f40e5967de56a4a4dd02822e3edf4c08f78f30516e1c163244ce" => :catalina
-    sha256 "5f28c305b9a1f40e5967de56a4a4dd02822e3edf4c08f78f30516e1c163244ce" => :mojave
-    sha256 "5f28c305b9a1f40e5967de56a4a4dd02822e3edf4c08f78f30516e1c163244ce" => :high_sierra
-    sha256 "5ba86247b9becdbe318783a717b994f1d74e275b1cdd7fbd1440b6b040a8f942" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a670f374f814891e2db3d00de8a156d2d177cbce453435388fa180de343d1f27"
+    sha256 cellar: :any_skip_relocation, big_sur:       "71432c9f74dfe76886bbe1e89d128bf5fa80e2e1ef9d3ea15a18fc9d7a739f34"
+    sha256 cellar: :any_skip_relocation, catalina:      "71432c9f74dfe76886bbe1e89d128bf5fa80e2e1ef9d3ea15a18fc9d7a739f34"
+    sha256 cellar: :any_skip_relocation, mojave:        "3e4d4f6cc29087f12b21f8354c44b0088d7dea65064b9d705d95217ddc9ab248"
   end
 
   depends_on "boost" => :build
   depends_on "cmake" => :build
+
   uses_from_macos "expat"
 
   resource "protozero" do
-    url "https://github.com/mapbox/protozero/archive/v1.6.8.tar.gz"
-    sha256 "019a0f3789ad29d7e717cf2e0a7475b36dc180508867fb47e8c519885b431706"
+    url "https://github.com/mapbox/protozero/archive/v1.7.0.tar.gz"
+    sha256 "beffbdfab060854fd770178a8db9c028b5b6ee4a059a2fed82c46390a85f3f31"
   end
 
   def install
@@ -61,7 +62,7 @@ class Libosmium < Formula
       }
     EOS
 
-    system ENV.cxx, "-std=c++11", *("-stdlib=libc++" if OS.mac?), "-o", "libosmium_read", "test.cpp", "-lexpat", *("-pthread" unless OS.mac?)
+    system ENV.cxx, "-std=c++11", "-lexpat", "-o", "libosmium_read", "-pthread", "test.cpp"
     system "./libosmium_read", "test.osm"
   end
 end

@@ -2,18 +2,22 @@ class Libsvm < Formula
   desc "Library for support vector machines"
   homepage "https://www.csie.ntu.edu.tw/~cjlin/libsvm/"
 
-  # Upstream deletes old downloads, so we need to mirror it ourselves
-  url "https://www.csie.ntu.edu.tw/~cjlin/libsvm/libsvm-3.23.tar.gz"
-  mirror "https://dl.bintray.com/homebrew/mirror/libsvm-3.23.tar.gz"
-  sha256 "257aed630dc0a0163e12cb2a80aea9c7dc988e55f28d69c945a38b9433c0ea4a"
+  # TODO: Upstream deletes old downloads, so we need a mirror
+  url "https://www.csie.ntu.edu.tw/~cjlin/libsvm/libsvm-3.25.tar.gz"
+  sha256 "52350e8aa740b176e1d773e9dc08f1340218c37e01bec37ab90db0127e4bb5e5"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url :homepage
+    regex(/The current release \(Version v?(\d+(?:\.\d+)+)[, )]/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "c2c9525f4cdff0654a5a805dc60aa09880454f0fa5ab92eb1e4c0287cd738c96" => :catalina
-    sha256 "75d440e35a774490aea6cec6fd514779069d3ffa55febce89a3f1eb8bad45337" => :mojave
-    sha256 "661d867329c2851e84d02e78d2debc78357c9aa0d576223a1011b4d5533a7391" => :high_sierra
-    sha256 "e78ffd8fb5a4c430e206462619ef419cde99f48728d09baaf250dc1cbc121abc" => :sierra
-    sha256 "ab51e04e1c11a68ab5d77fa3ed63f54a6bbdf7a8f8b030201c0fa51cd85cd725" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "ae3fff4762882360a23280215cafdc93d3da1d598816d34cfb0e7b6a922180e3"
+    sha256 cellar: :any,                 big_sur:       "27481a34d2af64572b48b268c8e47d7700aab4ec9dc2978216c471d512a4cb81"
+    sha256 cellar: :any,                 catalina:      "ad8d34d17fdca6b25374eff11b5f2b1067d19894358b23c04b3b8ac0f82180b1"
+    sha256 cellar: :any,                 mojave:        "485eec232bd3cc0619494de50cac4ef4a5b65761d5d6a062c62e07d9a0007e31"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3c4178c8b908bb6bb455475dcad8018f399837460c77f26a8111d8dcd7eb7dbb"
   end
 
   def install

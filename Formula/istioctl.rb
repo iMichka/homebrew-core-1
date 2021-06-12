@@ -1,43 +1,54 @@
 class Istioctl < Formula
   desc "Istio configuration command-line utility"
-  homepage "https://github.com/istio/istio"
+  homepage "https://istio.io/"
   url "https://github.com/istio/istio.git",
-      :tag      => "1.4.0",
-      :revision => "c4def934e4f8d1feb42725da41ee0078cde8397f"
+      tag:      "1.10.1",
+      revision: "845b0465214d059411fc89c16d5e3786f5fd9b30"
+  license "Apache-2.0"
+  head "https://github.com/istio/istio.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "68dcc7f4e8fd509cc3093e8168ae688c4a3bf0dc65340bb56ee3036686d8309a" => :catalina
-    sha256 "68dcc7f4e8fd509cc3093e8168ae688c4a3bf0dc65340bb56ee3036686d8309a" => :mojave
-    sha256 "68dcc7f4e8fd509cc3093e8168ae688c4a3bf0dc65340bb56ee3036686d8309a" => :high_sierra
-    sha256 "3563def01eb38ce486d7a3bfb9fa5ad046f34b32663b1d64d0e951496f0b20c5" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "61efd0ee8af4f7caab646bbbff40e59fc1d2c3a85687f79475dd2cc67a2de06f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "8a6680c6a86b32ff47d4b550f40109637d107bbdcf47df09ad13d553cb775c94"
+    sha256 cellar: :any_skip_relocation, catalina:      "8a6680c6a86b32ff47d4b550f40109637d107bbdcf47df09ad13d553cb775c94"
+    sha256 cellar: :any_skip_relocation, mojave:        "8a6680c6a86b32ff47d4b550f40109637d107bbdcf47df09ad13d553cb775c94"
   end
 
   depends_on "go" => :build
+  depends_on "go-bindata" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
+    ENV["VERSION"] = version.to_s
     ENV["TAG"] = version.to_s
     ENV["ISTIO_VERSION"] = version.to_s
     ENV["HUB"] = "docker.io/istio"
+    ENV["BUILD_WITH_CONTAINER"] = "0"
 
-    srcpath = buildpath/"src/istio.io/istio"
-    if OS.mac?
-      outpath = buildpath/"out/darwin_amd64/release"
-    else
-      outpath = buildpath/"out/linux_amd64/release"
+    dirpath = nil
+    on_macos do
+      if Hardware::CPU.arm?
+        # Fix missing "amd64" for macOS ARM in istio/common/scripts/setup_env.sh
+        # Can remove when upstream adds logic to detect `$(uname -m) == "arm64"`
+        ENV["TARGET_ARCH"] = "arm64"
+
+        dirpath = "darwin_arm64"
+      else
+        dirpath = "darwin_amd64"
+      end
     end
-    srcpath.install buildpath.children
+    on_linux do
+      dirpath = "linux_amd64"
+    end
 
-    cd srcpath do
-      system "make", "istioctl"
-      prefix.install_metafiles
-      bin.install outpath/"istioctl"
+    system "make", "istioctl", "istioctl.completion"
+    cd "out/#{dirpath}" do
+      bin.install "istioctl"
+      bash_completion.install "release/istioctl.bash"
+      zsh_completion.install "release/_istioctl"
     end
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/istioctl version --remote=false")
+    assert_equal version.to_s, shell_output("#{bin}/istioctl version --remote=false").strip
   end
 end

@@ -1,65 +1,69 @@
 class Vice < Formula
   desc "Versatile Commodore Emulator"
-  homepage "https://vice-emu.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/vice-emu/releases/vice-3.3.tar.gz"
-  sha256 "1a55b38cc988165b077808c07c52a779d181270b28c14b5c9abf4e569137431d"
-  revision 3
+  homepage "https://sourceforge.net/projects/vice-emu/"
+  url "https://downloads.sourceforge.net/project/vice-emu/releases/vice-3.5.tar.gz"
+  sha256 "56b978faaeb8b2896032bd604d03c3501002187eef1ca58ceced40f11a65dc0e"
+  license "GPL-2.0-or-later"
+  revision 1
   head "https://svn.code.sf.net/p/vice-emu/code/trunk/vice"
 
-  bottle do
-    sha256 "ab60f8d6ed6e48190ae40464b449578141326e56006e422e46b85525f0876fec" => :catalina
-    sha256 "8774f17d04f9f3967886123347151705b1e53d0d3d55328ba553d60f1a73747b" => :mojave
-    sha256 "009af174f99daedad8b319cef9668f07d7c513fa8a859a687ef731a3e2a1abf7" => :high_sierra
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/vice[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
+  bottle do
+    sha256 big_sur:  "c07d71cebd01929ae44bb80611d761c10c5f8ae53b2ac8e855d2a77bb9ce2270"
+    sha256 catalina: "32421c80ed1f4fd835143587ec1d666941aadaefa2ea5facd2bbd2355cc078c4"
+    sha256 mojave:   "04964db736a6895edf14f3e0d1cd8dce585c18b56dd123f6376bb2743a1d9953"
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "dos2unix" => :build
   depends_on "pkg-config" => :build
   depends_on "texinfo" => :build
   depends_on "xa" => :build
   depends_on "yasm" => :build
-  depends_on "autoconf" if build.head?
-  depends_on "automake" if build.head?
+
+  depends_on "adwaita-icon-theme"
   depends_on "ffmpeg"
   depends_on "flac"
   depends_on "giflib"
-  depends_on "gtk+3" if build.head?
+  depends_on "glew"
+  depends_on "gtk+3"
   depends_on "jpeg"
   depends_on "lame"
-  depends_on "libnet"
   depends_on "libogg"
   depends_on "libpng"
+  depends_on "librsvg"
   depends_on "libvorbis"
-  depends_on "mpg123"
-  depends_on "portaudio"
-  depends_on "sdl2" unless build.head?
-  depends_on "xz"
 
   def install
-    configure_flags = [
-      "--prefix=#{prefix}",
-      "--disable-dependency-tracking",
-      "--disable-arch",
-      "--enable-external-ffmpeg",
+    configure_flags = %W[
+      --prefix=#{prefix}
+      --disable-dependency-tracking
+      --disable-arch
+      --disable-pdf-docs
+      --enable-native-gtk3ui
+      --enable-midi
+      --enable-lame
+      --enable-external-ffmpeg
+      --enable-ethernet
+      --enable-cpuhistory
+      --with-flac
+      --with-vorbis
+      --with-gif
+      --with-jpeg
+      --with-png
     ]
 
-    if build.head?
-      configure_flags << "--enable-native-gtk3ui"
-    else
-      configure_flags << "--disable-bundle"
-      configure_flags << "--enable-sdlui2"
-    end
-
-    system "./autogen.sh" if build.head?
+    system "./autogen.sh"
     system "./configure", *configure_flags
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    App bundles are no longer built for each emulator. The binaries are
-    available in #{HOMEBREW_PREFIX}/bin directly instead.
-  EOS
-  end
-
   test do
-    assert_match "Usage", shell_output("#{bin}/petcat -help", 1)
+    assert_match "cycle limit reached", shell_output("#{bin}/x64sc -console -limitcycles 1000000 -logfile -", 1)
   end
 end

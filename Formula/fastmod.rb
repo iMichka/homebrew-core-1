@@ -1,22 +1,22 @@
 class Fastmod < Formula
   desc "Fast partial replacement for the codemod tool"
   homepage "https://github.com/facebookincubator/fastmod"
-  url "https://github.com/facebookincubator/fastmod/archive/v0.2.6.tar.gz"
-  sha256 "b70f615e883cc6cc235b62ee15ec2ec7ef4b04618b42fb79d8ee807440f6cf3c"
+  url "https://github.com/facebookincubator/fastmod/archive/v0.4.2.tar.gz"
+  sha256 "5afb4c449aa7d1efe34e0540507fc1d1f40f7eba0861b2bb10409080faeffc4a"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "b8796ef40402ee2f3f1663186cf0c72a0b46e7870bdc38ed36b42797b1d8903e" => :catalina
-    sha256 "3e63d95fed7192044cb1140179d6b0565f69c7187e82efb541b157c91cd27186" => :mojave
-    sha256 "8047f087b7034a595a66daa17b6d5e7fb381ce8a50fe443747f5ce42714b323f" => :high_sierra
-    sha256 "cbfce8f08706e0529a581c335f417412d28f1856b59dc66ebd867b22d7290748" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "944418b3f91541220ab28960c152587749dc6cb56c18f099b40371c00765a01b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "09e462f4355d7dcac277c027280d87f5da45c07d97e20bb36cb1419e03e23137"
+    sha256 cellar: :any_skip_relocation, catalina:      "b775cece5ec1a8af87f117eb9946569632c95b878242ef94370ecda978bd3989"
+    sha256 cellar: :any_skip_relocation, mojave:        "48985e1b88574be11d01213776f125f4fbf45aaf4f4cdbf71c0341e1faf60a49"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0e0e97754e4782cdb0b51e9a67956b3cf58e5b4ea0735dfc292c5ae88c601220"
   end
 
   depends_on "rust" => :build
 
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
   end
 
   test do

@@ -1,19 +1,32 @@
 class Sdcc < Formula
   desc "ANSI C compiler for Intel 8051, Maxim 80DS390, and Zilog Z80"
   homepage "https://sdcc.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/sdcc/sdcc/3.9.0/sdcc-src-3.9.0.tar.bz2"
-  sha256 "94ecae73faf7f3feee307f89dfe3cef2d7866293c7909ea05b3b33c88d67c036"
+  url "https://downloads.sourceforge.net/project/sdcc/sdcc/4.1.0/sdcc-src-4.1.0.tar.bz2"
+  sha256 "81edf776d5a2dc61a4b5c3408929db7b25874d69c46e4a71b116be1322fd533f"
+  license all_of: ["GPL-2.0-only", "GPL-3.0-only", :public_domain, "Zlib"]
   head "https://svn.code.sf.net/p/sdcc/code/trunk/sdcc"
 
-  bottle do
-    sha256 "91714d5a605eeff62a35e63aac856be74e35016302fa13dab181bb5422ebe7aa" => :catalina
-    sha256 "a4cfec7484f490988b439426b05310c4ddcd155a16f6d95967b0265e62b82a6c" => :mojave
-    sha256 "79f6440540864bb4fdbe3a30619c3dec35e5daa9ae012c979882e9e95c27d088" => :high_sierra
-    sha256 "129e06c6cab2f160d8eb9da70030443d9ffb783bd346be52a05b1af4b95d22ba" => :sierra
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/sdcc-src[._-]v?(\d+(?:\.\d+)+)\.t}i)
   end
 
+  bottle do
+    sha256 arm64_big_sur: "204b16ac599b7a7c4f881f5689b47f3af4d09134b63686c716f42751e192c1ff"
+    sha256 big_sur:       "3b9371b349c03c7628b68b103f5f49fb7861c0662d9f092a9013f6441b43b2ed"
+    sha256 catalina:      "546c39fb908ac27107a59f8427848161e0573c36e17199acddd1e4b839f37c9f"
+    sha256 mojave:        "ed31251e97c22718ffd714b06561cba755cce2030d0213324fe986e1bf0b8137"
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
   depends_on "boost"
   depends_on "gputils"
+  depends_on "readline"
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+  uses_from_macos "texinfo" => :build
 
   def install
     system "./configure", "--prefix=#{prefix}"
@@ -23,6 +36,12 @@ class Sdcc < Formula
   end
 
   test do
-    system "#{bin}/sdcc", "-v"
+    (testpath/"test.c").write <<~EOS
+      int main() {
+        return 0;
+      }
+    EOS
+    system "#{bin}/sdcc", "-mz80", "#{testpath}/test.c"
+    assert_predicate testpath/"test.ihx", :exist?
   end
 end

@@ -1,30 +1,48 @@
-require "language/haskell"
-
 class Hadolint < Formula
-  include Language::Haskell::Cabal
-
   desc "Smarter Dockerfile linter to validate best practices"
   homepage "https://github.com/hadolint/hadolint"
-  url "https://github.com/hadolint/hadolint/archive/v1.17.2.tar.gz"
-  sha256 "9ab93b772b9d763ced02717bcf12ad4b060d535f6cdd59cb7b6a23aba61e453b"
+  url "https://github.com/hadolint/hadolint/archive/v2.4.1.tar.gz"
+  sha256 "dade1c9659471b3aff220f0a321e98c45e24584c7bd0d5d20bd95c64a1269bdd"
+  license "GPL-3.0-only"
 
   bottle do
-    sha256 "a14cc819871236cf5c238493e497cc101267224b3ce8d27578622c2bcc926f51" => :mojave
-    sha256 "bf080fe17e353dfabe80a060e3379d47fe935994a7a81c3872b0247b5158ee4a" => :high_sierra
-    sha256 "5494638c1b68a80e0832eede84bf70afe2ae14c30c80c202e90ca8de9c847009" => :sierra
-    sha256 "b3de7ad73f28a1bb87fa13e094bd1f562c0dd9b91418f373ecea5e7398efc775" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "83b735a443ef94215af0d3aa0987996c80da2c53a57b1934c1a802f3bb4df0df"
+    sha256 cellar: :any_skip_relocation, big_sur:       "070d291918f60f932cd52087aecda626b0022ea15c1e30f349466a06842ad16f"
+    sha256 cellar: :any_skip_relocation, catalina:      "e9ed3f5d51185405a85a23805e1c25c745207c2466c9d52b2acf12dc61f4443f"
+    sha256 cellar: :any_skip_relocation, mojave:        "aa89cf879b8d9e440dd22b2c37692f636ef8e3c0e9843e3b33084ebaa4fd48bd"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "022def7bd70eb46ae828424f34ce508edeaaaedccf4ce8e9cd16bf949d6847a0"
   end
 
-  depends_on "cabal-install" => :build
   depends_on "ghc" => :build
+  depends_on "haskell-stack" => :build
+  depends_on "llvm" => :build if Hardware::CPU.arm?
+
+  uses_from_macos "xz"
+
+  on_linux do
+    depends_on "gmp"
+  end
 
   def install
-    cabal_sandbox do
-      cabal_install "hpack"
-      system "./.cabal-sandbox/bin/hpack"
+    unless OS.mac?
+      gmp = Formula["gmp"]
+      ENV.prepend_path "LD_LIBRARY_PATH", gmp.lib
+      ENV.prepend_path "LIBRARY_PATH", gmp.lib
     end
 
-    install_cabal_package
+    # Let `stack` handle its own parallelization
+    jobs = ENV.make_jobs
+    ENV.deparallelize
+
+    ghc_args = [
+      "--system-ghc",
+      "--no-install-ghc",
+      "--skip-ghc-check",
+    ]
+
+    system "stack", "-j#{jobs}", "build", *ghc_args
+    system "stack", "-j#{jobs}", "--local-bin-path=#{bin}", "install", *ghc_args
   end
 
   test do

@@ -1,29 +1,40 @@
 class Cling < Formula
-  desc "The cling C++ interpreter"
+  desc "C++ interpreter"
   homepage "https://root.cern.ch/cling"
   url "https://github.com/root-project/cling.git",
-      :tag      => "v0.6",
-      :revision => "82ac7bf1870abbedb7fe44f8e34a429538f26a8d"
+      tag:      "v0.9",
+      revision: "f3768a4c43b0f3b23eccc6075fa178861a002a10"
+  license any_of: ["LGPL-2.1-only", "NCSA"]
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "9ab4ced2f1cda06858656f78b5ffb7fd1ab680d8b26680e353e71eb7b6c5601b" => :catalina
-    sha256 "e630699239fadc14a1d6b2a62474a9e6c21f187642af66f92df1a49d5e7c899c" => :mojave
-    sha256 "381326c7944d38195c9b8507db18aa35fa636dc8c08f876472db0d7577ce597b" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "82134eeea0ba90008355120b137908d828011e302b62ec97de10b152777d9651"
+    sha256 cellar: :any,                 big_sur:       "e894d9476bc9ed0edb1ca8d3ca1d9fa6cefc8fc50befc93f1d1c25d1f1bee721"
+    sha256 cellar: :any,                 catalina:      "fd178b38640189a9b096d9c98fe3b1dedc934a504ddc0d3dc1c6bbfea144f09f"
+    sha256 cellar: :any,                 mojave:        "5135fc901ba316ca0e02f5598af21cd42a264994111252964f239b2576c7829b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "1f7024525cbffb50c436a4cc62a0576938b5bda29c3c95b61d63ef54261bb0b2"
   end
 
   depends_on "cmake" => :build
 
+  uses_from_macos "libxml2"
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
   resource "clang" do
     url "http://root.cern.ch/git/clang.git",
-        :tag      => "cling-v0.6",
-        :revision => "02c41d5edd15232b0b25ec1d842403552c2aceb4"
+        tag:      "cling-v0.9",
+        revision: "b7fa7dcfd21cac3d67688be9bdc83a35778e53e1"
   end
 
   resource "llvm" do
     url "http://root.cern.ch/git/llvm.git",
-        :tag      => "cling-v0.6",
-        :revision => "e0b472e46eb5861570497c2b9efabf96f2d4a485"
+        tag:      "cling-v0.9",
+        revision: "85e42859fb6de405e303fc8d92e37ff2b652b4b5"
   end
 
   def install

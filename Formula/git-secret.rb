@@ -1,19 +1,20 @@
 class GitSecret < Formula
   desc "Bash-tool to store the private data inside a git repo"
-  homepage "https://sobolevn.github.io/git-secret/"
+  homepage "https://git-secret.io"
+  license "MIT"
   head "https://github.com/sobolevn/git-secret.git"
 
   stable do
-    url "https://github.com/sobolevn/git-secret/archive/v0.3.2.tar.gz"
-    sha256 "07b32b096e5ff5b4818096b1858c1f69df4684bb0f256e620514cf88f44ded85"
+    url "https://github.com/sobolevn/git-secret/archive/v0.4.0.tar.gz"
+    sha256 "ae17bfda88eb77e8f07c5f16d833792a3a14adc9c5d2bbc840f28538c62f08ba"
   end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "2fb53e4162baa1e614c3d73dbb24257604cf8b7864f73deeba21c784c6434193" => :catalina
-    sha256 "2fb53e4162baa1e614c3d73dbb24257604cf8b7864f73deeba21c784c6434193" => :mojave
-    sha256 "2fb53e4162baa1e614c3d73dbb24257604cf8b7864f73deeba21c784c6434193" => :high_sierra
-    sha256 "2576f845239fe032af7097c453f81acfe9c067b10bb645a6366fd9694c60cfab" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8b19c1a419d844931e68bc21b0097c2d9c17275f66de939cafe6a13df91dafb3"
+    sha256 cellar: :any_skip_relocation, big_sur:       "2bd6c524c359601a854696aa0b7fed558e6c5dc45791feced47f33e06103dafe"
+    sha256 cellar: :any_skip_relocation, catalina:      "2bd6c524c359601a854696aa0b7fed558e6c5dc45791feced47f33e06103dafe"
+    sha256 cellar: :any_skip_relocation, mojave:        "2bd6c524c359601a854696aa0b7fed558e6c5dc45791feced47f33e06103dafe"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8be47366babeccfc6d87dfdc305deb4bb287e7ed5cde997799a5dfa816c622a3"
   end
 
   depends_on "gawk"

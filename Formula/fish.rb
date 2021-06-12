@@ -1,39 +1,45 @@
 class Fish < Formula
   desc "User-friendly command-line shell for UNIX-like operating systems"
   homepage "https://fishshell.com"
-  url "https://github.com/fish-shell/fish-shell/releases/download/3.0.2/fish-3.0.2.tar.gz"
-  sha256 "14728ccc6b8e053d01526ebbd0822ca4eb0235e6487e832ec1d0d22f1395430e"
+  url "https://github.com/fish-shell/fish-shell/releases/download/3.2.2/fish-3.2.2.tar.xz"
+  sha256 "5944da1a8893d11b0828a4fd9136ee174549daffb3d0adfdd8917856fe6b4009"
+  license "GPL-2.0-only"
+  revision 1
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "895edf3ca5bf3e3774a3f625b7c765868862dc8524fb68e83ce288ae0dbffdd0" => :catalina
-    sha256 "0dda76c64b0e2b4f1bfe48b816346f54a3fd9531550439caadadc6a1641c6d6b" => :mojave
-    sha256 "aaa15fbea68f8414084124da4347aec31484a3ab6320daf5f1cd54e208bf32c1" => :high_sierra
-    sha256 "65eb56f5d3e5978051743e0e1a6616983f34922cad65cbe0964b671d9bf4437e" => :sierra
-    sha256 "8fc29cc02ed7bd7f253f686bf5a066761581b282ae0a01fcb2a0eabb389e378b" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "f43a181738a3c32a204606ca1795a80e5c1cf60c0944a2fc7ac7cfda5fd1696e"
+    sha256 cellar: :any,                 big_sur:       "81df0f00e919fbdd42ab36fbb13bc7c5eca27b6c3c085a525db6e3f18d03775d"
+    sha256 cellar: :any,                 catalina:      "2d6e8210d1ebfc5e06c0e73294df22adc6607bd5980d26e59ddeba9d3fca8d6b"
+    sha256 cellar: :any,                 mojave:        "862fac70a5d143b7ac017f9d6b13f899bd6944f41fde25e8e31de4c70393b387"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c596d7e22e227b8630f72ec2243bc28bf3218282f151910c3d2421e2d909f3b9"
   end
 
   head do
-    url "https://github.com/fish-shell/fish-shell.git", :shallow => false
+    url "https://github.com/fish-shell/fish-shell.git"
 
     depends_on "sphinx-doc" => :build
   end
 
   depends_on "cmake" => :build
+  # Apple ncurses (5.4) is 15+ years old and
+  # has poor support for modern terminals
+  depends_on "ncurses"
   depends_on "pcre2"
-  uses_from_macos "ncurses"
 
   def install
-    # In Homebrew's 'superenv' sed's path will be incompatible, so
-    # the correct path is passed into configure here.
     args = %W[
       -Dextra_functionsdir=#{HOMEBREW_PREFIX}/share/fish/vendor_functions.d
       -Dextra_completionsdir=#{HOMEBREW_PREFIX}/share/fish/vendor_completions.d
       -Dextra_confdir=#{HOMEBREW_PREFIX}/share/fish/vendor_conf.d
     ]
-    args << "-DSED=/usr/bin/sed" if OS.mac?
-    system "cmake", ".", *std_cmake_args, *args
-    system "make", "install"
+    system "cmake", "-S", ".", "-B", "build", *std_cmake_args, *args
+    system "cmake", "--build", "build"
+    system "cmake", "--install", "build"
   end
 
   def post_install

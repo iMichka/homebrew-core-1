@@ -1,38 +1,32 @@
 class Ccls < Formula
   desc "C/C++/ObjC language server"
   homepage "https://github.com/MaskRay/ccls"
-  url "https://github.com/MaskRay/ccls/archive/0.20190823.3.tar.gz"
-  sha256 "db4d048651f27759393baf7880d66b1eae69a48d65999cca01e6962f96839950"
+  url "https://github.com/MaskRay/ccls/archive/0.20210330.tar.gz"
+  sha256 "28c228f49dfc0f23cb5d581b7de35792648f32c39f4ca35f68ff8c9cb5ce56c2"
+  license "Apache-2.0"
+  revision OS.mac? ? 1 : 2
   head "https://github.com/MaskRay/ccls.git"
 
   bottle do
-    sha256 "6e30b69435dab3605ba91fe1fc72835e48aa0818fab5a048f7fd25f174625c30" => :catalina
-    sha256 "a419fecb5bf96d334e79eccd23ebf2aa479587f1599496934afa9c08d1679ec3" => :mojave
-    sha256 "eb47960da3d60d8ac4bc5982a407f2f1e12e873dcc91b26dd06f0d5fcfa46da8" => :high_sierra
-    sha256 "2fc227f892e2d0429ed4d70ee429ee1516e596e4dcd5fa950bea39b6ecb6ce43" => :x86_64_linux
+    sha256                               arm64_big_sur: "4b2edaf5fa08c9846ca7bc5cc20d36cbf6c6299af4df34527fbd511bbdebb5d7"
+    sha256                               big_sur:       "cde35a76dbcadb48c962ded6e8e42e232e2a9084d46f01671b4a372a71dcc6cc"
+    sha256                               catalina:      "86b111c8e74d39fb31558870c8b11b45625fab9573bbced33600319c53448530"
+    sha256                               mojave:        "f8c02843ad68842a00b2b1d7015f3e73577b2717eef55c5c614231f0a4b57212"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7b3e1a27b3d63ce0e6e29efd0e496de63aecde88d582b675dc567914b561b938"
   end
 
   depends_on "cmake" => :build
   depends_on "rapidjson" => :build
   depends_on "llvm"
-  depends_on :macos => :high_sierra # C++ 17 is required
+  depends_on macos: :high_sierra # C++ 17 is required
 
-  # C++17 is required
-  uses_from_macos "gcc@9"
-
-  fails_with :gcc => "4"
-  fails_with :gcc => "5"
-  fails_with :gcc => "6"
-  fails_with :gcc => "7" do
-    version "7.1"
+  on_linux do
+    depends_on "gcc"
   end
 
-  def install
-    # https://github.com/Homebrew/brew/issues/6070
-    unless OS.mac?
-      ENV.remove %w[LDFLAGS LIBRARY_PATH HOMEBREW_LIBRARY_PATHS], "#{HOMEBREW_PREFIX}/lib"
-    end
+  fails_with gcc: "5"
 
+  def install
     system "cmake", *std_cmake_args
     system "make", "install"
   end

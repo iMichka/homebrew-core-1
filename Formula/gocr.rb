@@ -3,14 +3,20 @@ class Gocr < Formula
   homepage "https://wasd.urz.uni-magdeburg.de/jschulen/ocr/"
   url "https://wasd.urz.uni-magdeburg.de/jschulen/ocr/gocr-0.52.tar.gz"
   sha256 "df906463105f5f4273becc2404570f187d4ea52bd5769d33a7a8661a747b8686"
+  revision 1
+
+  livecheck do
+    url "https://wasd.urz.uni-magdeburg.de/jschulen/ocr/download.html"
+    regex(%r{href=(?:["']?|.*?/)gocr[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "fac83eb0f14256afd06202061eece969cb5b9cd7dda66e4d20077dc823353bed" => :catalina
-    sha256 "f0af1bb6614e72f70b54eeacb2063aff9eea014965611828f2e13eb8677d636b" => :mojave
-    sha256 "8bcc15b6bef035a94d27a242f7cd40f6c71d4585a2b0c964f3e26aa800258f8a" => :high_sierra
-    sha256 "bf3b661399dd9450b81ed3c22536ebeec0931310daa57371904ee4e40f5b0413" => :sierra
-    sha256 "7c11bd4cc580f170cd96b3554f2af95026601477c233f1b11cc890bf76691972" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "a3639ecb89f70562106db696e43f8ccdbe770b812ba2cdc695637b5f8e8dba7f"
+    sha256 cellar: :any, big_sur:       "e2fecccba7638297e89075dd8a21bf64d124a9f4f341f2437411abadf90b1f33"
+    sha256 cellar: :any, catalina:      "d0408f223b941c6d81c0edd843ab5916475a4ea4b94892b548da6403e4c3af2a"
+    sha256 cellar: :any, mojave:        "d173d60e8d8f139b4e7e310b84d1bfc56e406eb026c51beba9d4b2facaac3ae1"
+    sha256 cellar: :any, high_sierra:   "2a5cfa5a815706b2ecb11658ad9132bba21de5304e4541118d8d061a5bb7779a"
+    sha256 cellar: :any, x86_64_linux:  "a272a1edb6c30560b8b4ed0ce44968f1d01c3f66615bce816c9f4ae598f25803"
   end
 
   depends_on "jpeg"

@@ -1,22 +1,20 @@
 class GitLfs < Formula
   desc "Git extension for versioning large files"
   homepage "https://github.com/git-lfs/git-lfs"
-  url "https://github.com/git-lfs/git-lfs/releases/download/v2.8.0/git-lfs-v2.8.0.tar.gz"
-  sha256 "3347bbe6055b38902e4ef65d0f0aa00b3f100b2ad67a43aee6f340e4eb731535"
+  url "https://github.com/git-lfs/git-lfs/releases/download/v2.13.3/git-lfs-v2.13.3.tar.gz"
+  sha256 "f8bd7a06e61e47417eb54c3a0db809ea864a9322629b5544b78661edab17b950"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1dfa249482bce6cdbfc46d6d34e88afd4fc7947dd98d4072b5c6c8909a31b03c" => :mojave
-    sha256 "1ea60ee3dffe2ce7af00768361dbd4b2783d2159b7b269960d8504b0ab05c3a6" => :high_sierra
-    sha256 "5f4a9d27c5d73aea0c8cb4ed403e15df4885d7aac44fec4d3fee1a82779c6a05" => :sierra
-    sha256 "8ea45405f13bca30f2e364681efc276933fd67e0488c2f4896c512f8b08535d9" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "af433100a9ba1c1b222d01bee070704eb74cdd75038b7c333a9ff6e8e335375c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "153252f96cb3d77c2980f18c5eab591f237b011f4426f1faf918ecdc51969a33"
+    sha256 cellar: :any_skip_relocation, catalina:      "c99996a1fbfee4c5d4d0ac3cd38d42d884224ab3f305566ed13309b6bc63b9b4"
+    sha256 cellar: :any_skip_relocation, mojave:        "69d6da76ac82d66f0cf36352f7c65af24918241241fbda5fe4ab74030094e597"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c3019b423ac060ef6c0a8d0f5a8a6fbeed7286eb60c9ee4dd0422e30a784f07d"
   end
 
   depends_on "go" => :build
-  uses_from_macos "ruby"
-
-  # System Ruby uses old TLS versions no longer supported by RubyGems.
-  depends_on "ruby" => :build if MacOS.version <= :sierra
+  depends_on "ruby" => :build
 
   def install
     ENV["GIT_LFS_SHA"] = ""
@@ -38,15 +36,16 @@ class GitLfs < Formula
     end
   end
 
-  def caveats; <<~EOS
-    Update your git config to finish installation:
+  def caveats
+    <<~EOS
+      Update your git config to finish installation:
 
-      # Update global git config
-      $ git lfs install
+        # Update global git config
+        $ git lfs install
 
-      # Update system git config
-      $ git lfs install --system
-  EOS
+        # Update system git config
+        $ git lfs install --system
+    EOS
   end
 
   test do

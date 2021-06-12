@@ -1,16 +1,16 @@
 class GsettingsDesktopSchemas < Formula
   desc "GSettings schemas for desktop components"
   homepage "https://download.gnome.org/sources/gsettings-desktop-schemas/"
-  url "https://download.gnome.org/sources/gsettings-desktop-schemas/3.34/gsettings-desktop-schemas-3.34.0.tar.xz"
-  sha256 "288b04260f7040b0e004a8d59c773cfb4e32df4f1b4a0f9d705c51afccc95ead"
+  url "https://download.gnome.org/sources/gsettings-desktop-schemas/40/gsettings-desktop-schemas-40.0.tar.xz"
+  sha256 "f1b83bf023c0261eacd0ed36066b76f4a520bbcb14bb69c402b7959257125685"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "25c76bffef3120c933377a4fb15c83e58e85725cddf5eb5a0b258543dca236b5" => :catalina
-    sha256 "b4ee2623616015199defc0693af6a1b5ca5e33db176057f0c45c831463e73dce" => :mojave
-    sha256 "b4ee2623616015199defc0693af6a1b5ca5e33db176057f0c45c831463e73dce" => :high_sierra
-    sha256 "6c01b5599386af810b7bac0b6c4b8f2bf985a4d649e8d98c674097052a570a8f" => :sierra
-    sha256 "d77650207e616a12f3fc30bc2de90215642aa8335514616673e8a29719ab6cec" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f98030c66d5023f9fd91a7700dff2372a9becd02514bd291139d56c32b2c06c1"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a7f5b4fc71c5dfdd9418823c6252872b6e6ecc7bab2e5828dcdcf7d484223178"
+    sha256 cellar: :any_skip_relocation, catalina:      "24379b6ab7c18f2d682d59ef7c8f94eaf67a41d0ed3156deb5f0f9bc99919cd4"
+    sha256 cellar: :any_skip_relocation, mojave:        "1350e64db550d9db2f48be5495f4da335b324b9b6c87ce4f073cf52cdbe3f790"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "55492f06fbcee241f240b180fb66aaaf27c2e22ed307f9c7ad03520e4ae4d162"
   end
 
   depends_on "gobject-introspection" => :build
@@ -18,16 +18,14 @@ class GsettingsDesktopSchemas < Formula
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "glib"
-  unless OS.mac?
-    depends_on "python@2"
-    depends_on "expat"
-  end
+
+  uses_from_macos "expat"
 
   def install
     ENV["DESTDIR"] = "/"
 
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
     end

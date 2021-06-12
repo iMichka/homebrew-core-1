@@ -1,32 +1,36 @@
 class NetSnmp < Formula
   desc "Implements SNMP v1, v2c, and v3, using IPv4 and IPv6"
   homepage "http://www.net-snmp.org/"
-  url "https://downloads.sourceforge.net/project/net-snmp/net-snmp/5.8/net-snmp-5.8.tar.gz"
-  sha256 "b2fc3500840ebe532734c4786b0da4ef0a5f67e51ef4c86b3345d697e4976adf"
-  revision 1
+  url "https://downloads.sourceforge.net/project/net-snmp/net-snmp/5.9.1/net-snmp-5.9.1.tar.gz"
+  sha256 "eb7fd4a44de6cddbffd9a92a85ad1309e5c1054fb9d5a7dd93079c8953f48c3f"
+  license "Net-SNMP"
+  head "https://github.com/net-snmp/net-snmp.git"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/net-snmp[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "365760ffedb84e252289adc26a17365b62de654b3cff95952b6eff2ff90df7db" => :catalina
-    sha256 "efd1bcbd0e99fc29571de33c64fd1494db705a114778800d8181a27424a24421" => :mojave
-    sha256 "f5774ae4c5cc7f5a7fe5eb9eaa60f35842af5f6c2c184444428cc2e412f040fb" => :high_sierra
-    sha256 "1b1ea4f4456b6fc36c501398852b2e9979791387f38993129382b75782176f97" => :sierra
-    sha256 "ed3478ed3ee7ea2bdd8d556da0be03a663edf16caf79ec5d167f360fd2217d86" => :x86_64_linux
+    sha256 arm64_big_sur: "78fa5061c6ba9240160cacfaa7b1c2f526d3a2dd8d3121ea4f6ba5bacced8a86"
+    sha256 big_sur:       "263ce5cfee921c1a75b0427e19cb15be78d6f65b2f2630d04ea4f5aac087f435"
+    sha256 catalina:      "7eaea9810b5847062284f67e1ac83a8f96739a3d9dec0428237717467aeec312"
+    sha256 mojave:        "8c57e53e0e45997e91c0071b9e7ee245d8610f935731b1ec6738b141274593eb"
+    sha256 x86_64_linux:  "177521069687eb0366887e0fedb1ebfec14a28d3dd139830cb8eca0664bfdebe"
   end
 
   keg_only :provided_by_macos
 
+  if Hardware::CPU.arm?
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "libtool" => :build
+  end
   depends_on "openssl@1.1"
 
   def install
-    # https://sourceforge.net/p/net-snmp/bugs/2504/
-    # I suspect upstream will fix this in the first post-Mojave release but
-    # if it's not fixed in that release this should be reported upstream.
-    (buildpath/"include/net-snmp/system/darwin18.h").write <<~EOS
-      #include <net-snmp/system/darwin17.h>
-    EOS
-    (buildpath/"include/net-snmp/system/darwin19.h").write <<~EOS
-      #include <net-snmp/system/darwin17.h>
-    EOS
+    # Workaround https://github.com/net-snmp/net-snmp/issues/226 in 5.9:
+    inreplace "agent/mibgroup/mibII/icmp.h", "darwin10", "darwin"
 
     args = %W[
       --disable-debugging
@@ -43,6 +47,7 @@ class NetSnmp < Formula
       --with-openssl=#{Formula["openssl@1.1"].opt_prefix}
     ]
 
+    system "autoreconf", "-fvi" if Hardware::CPU.arm?
     system "./configure", *args
     system "make"
     system "make", "install"

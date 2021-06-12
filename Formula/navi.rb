@@ -1,25 +1,31 @@
 class Navi < Formula
   desc "Interactive cheatsheet tool for the command-line"
   homepage "https://github.com/denisidoro/navi"
-  url "https://github.com/denisidoro/navi/archive/v0.17.0.tar.gz"
-  sha256 "6de54da35cd6491c8a516efa78f0c866abc6eb2d81347d7faf6b905aeb443c95"
+  url "https://github.com/denisidoro/navi/archive/v2.16.0.tar.gz"
+  sha256 "f4767e4ad833c16be556d690b2cac0c9bf0a3ddfc4b782a832f6f1f1c3add9c0"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9b632acac9a218b9240665efcbb65004cefc66f756a56b834896d36edb581538" => :catalina
-    sha256 "9b632acac9a218b9240665efcbb65004cefc66f756a56b834896d36edb581538" => :mojave
-    sha256 "9b632acac9a218b9240665efcbb65004cefc66f756a56b834896d36edb581538" => :high_sierra
-    sha256 "f86b082240770b26c53e8f44392d2c8b4aae854185c4801dab8dedb0f013c413" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "128391e2960a52d6dd7ae61910f2848193e147b632455ca29cd63f8879d68def"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a10e743963436737be4caab65832ebbc34494cd9a4a6cf7714bea2a56e4097a7"
+    sha256 cellar: :any_skip_relocation, catalina:      "9bbc1a4bdae98ace4c09fc5a5510539c72da9829b73def0a52f7fe53bb6d74eb"
+    sha256 cellar: :any_skip_relocation, mojave:        "450e9827aa1dd65ad20a1a2b5f0918b3de8c4ed4935f521f2856a00206e9346d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5640c21e52d2b0a2eed3a22067fb1db1272ec1bf0dcb06a0029b722575d2cbc7"
   end
 
+  depends_on "rust" => :build
   depends_on "fzf"
 
+  uses_from_macos "zlib"
+
   def install
-    libexec.install Dir["*"]
-    bin.write_exec_script(libexec/"navi")
+    system "cargo", "install", *std_cargo_args
   end
 
   test do
-    assert_equal version, shell_output("#{bin}/navi --version")
+    assert_match "navi " + version, shell_output("#{bin}/navi --version")
+    (testpath/"cheats/test.cheat").write "% test\n\n# foo\necho bar\n\n# lorem\necho ipsum\n"
+    assert_match "bar",
+        shell_output("export RUST_BACKTRACE=1; #{bin}/navi --path #{testpath}/cheats --query foo --best-match")
   end
 end

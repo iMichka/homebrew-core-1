@@ -1,27 +1,41 @@
 class Tepl < Formula
   desc "GNOME Text Editor Product Line"
   homepage "https://wiki.gnome.org/Projects/Tepl"
-  url "https://download.gnome.org/sources/tepl/4.2/tepl-4.2.1.tar.xz"
-  sha256 "f31ce335fa69061e5ab8653842c5d9c763641abbe323cc2374c273fc240d2b6e"
+  url "https://download.gnome.org/sources/tepl/6.00/tepl-6.00.0.tar.xz"
+  sha256 "a86397a895dca9c0de7a5ccb063bda8f7ef691cccb950ce2cfdee367903e7a63"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "86c7525cced9bbbb7d610b4234319c971adfa2956a40b30627d73d5a1f7d6abe" => :catalina
-    sha256 "f30d1359092aa7182961a00250f8b04f84efc5fbf9050382ab08a2b0e40e3079" => :mojave
-    sha256 "3a3eb85ed75ecc8c8b416d1eaab1c158201d4291854d182fd9ab9c1ed4a307aa" => :high_sierra
-    sha256 "53bdfb28261afeb2a3eb97eea9a0345e52e059f49ab9ff86c15c45fa93de7b00" => :x86_64_linux
+    sha256 arm64_big_sur: "ffb98f11bf159e2352d8ed7ca0bb4c62c48f4ba5781c7e2757a02ad5458fc1a0"
+    sha256 big_sur:       "b5c8dfff1540875f6bd03ec4a7e58ba68d5df65597e80eb7e469ce88c6bd4175"
+    sha256 catalina:      "0c2d2161a8f65a3728e479d26ba2dc736e163b7fe902ec59666d138bfc0de47e"
+    sha256 mojave:        "44b4a1c68e07df9275cb2275f6852e6b713e306f764833c620542a2cb741e565"
+    sha256 x86_64_linux:  "0f2659d20ab8e40d1021aec881f0e05627ec6147a1131b2b4aa330dccaf36efd"
   end
 
+  # See: https://gitlab.gnome.org/Archive/tepl
+  deprecate! date: "2021-05-25", because: :repo_archived
+
   depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "amtk"
   depends_on "gtksourceview4"
   depends_on "uchardet"
 
+  # Submitted upstream at https://gitlab.gnome.org/GNOME/tepl/-/merge_requests/8
+  patch do
+    url "https://gitlab.gnome.org/GNOME/tepl/-/commit/a8075b0685764d1243762e569fc636fa4673d244.diff"
+    sha256 "b5d646c194955b0c14bbb7604c96e237a82632dc548f66f2d0163595ef18ee88"
+  end
+
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do
@@ -68,7 +82,7 @@ class Tepl < Formula
       -I#{gtksourceview4.opt_include}/gtksourceview-4
       -I#{gtkx3.opt_include}/gtk-3.0
       -I#{harfbuzz.opt_include}/harfbuzz
-      -I#{include}/tepl-4
+      -I#{include}/tepl-#{version.major}
       -I#{libepoxy.opt_include}
       -I#{libpng.opt_include}/libpng16
       -I#{pango.opt_include}/pango-1.0
@@ -95,7 +109,7 @@ class Tepl < Formula
       -lgio-2.0
       -lglib-2.0
       -lgobject-2.0
-      -ltepl-4
+      -ltepl-6
       -l#{gtksourceviewlib}
       -lgtk-3
       -lpango-1.0

@@ -1,35 +1,56 @@
 class Bento4 < Formula
   desc "Full-featured MP4 format and MPEG DASH library and tools"
   homepage "https://www.bento4.com/"
-  url "https://github.com/axiomatic-systems/Bento4/archive/v1.5.1-628.tar.gz"
-  version "1.5.1-628"
-  sha256 "e6fce0b1015698ff2f4f99e81c516ec042b351de052c885da7f82aebda56b65a"
+  url "https://www.bok.net/Bento4/source/Bento4-SRC-1-6-0-637.zip"
+  version "1.6.0-637"
+  sha256 "ac6628aa46836994d52823a7dddc604d4f32b04c08bde73dcbe5a446a7715420"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "f982d297d2d65bb5e51c29602fea985f0abe399077b555f805920ebd821b583a" => :catalina
-    sha256 "70b14caee7dee4170ef309393e122f16ecb677943a3f2c9d1d40747764bea18d" => :mojave
-    sha256 "d1977eae032f7de54129952c0178bf183aa3909a89826333b185a36e43c780f0" => :high_sierra
-    sha256 "85ca3dbb13344503507d939edb90dfee89f3d8f342c1fadbb1494e983d9251cf" => :sierra
+  livecheck do
+    url "https://www.bok.net/Bento4/source/"
+    regex(/href=.*?Bento4-SRC[._-]v?(\d+(?:[.-]\d+)+)\.zip/i)
   end
 
-  depends_on :xcode => :build if OS.mac?
-  depends_on "python"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "fe8e42701b024238775a67bdbdcb25c212f2a083f1584cddc3cb7de6abba7814"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d08015d67e5e8ae84f6fc0e7fe51055cb1e2aa5834f31903573466cca45a6c97"
+    sha256 cellar: :any_skip_relocation, catalina:      "2efea32fecade412d22f6fd935b8cce2c551827b89525cabed6d6a4a2de75c31"
+    sha256 cellar: :any_skip_relocation, mojave:        "3263f0b113098ea8e9657b57b6bb6de2eba407239ca45b49c46004c1f2731e71"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "5a4aeeb90a41317022137325da9ca78acb8223a3af1ac019e135cbdb7972a251"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "114af11f657a42348cf6208ff73d67178ca0d9c7a447f153fa31b5e3475e9b28"
+  end
 
-  conflicts_with "gpac", :because => "both install `mp42ts` binaries"
-  conflicts_with "mp4v2",
-    :because => "both install `mp4extract` and `mp4info` binaries"
+  depends_on xcode: :build
+  depends_on "python@3.9"
+
+  on_linux do
+    depends_on "cmake" => :build
+  end
+
+  conflicts_with "gpac", because: "both install `mp42ts` binaries"
+  conflicts_with "mp4v2", because: "both install `mp4extract` and `mp4info` binaries"
 
   def install
-    cd "Build/Targets/universal-apple-macosx" do
-      xcodebuild "-target", "All", "-configuration", "Release", "SYMROOT=build"
-      programs = Dir["build/Release/*"].select do |f|
-        next if f.end_with? ".dylib"
-        next if f.end_with? "Test"
+    on_macos do
+      cd "Build/Targets/universal-apple-macosx" do
+        xcodebuild "-target", "All", "-configuration", "Release", "SYMROOT=build"
+        programs = Dir["build/Release/*"].select do |f|
+          next if f.end_with? ".dylib"
+          next if f.end_with? "Test"
 
-        File.file?(f) && File.executable?(f)
+          File.file?(f) && File.executable?(f)
+        end
+        bin.install programs
       end
-      bin.install programs
+    end
+    on_linux do
+      mkdir "cmakebuild" do
+        system "cmake", "..", *std_cmake_args
+        system "make"
+        programs = Dir["./*"].select do |f|
+          File.file?(f) && File.executable?(f)
+        end
+        bin.install programs
+      end
     end
 
     rm Dir["Source/Python/wrappers/*.bat"]

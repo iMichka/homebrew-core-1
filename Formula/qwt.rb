@@ -1,17 +1,20 @@
 class Qwt < Formula
   desc "Qt Widgets for Technical Applications"
   homepage "https://qwt.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/qwt/qwt/6.1.4/qwt-6.1.4.tar.bz2"
-  sha256 "1529215329e51fc562e0009505a838f427919a18b362afff441f035b2d9b5bd9"
+  url "https://downloads.sourceforge.net/project/qwt/qwt/6.1.6/qwt-6.1.6.tar.bz2"
+  sha256 "99460d31c115ee4117b0175d885f47c2c590d784206f09815dc058fbe5ede1f6"
+  license "LGPL-2.1-only" => { with: "Qwt-exception-1.0" }
+  revision 1
 
   bottle do
-    sha256 "7c6d650a357ff7131f9c079008f6f92ab698673a1b87f43c6617c1be8d9c8d1f" => :catalina
-    sha256 "bbc1c7842159419ae1946cec3dcaa4e4eb645c37ee63249a93ffab255b6eeb25" => :mojave
-    sha256 "290203526a7fb210f43d53301597908172abc107d8b3260b36b1b24f73805c9f" => :high_sierra
-    sha256 "5737738dca1f1c423c45d43440baa652fc87183d6fdffa960f3df9b6b7c40a83" => :sierra
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "3c43bf4bfdf534412bf735491933f74a769a932a5aa5259f853863a9ee4b87b6"
+    sha256 cellar: :any, big_sur:       "c24cda4af4d080edca1ece9479c7bd5ce65d4ec35ea6e09cd1e87cb4567a1ef6"
+    sha256 cellar: :any, catalina:      "3d1dc4affd8ad1e9ca3f691d54cdc4fb274d74cafbdd9d1ef185c1911a6c2faf"
+    sha256 cellar: :any, mojave:        "6d62005e546ead278510aa098a4e10cb31b0af8962caceee6a0e83edc7704f30"
   end
 
-  depends_on "qt"
+  depends_on "qt@5"
 
   # Update designer plugin linking back to qwt framework/lib after install
   # See: https://sourceforge.net/p/qwt/patches/45/
@@ -19,7 +22,7 @@ class Qwt < Formula
 
   def install
     inreplace "qwtconfig.pri" do |s|
-      s.gsub! /^\s*QWT_INSTALL_PREFIX\s*=(.*)$/, "QWT_INSTALL_PREFIX=#{prefix}"
+      s.gsub!(/^\s*QWT_INSTALL_PREFIX\s*=(.*)$/, "QWT_INSTALL_PREFIX=#{prefix}")
 
       # Install Qt plugin in `lib/qt/plugins/designer`, not `plugins/designer`.
       s.sub! %r{(= \$\$\{QWT_INSTALL_PREFIX\})/(plugins/designer)$},
@@ -27,13 +30,19 @@ class Qwt < Formula
     end
 
     args = ["-config", "release", "-spec"]
-    if ENV.compiler == :clang
-      args << "macx-clang"
-    elsif OS.mac?
-      args << "macx-g++"
+    spec = if ENV.compiler == :clang
+      "macx-clang"
+    else
+      "macx-g++"
     end
+    on_linux do
+      spec = "linux-g++"
+    end
+    spec << "-arm64" if Hardware::CPU.arm?
+    args << spec
 
-    system "qmake", *args
+    qt5 = Formula["qt@5"].opt_prefix
+    system "#{qt5}/bin/qmake", *args
     system "make"
     system "make", "install"
   end
@@ -46,13 +55,28 @@ class Qwt < Formula
         return (curve1 == NULL);
       }
     EOS
-    system ENV.cxx, "test.cpp", "-o", "out",
-      "-std=c++11",
-      "-framework", "qwt", "-framework", "QtCore",
-      "-F#{lib}", "-F#{Formula["qt"].opt_lib}",
-      "-I#{lib}/qwt.framework/Headers",
-      "-I#{Formula["qt"].opt_lib}/QtCore.framework/Versions/5/Headers",
-      "-I#{Formula["qt"].opt_lib}/QtGui.framework/Versions/5/Headers"
+    on_macos do
+      system ENV.cxx, "test.cpp", "-o", "out",
+        "-std=c++11",
+        "-framework", "qwt", "-framework", "QtCore",
+        "-F#{lib}", "-F#{Formula["qt@5"].opt_lib}",
+        "-I#{lib}/qwt.framework/Headers",
+        "-I#{Formula["qt@5"].opt_lib}/QtCore.framework/Versions/5/Headers",
+        "-I#{Formula["qt@5"].opt_lib}/QtGui.framework/Versions/5/Headers"
+    end
+    on_linux do
+      system ENV.cxx,
+        "-I#{Formula["qt@5"].opt_include}",
+        "-I#{Formula["qt@5"].opt_include}/QtCore",
+        "-I#{Formula["qt@5"].opt_include}/QtGui",
+        "test.cpp",
+        "-lqwt", "-lQt5Core", "-lQt5Gui",
+        "-L#{Formula["qt@5"].opt_lib}",
+        "-L#{Formula["qwt"].opt_lib}",
+        "-Wl,-rpath=#{Formula["qt@5"].opt_lib}",
+        "-Wl,-rpath=#{Formula["qwt"].opt_lib}",
+        "-o", "out", "-std=c++11", "-fPIC"
+    end
     system "./out"
   end
 end

@@ -1,71 +1,66 @@
 class ClangFormat < Formula
   desc "Formatting tools for C, C++, Obj-C, Java, JavaScript, TypeScript"
   homepage "https://clang.llvm.org/docs/ClangFormat.html"
-  version "2019-05-14"
+  # The LLVM Project is under the Apache License v2.0 with LLVM Exceptions
+  license "Apache-2.0"
+  version_scheme 1
+  head "https://github.com/llvm/llvm-project.git", branch: "main"
 
   stable do
-    depends_on "subversion" => :build
-    url "https://llvm.org/svn/llvm-project/llvm/tags/google/stable/2019-05-14/", :using => :svn
+    url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/llvm-12.0.0.src.tar.xz"
+    sha256 "49dc47c8697a1a0abd4ee51629a696d7bfe803662f2a7252a3b16fc75f3a8b50"
 
     resource "clang" do
-      url "https://llvm.org/svn/llvm-project/cfe/tags/google/stable/2019-05-14/", :using => :svn
+      url "https://github.com/llvm/llvm-project/releases/download/llvmorg-12.0.0/clang-12.0.0.src.tar.xz"
+      sha256 "e26e452e91d4542da3ebbf404f024d3e1cbf103f4cd110c26bf0a19621cca9ed"
     end
+  end
 
-    resource "libcxx" do
-      url "https://releases.llvm.org/9.0.0/libcxx-9.0.0.src.tar.xz"
-      sha256 "3c4162972b5d3204ba47ac384aa456855a17b5e97422723d4758251acf1ed28c"
-    end
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/llvmorg[._-]v?(\d+(?:\.\d+)+)}i)
   end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "811e557c5b540317ff532959f3b074d6b9763abfb58186f3a1cbeb10acfb3358" => :catalina
-    sha256 "beb4842dafb9092fe56ba4dc94030b581d3ae85ae914b2c2a37ae872c88dbd34" => :mojave
-    sha256 "dcea54b1734a2385a7275deb7b7fe9970cf06387d9051103476a0082614849f0" => :high_sierra
-    sha256 "d635100376001a700c7e810c67f04624ffdba78ba939cee446b8886a945bb829" => :x86_64_linux
-  end
-
-  head do
-    url "https://git.llvm.org/git/llvm.git"
-
-    resource "clang" do
-      url "https://git.llvm.org/git/clang.git"
-    end
-
-    resource "libcxx" do
-      url "https://git.llvm.org/git/libcxx.git"
-    end
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1f038a1af0ed7c0c316cca7a5b74c868eb011ea5c1106bd34d451c7d99b16ca4"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a919653359246062c53f2ce6a7a3fd822e71b1d65c4f75bd20a361bc7264b139"
+    sha256 cellar: :any_skip_relocation, catalina:      "e18818a9555c17fffdf416deb5e16526f4b7fb07ec684d5dda22b6b8b1fd7c4e"
+    sha256 cellar: :any_skip_relocation, mojave:        "2ce598eddb5655854cc4a0e88591ced06b0a2d5bab96497c0b7081f5a2b0dd74"
   end
 
   depends_on "cmake" => :build
   depends_on "ninja" => :build
   depends_on "subversion" => :build
-  unless OS.mac?
-    depends_on "bison" => :build
-    depends_on "gcc" # needed for libstdc++
-    depends_on "glibc" if Formula["glibc"].installed? || OS::Linux::Glibc.system_version < Formula["glibc"].version
-    depends_on "libedit" # llvm requires <histedit.h>
-    depends_on "ncurses"
-    depends_on "libxml2"
-    depends_on "zlib"
+
+  uses_from_macos "libxml2"
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
+  on_linux do
+    keg_only "it conflicts with llvm"
   end
 
   def install
-    (buildpath/"projects/libcxx").install resource("libcxx") if OS.mac?
-    (buildpath/"tools/clang").install resource("clang")
+    if build.head?
+      ln_s buildpath/"clang", buildpath/"llvm/tools/clang"
+    else
+      (buildpath/"tools/clang").install resource("clang")
+    end
 
-    mkdir "build" do
+    llvmpath = build.head? ? buildpath/"llvm" : buildpath
+
+    mkdir llvmpath/"build" do
       args = std_cmake_args
-      args << "-DCMAKE_OSX_SYSROOT=/" unless OS.mac? && MacOS::Xcode.installed?
-      args << "-DLLVM_ENABLE_LIBCXX=ON" if OS.mac?
-      args << "-DLLVM_ENABLE_LIBCXX=OFF" unless OS.mac?
+      args << "-DLLVM_EXTERNAL_PROJECTS=\"clang\""
       args << ".."
       system "cmake", "-G", "Ninja", *args
       system "ninja", "clang-format"
-      bin.install "bin/clang-format"
     end
-    bin.install "tools/clang/tools/clang-format/git-clang-format"
-    (share/"clang").install Dir["tools/clang/tools/clang-format/clang-format*"]
+
+    bin.install llvmpath/"build/bin/clang-format"
+    bin.install llvmpath/"tools/clang/tools/clang-format/git-clang-format"
+    (share/"clang").install Dir[llvmpath/"tools/clang/tools/clang-format/clang-format*"]
   end
 
   test do

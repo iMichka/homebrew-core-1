@@ -3,36 +3,39 @@
 # also updated by incrementing their revisions.
 #
 # Specific packages to pay attention to include:
-# - camlp4
-# - opam
+# - camlp5
+# - lablgtk
 #
 # Applications that really shouldn't break on a compiler update are:
-# - mldonkey
 # - coq
 # - coccinelle
 # - unison
 class Ocaml < Formula
   desc "General purpose programming language in the ML family"
   homepage "https://ocaml.org/"
-  url "https://caml.inria.fr/pub/distrib/ocaml-4.08/ocaml-4.08.1.tar.xz"
-  sha256 "cd4f180453ffd7cc6028bb18954b3d7c3f715af13157df2f7c68bdfa07655ea3"
-  head "https://github.com/ocaml/ocaml.git", :branch => "trunk"
+  url "https://caml.inria.fr/pub/distrib/ocaml-4.12/ocaml-4.12.0.tar.xz"
+  sha256 "39ee9db8dc1e3eb65473dd81a71fabab7cc253dbd7b85e9f9b5b28271319bec3"
+  license "LGPL-2.1-only" => { with: "OCaml-LGPL-linking-exception" }
+  head "https://github.com/ocaml/ocaml.git", branch: "trunk"
+
+  livecheck do
+    url "https://ocaml.org/releases/"
+    regex(/href=.*?v?(\d+(?:\.\d+)+)\.html/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "3303756d5e2e4ce953dcf4f07861713ee9a121adc13030bd82dd484a8509bf13" => :catalina
-    sha256 "32975ce17008941774b66953c57c8bff280276773ce4e39305b215d1ef487dae" => :mojave
-    sha256 "91a69eb4be51d6a3afdb3b4c36d607a1384f355e3f468de345f996b9cb732e3e" => :high_sierra
-    sha256 "c66d4a1ee91315cedccc507ac9a85229777ab13062666fb2aacaa44512feb9c6" => :sierra
-    sha256 "468ce0b0a593608377d3967c4b60bb6e065ba1280e4c83290b322c09ba052323" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "23d4a0ea99bad00b29387d05eef233fb1ce44a71e9031644f984850820f7b1fc"
+    sha256 cellar: :any,                 big_sur:       "98ee5c246e559e6d494ce7e2927a8a4c11ff3c47c26d7a2da19053ba97aa6158"
+    sha256 cellar: :any,                 catalina:      "f1f72000415627bc8ea540dffc7fd29c2d7ebc41c70e76b03a994c7e6e746284"
+    sha256 cellar: :any,                 mojave:        "9badb226c3d92ae196c9a2922c73075eaa45ee90f3c9b06180e29706e95f2f0b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "779e6f230c29dd6ef71ec70e83fea42168c097c720c0a4d4b1ae34ab6e58be74"
   end
 
   pour_bottle? do
     # The ocaml compilers embed prefix information in weird ways that the default
     # brew detection doesn't find, and so needs to be explicitly blacklisted.
-    default_prefix = OS.linux? ? "/home/linuxbrew/.linuxbrew" : "/usr/local"
-    reason "The bottle needs to be installed into #{default_prefix}."
-    satisfy { HOMEBREW_PREFIX.to_s == default_prefix }
+    reason "The bottle needs to be installed into #{Homebrew::DEFAULT_PREFIX}."
+    satisfy { HOMEBREW_PREFIX.to_s == Homebrew::DEFAULT_PREFIX }
   end
 
   def install
@@ -43,7 +46,6 @@ class Ocaml < Formula
       --prefix=#{HOMEBREW_PREFIX}
       --enable-debug-runtime
       --mandir=#{man}
-      --disable-graph-lib
     ]
     system "./configure", *args
     system "make", "world.opt"

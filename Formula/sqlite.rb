@@ -1,21 +1,28 @@
 class Sqlite < Formula
   desc "Command-line interface for SQLite"
   homepage "https://sqlite.org/"
-  url "https://sqlite.org/2019/sqlite-autoconf-3300100.tar.gz"
-  version "3.30.1"
-  sha256 "8c5a50db089bd2a1b08dbc5b00d2027602ca7ff238ba7658fabca454d4298e60"
+  url "https://sqlite.org/2021/sqlite-autoconf-3350500.tar.gz"
+  version "3.35.5"
+  sha256 "f52b72a5c319c3e516ed7a92e123139a6e87af08a2dc43d7757724f6132e6db0"
+  license "blessing"
 
-  bottle do
-    cellar :any
-    sha256 "38c39121f7634ec563bb201b483f66cf567dfe61e02624ffb06f620f11158ab1" => :catalina
-    sha256 "5e6fef2d754e0e4009d502c40ad1846ac46937886b5f3fe89378cb838626d95e" => :mojave
-    sha256 "5331999b520ce7e257a0e263ef0a6d0a1d3d40ce9a1d5759a10e0e21dcd001be" => :high_sierra
-    sha256 "954d7c6aac9b3e72c24b040c9e9e872e381aa8dae7ad6963c41e175487dfea1a" => :x86_64_linux
+  livecheck do
+    url "https://sqlite.org/news.html"
+    regex(%r{v?(\d+(?:\.\d+)+)</h3>}i)
   end
 
-  keg_only :provided_by_macos, "macOS provides an older sqlite3"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "85e058d256013feea4835f51d9054dd1b8eec435d66ed581c95d161b3152e3b0"
+    sha256 cellar: :any,                 big_sur:       "801e11dff40b2e7067b8e124d266f82050cbae434447d7fa1ad36888fd8ceec2"
+    sha256 cellar: :any,                 catalina:      "217e257590018c8e0b2e994f8f8c9fa548459f1532acecf0b229f9885bf0ce22"
+    sha256 cellar: :any,                 mojave:        "b25dc8abacbef73874c1ee995beff6a0612e2863523913ccb348eda918c3547e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9b1a4c7d1bcde097e2b645bd0c653290ac6202fad8cdb18420b867c465fa0a93"
+  end
+
+  keg_only :provided_by_macos
 
   depends_on "readline"
+
   uses_from_macos "zlib"
 
   def install

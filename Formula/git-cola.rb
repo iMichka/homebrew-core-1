@@ -1,27 +1,30 @@
 class GitCola < Formula
   desc "Highly caffeinated git GUI"
   homepage "https://git-cola.github.io/"
-  url "https://github.com/git-cola/git-cola/archive/v3.6.tar.gz"
-  sha256 "63369f519f81988c2d167ba2c59ad53644d3fac2b7be1e12d3f1df9b8fd91839"
+  url "https://github.com/git-cola/git-cola/archive/v3.9.tar.gz"
+  sha256 "66b62f479ad141322351d62aff76e4882719d08f8f29b35f97d30f355391a54e"
+  license "GPL-2.0-or-later"
+  revision 1
   head "https://github.com/git-cola/git-cola.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0d7670e205435be7fa9e08a6d28c15b5df1b868de01371fa1898f3f10b0acc3c" => :catalina
-    sha256 "0d7670e205435be7fa9e08a6d28c15b5df1b868de01371fa1898f3f10b0acc3c" => :mojave
-    sha256 "0d7670e205435be7fa9e08a6d28c15b5df1b868de01371fa1898f3f10b0acc3c" => :high_sierra
-    sha256 "e8c896a2bce0d69faf543d7663ff4c7d01352e994868199e45154a107b2056d2" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "b9a2de2f11aa72f0c4010a89c0118974cca4aed743bd8809cac81d6839a35bb2"
+    sha256 cellar: :any_skip_relocation, big_sur:       "54c0806c423ffadb4bf4e017d8e7b657f0636fd16055e174bdf98881ccbb0ed0"
+    sha256 cellar: :any_skip_relocation, catalina:      "8ba8892158a9e2ceef9f278b4c7a789a2ee26bfffce97c56863d287a5b56d071"
+    sha256 cellar: :any_skip_relocation, mojave:        "ad020b9751ad02ff662b94c1df5bb18a496ec77c46957d6ec200633b45bf2959"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "24b91e748522ea9e2d47156666a9b2d68f8d3c5aa46735026700cf1b8f49b617"
   end
 
   depends_on "sphinx-doc" => :build
-  depends_on "pyqt"
-  depends_on "python"
-  depends_on "rsync" unless OS.mac?
+  depends_on "pyqt@5"
+  depends_on "python@3.9"
+
+  uses_from_macos "rsync"
 
   def install
     ENV.delete("PYTHONPATH")
-    system "make", "PYTHON=python3", "prefix=#{prefix}", "install"
-    system "make", "install-doc", "PYTHON=python3", "prefix=#{prefix}",
+    system "make", "PYTHON=#{Formula["python@3.9"].opt_bin}/python3", "prefix=#{prefix}", "install"
+    system "make", "install-doc", "PYTHON=#{Formula["python@3.9"].opt_bin}/python3}", "prefix=#{prefix}",
            "SPHINXBUILD=#{Formula["sphinx-doc"].opt_bin}/sphinx-build"
   end
 

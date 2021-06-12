@@ -1,32 +1,35 @@
 class Exiv2 < Formula
   desc "EXIF and IPTC metadata manipulation library and tools"
   homepage "https://www.exiv2.org/"
-  url "https://www.exiv2.org/builds/exiv2-0.27.2-Source.tar.gz"
-  sha256 "2652f56b912711327baff6dc0c90960818211cf7ab79bb5e1eb59320b78d153f"
+  url "https://www.exiv2.org/builds/exiv2-0.27.3-Source.tar.gz"
+  sha256 "a79f5613812aa21755d578a297874fb59a85101e793edc64ec2c6bd994e3e778"
+  license "GPL-2.0-or-later"
   head "https://github.com/Exiv2/exiv2.git"
 
+  livecheck do
+    url "https://www.exiv2.org/builds/"
+    regex(/href=.*?exiv2[._-]v?(\d+(?:\.\d+)+)-Source\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "fdadbb93ae659a651b2e7b899c3c2bf8910b8f0891661903a04a4c81a66ff534" => :catalina
-    sha256 "3b78b8fbffcc6d62685bc4a9a0a51855f5ccf6fe7fabc866f0970e1a12ced0b4" => :mojave
-    sha256 "8a4e65d47307247b11127c00cdad18626425eafb271faaeb1c076beb57298e12" => :high_sierra
-    sha256 "fe386bc9bfe7270655a6b3163f8e33a6fc6e6f36512e6ac6e6a49a1650a6a485" => :sierra
-    sha256 "e834faba285e924231a879189df53310f5d1c2c321207b84e525561f451ab022" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "f3b4f6da40ef2fbb4da84cc592a1fd2618f1007b4104451b0afa214f14e53125"
+    sha256 cellar: :any, big_sur:       "1d3b44a02c0ebe2ee46ced38a59cf81c60f12a0990debb8b14479431195a572e"
+    sha256 cellar: :any, catalina:      "607f8322cba23a92185541c3b8ee245e7ff339becda5364e1ea6c2168015375c"
+    sha256 cellar: :any, mojave:        "f4ed492ccb45b869000b2cc514ae507422624f6413057ee158ea80b772e182fb"
+    sha256 cellar: :any, high_sierra:   "cd1d11df6b535b1ccfb3458cef28a7662c1e2b7213382e8292abbe00526c7b52"
+    sha256 cellar: :any, x86_64_linux:  "347127bfe8140495e9a02a0d3aee991ec20d194a9c301cc8786e719990209029"
   end
 
   depends_on "cmake" => :build
   depends_on "gettext"
   depends_on "libssh"
 
-  unless OS.mac?
-    depends_on "curl"
-    depends_on "expat"
-    depends_on "zlib"
-  end
+  uses_from_macos "curl"
+  uses_from_macos "expat"
+  uses_from_macos "zlib"
 
   def install
     args = std_cmake_args
-    so = OS.mac? ? "dylib" : "so"
     args += %W[
       -DEXIV2_ENABLE_XMP=ON
       -DEXIV2_ENABLE_VIDEO=ON
@@ -39,8 +42,9 @@ class Exiv2 < Formula
       -DEXIV2_ENABLE_CURL=ON
       -DEXIV2_ENABLE_SSH=ON
       -DEXIV2_BUILD_SAMPLES=OFF
-      -DSSH_LIBRARY=#{Formula["libssh"].opt_lib}/libssh.#{so}
+      -DSSH_LIBRARY=#{Formula["libssh"].opt_lib}/#{shared_library("libssh")}
       -DSSH_INCLUDE_DIR=#{Formula["libssh"].opt_include}
+      -DCMAKE_INSTALL_NAME_DIR:STRING=#{lib}
       ..
     ]
     mkdir "build.cmake" do

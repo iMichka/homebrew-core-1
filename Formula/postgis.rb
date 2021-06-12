@@ -1,14 +1,20 @@
 class Postgis < Formula
   desc "Adds support for geographic objects to PostgreSQL"
   homepage "https://postgis.net/"
-  url "https://download.osgeo.org/postgis/source/postgis-3.0.0.tar.gz"
-  sha256 "c06fd2cd5cea0119106ffe17a7235d893c2bbe6f4b63c8617c767630973ba594"
+  url "https://download.osgeo.org/postgis/source/postgis-3.1.2.tar.gz"
+  sha256 "2cdd3760176926704b4eb25ff3357543c9637dee74425a49082906857c7e0732"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://download.osgeo.org/postgis/source/"
+    regex(/href=.*?postgis[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "905cd7340ca8db25ba0a3f400bc0dbd2ba2b307a41cadc8881d99987b7269f5f" => :catalina
-    sha256 "a42e4631bc90167895a13082a2fc215669097a034eb5bf57c0c0fc5c77fb71aa" => :mojave
-    sha256 "a2ba42858e1f2300411671d59b1ceece8eae1f66f7f1ed3f26421b574df63882" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "d024f9c9da0d07b0dfab7f90f888798bb692cd3ba8a4aad18073f36472561d69"
+    sha256 cellar: :any, big_sur:       "a70b062b0c3d6da8b86af146d292d063ff0d042b63f84c54df2a76a3e8072c00"
+    sha256 cellar: :any, catalina:      "39124e1f7788988510215185cc04354a1b490f3fc0f24bd1e411d4fd01f23a2f"
+    sha256 cellar: :any, mojave:        "9f3543c449d002372c6c52c3b82a832b37b3157ff1691d34e929b67fd952fe37"
   end
 
   head do
@@ -26,7 +32,7 @@ class Postgis < Formula
   depends_on "json-c" # for GeoJSON and raster handling
   depends_on "pcre"
   depends_on "postgresql"
-  depends_on "proj"
+  depends_on "proj@7"
   depends_on "protobuf-c" # for MVT (map vector tiles) support
   depends_on "sfcgal" # for advanced 2D/3D functions
 
@@ -34,7 +40,7 @@ class Postgis < Formula
     ENV.deparallelize
 
     args = [
-      "--with-projdir=#{Formula["proj"].opt_prefix}",
+      "--with-projdir=#{Formula["proj@7"].opt_prefix}",
       "--with-jsondir=#{Formula["json-c"].opt_prefix}",
       "--with-pgconfig=#{Formula["postgresql"].opt_bin}/pg_config",
       "--with-protobufdir=#{Formula["protobuf-c"].opt_bin}",

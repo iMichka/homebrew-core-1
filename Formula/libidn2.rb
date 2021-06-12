@@ -1,15 +1,22 @@
 class Libidn2 < Formula
   desc "International domain name library (IDNA2008, Punycode and TR46)"
   homepage "https://www.gnu.org/software/libidn/#libidn2"
-  url "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.0.tar.gz"
-  mirror "https://ftpmirror.gnu.org/libidn/libidn2-2.3.0.tar.gz"
-  sha256 "e1cb1db3d2e249a6a3eb6f0946777c2e892d5c5dc7bd91c74394fc3a01cab8b5"
+  url "https://ftp.gnu.org/gnu/libidn/libidn2-2.3.1.tar.gz"
+  mirror "https://ftpmirror.gnu.org/libidn/libidn2-2.3.1.tar.gz"
+  sha256 "8af684943836b8b53965d5f5b6714ef13c26c91eaa36ce7d242e3d21f5d40f2d"
+  license any_of: ["GPL-2.0-or-later", "LGPL-3.0-or-later"]
+
+  livecheck do
+    url :stable
+    regex(/href=.*?libidn2[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "0908585cca518a83f101b2edc0417a26a4b4fc8b76e393c6f6672de6e595c914" => :catalina
-    sha256 "d56e7ff347b0a4c2c433cd44564dfef74c9f1b237ef913307e152314677e1360" => :mojave
-    sha256 "4530dd74cbd31c49b0f499eda0f9ea29ec7ff6ae00f9aff3974247365d1fb21e" => :high_sierra
-    sha256 "19ba112bede8c0b913033880b7403a1616b3033c41ed46de57c00f421bdd1668" => :x86_64_linux
+    sha256 arm64_big_sur: "f5338389f4d1ba865b01ea508c9d1f07edc83258a4161e6789aade42c3d11723"
+    sha256 big_sur:       "5cdc0013d853962d6d3d3cc6c091a72f853bca9934d106dbe4046b20ee142055"
+    sha256 catalina:      "1d9ba7c36ba4071f958f030dc99aabff2d84de58586aae737111add263959e0f"
+    sha256 mojave:        "f99226cc8ab879de19a05ed036101e413c6fdc89b3cf4fcd83d1920dd3ad56f1"
+    sha256 x86_64_linux:  "e9f7472dd388710604fc3af9639a18d719f48c2f9d79108092b7f87f60e5c89a"
   end
 
   head do
@@ -22,11 +29,7 @@ class Libidn2 < Formula
   end
 
   depends_on "pkg-config" => :build
-  if OS.mac?
-    depends_on "gettext"
-  else
-    depends_on "gettext" => :build
-  end
+  depends_on "gettext"
   depends_on "libunistring"
 
   def install

@@ -1,25 +1,28 @@
 class Perl < Formula
   desc "Highly capable, feature-rich programming language"
   homepage "https://www.perl.org/"
-  url "https://www.cpan.org/src/5.0/perl-5.30.0.tar.gz"
-  sha256 "851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2"
-  head "https://perl5.git.perl.org/perl.git", :branch => "blead"
+  url "https://www.cpan.org/src/5.0/perl-5.34.0.tar.xz"
+  sha256 "82c2e5e5c71b0e10487a80d79140469ab1f8056349ca8545140a224dbbed7ded"
+  license any_of: ["Artistic-1.0-Perl", "GPL-1.0-or-later"]
+  head "https://github.com/perl/perl5.git", branch: "blead"
+
+  livecheck do
+    url "https://www.cpan.org/src/"
+    regex(/href=.*?perl[._-]v?(\d+\.\d*[02468](?:\.\d+)*)\.t/i)
+  end
 
   bottle do
-    sha256 "558b5c5408c82ec7e14ea7974b5f1e62ed5a5ed8343506c69b94becfe27e2488" => :catalina
-    sha256 "c0d17d9af9a950c65c7ac39f5d5bcdc2932ab281455107a5c55d1eda7d792f0d" => :mojave
-    sha256 "8529587433c3bf6985dd92d39808c01d9d421eeef8e25dc5b2921729d253c346" => :high_sierra
-    sha256 "086995758ea8f80844c3acb75ac8c177421560b382d22f63d128668f31918b0e" => :sierra
-    sha256 "e9dd9851a056caaa2bdea8d1e22136625e7fa66b82c9787c5d8e466456a7b9c3" => :x86_64_linux
+    sha256 arm64_big_sur: "8b55cc95c9de8bdcf628ae6d6f631057952fa8b0218da8ac61eafe4da65a8761"
+    sha256 big_sur:       "5f86afbccd065524f92080bd7f35ffe6398b7dd40a8fef6f0a2a7982fd276dae"
+    sha256 catalina:      "de0127c56612bbadc3621217b586571cab897c001344b7a1d63302a4f8f74a8e"
+    sha256 mojave:        "2222c3f09bdcd10640720d2f52ba71e09408ead129bc77853b2fdf88fc381061"
+    sha256 x86_64_linux:  "ade369d066b93925bced51ad47be64743969283e9e0c88fb3de2c58bfddbacee"
   end
 
-  unless OS.mac?
-    depends_on "gdbm"
-    depends_on "berkeley-db"
+  depends_on "berkeley-db"
+  depends_on "gdbm"
 
-    # required for XML::Parser
-    depends_on "expat"
-  end
+  uses_from_macos "expat"
 
   # Prevent site_perl directories from being removed
   skip_clean "lib/perl5/site_perl"
@@ -39,18 +42,15 @@ class Perl < Formula
       -Duselargefiles
       -Dusethreads
     ]
+    on_macos do
+      args << "-Dsed=/usr/bin/sed"
+    end
 
     args << "-Dusedevel" if build.head?
-    # Fix for https://github.com/Linuxbrew/homebrew-core/issues/405
-    args << "-Dlocincpth=#{HOMEBREW_PREFIX}/include" if OS.linux?
 
     system "./Configure", *args
 
     system "make"
-    # On Linux (in travis / docker container), the op/getppid.t fails too, disable the tests:
-    # https://rt.perl.org/Public/Bug/Display.html?id=130143
-    system "make", "test" if OS.mac?
-
     system "make", "install"
 
     # expose libperl.so to ensure we aren't using a brewed executable
@@ -62,32 +62,29 @@ class Perl < Formula
   end
 
   def post_install
-    unless OS.mac?
-      # Glibc does not provide the xlocale.h file since version 2.26
-      # Patch the perl.h file to be able to use perl on newer versions.
-      # locale.h includes xlocale.h if the latter one exists
-      perl_core = Pathname.new(`#{bin/"perl"} -MConfig -e 'print $Config{archlib}'`)+"CORE"
-      inreplace "#{perl_core}/perl.h", "include <xlocale.h>", "include <locale.h>", :audit_result => false
-
-      # CPAN modules installed via the system package manager will not be visible to
-      # brewed Perl. As a temporary measure, install critical CPAN modules to ensure
-      # they are available. See https://github.com/Linuxbrew/homebrew-core/pull/1064
-      ENV.activate_extensions!
-      ENV.setup_build_environment(self)
-      ENV["PERL_MM_USE_DEFAULT"] = "1"
-      system bin/"cpan", "-i", "XML::Parser"
-      system bin/"cpan", "-i", "XML::SAX"
+    on_linux do
+      perl_archlib = Utils.safe_popen_read("perl", "-MConfig", "-e", "print $Config{archlib}")
+      perl_core = Pathname.new(perl_archlib)/"CORE"
+      if File.readlines("#{perl_core}/perl.h").grep(/include <xlocale.h>/).any? &&
+         (OS::Linux::Glibc.system_version >= "2.26" ||
+         (Formula["glibc"].any_version_installed? && Formula["glibc"].version >= "2.26"))
+        # Glibc does not provide the xlocale.h file since version 2.26
+        # Patch the perl.h file to be able to use perl on newer versions.
+        # locale.h includes xlocale.h if the latter one exists
+        inreplace "#{perl_core}/perl.h", "include <xlocale.h>", "include <locale.h>"
+      end
     end
   end
 
-  def caveats; <<~EOS
-    By default non-brewed cpan modules are installed to the Cellar. If you wish
-    for your modules to persist across updates we recommend using `local::lib`.
+  def caveats
+    <<~EOS
+      By default non-brewed cpan modules are installed to the Cellar. If you wish
+      for your modules to persist across updates we recommend using `local::lib`.
 
-    You can set that up like this:
-      PERL_MM_OPT="INSTALL_BASE=$HOME/perl5" cpan local::lib
-      echo 'eval "$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)"' >> #{shell_profile}
-  EOS
+      You can set that up like this:
+        PERL_MM_OPT="INSTALL_BASE=$HOME/perl5" cpan local::lib
+        echo 'eval "$(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib=$HOME/perl5)"' >> #{shell_profile}
+    EOS
   end
 
   test do

@@ -1,17 +1,22 @@
 class GnuChess < Formula
-  desc "GNU Chess"
+  desc "Chess-playing program"
   homepage "https://www.gnu.org/software/chess/"
-  url "https://ftp.gnu.org/gnu/chess/gnuchess-6.2.5.tar.gz"
-  mirror "https://ftpmirror.gnu.org/chess/gnuchess-6.2.5.tar.gz"
-  sha256 "9a99e963355706cab32099d140b698eda9de164ebce40a5420b1b9772dd04802"
-  revision 1
+  url "https://ftp.gnu.org/gnu/chess/gnuchess-6.2.8.tar.gz"
+  mirror "https://ftpmirror.gnu.org/chess/gnuchess-6.2.8.tar.gz"
+  sha256 "d50446cda8012240321da39cddbb4df4d08458a8d538a4738882814139583847"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url :stable
+    regex(/href=.*?gnuchess[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "c974d47804b8d31d5291b7fa5aa7cc2b4caee43d9b92db9ac9e63713e7f4d4f7" => :catalina
-    sha256 "38957b9b332c27f5952ff0f5cc38d08c58a6578ef358974fb1f7860a13d12f60" => :mojave
-    sha256 "f66f7a33aa5d6901cdaa888ab0a5e8b6e0f49649dbbf86c7c3ff48568c0e0a89" => :high_sierra
-    sha256 "17d6cd58b1c4157c70bb1417824ec96a161bae4f5ff1544f4d1044f03f0e95a0" => :sierra
-    sha256 "0089a6814f2673ba6cace17780653085caf19b029ce69cd5febbecd82cd30610" => :x86_64_linux
+    sha256 arm64_big_sur: "9f6f4e4be12a9b4a543077dfeff7220216c5b50076b3fe502452726654c588b3"
+    sha256 big_sur:       "4049d5fe6c4ae97e9756faae5f8a25e4f20d2af9ae97999a79ffeb9fe4a0dc85"
+    sha256 catalina:      "31f8d094109dfff455ac3ec6ccd46c5b109b105bd0a6f348778c4ff4469cb304"
+    sha256 mojave:        "64398f15fb0e590834f9970a8eff17744e3f038b56709c7e54923181ddaa8934"
+    sha256 x86_64_linux:  "cdfc9cf3928a9003a3d4967f6f6a292857e9b563bdfbb6085d1daa300fdb740c"
   end
 
   head do
@@ -30,6 +35,9 @@ class GnuChess < Formula
   end
 
   def install
+    #  Fix "install-sh: Permission denied" issue
+    chmod "+x", "install-sh"
+
     if build.head?
       system "autoreconf", "--install"
       chmod 0755, "install-sh"
@@ -44,11 +52,12 @@ class GnuChess < Formula
     end
   end
 
-  def caveats; <<~EOS
-    This formula also downloads the additional opening book.  The
-    opening book is a PGN file located in #{doc} that can be added
-    using gnuchess commands.
-  EOS
+  def caveats
+    <<~EOS
+      This formula also downloads the additional opening book.  The
+      opening book is a PGN file located in #{doc} that can be added
+      using gnuchess commands.
+    EOS
   end
 
   test do

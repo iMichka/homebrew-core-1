@@ -1,27 +1,32 @@
 class Bison < Formula
   desc "Parser generator"
   homepage "https://www.gnu.org/software/bison/"
-  url "https://ftp.gnu.org/gnu/bison/bison-3.5.tar.xz"
-  mirror "https://ftpmirror.gnu.org/bison/bison-3.5.tar.xz"
-  sha256 "55e4a023b1b4ad19095a5f8279f0dc048fa29f970759cea83224a6d5e7a3a641"
+  # X.Y.9Z are beta releases that sometimes get accidentally uploaded to the release FTP
+  url "https://ftp.gnu.org/gnu/bison/bison-3.7.6.tar.xz"
+  mirror "https://ftpmirror.gnu.org/bison/bison-3.7.6.tar.xz"
+  sha256 "67d68ce1e22192050525643fc0a7a22297576682bef6a5c51446903f5aeef3cf"
+  license "GPL-3.0-or-later"
+  version_scheme 1
 
   bottle do
-    sha256 "0a99cc32f88221f5e733ee7db13536f83a2e5232458f89b1725a3bfe09013b08" => :catalina
-    sha256 "9e0c9fffc249e3578f103b70163e76cb6757c896794e7c59c5caf17c7ff32258" => :mojave
-    sha256 "ef24c90f7fb895768f1c96b9822dae1b112b068a075e2afd5baf398313b6d395" => :high_sierra
-    sha256 "719e7b6f7a3aa22458bc264725171df60c3b583b3885357e1b9e3d3c5af4d8a0" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ee20f2693b08afe6bf50abad5e9a6adf60b629360c64fb580f0512283d87846f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "9f57b6c53d6595330adf79112e72034895f061769ebc8906a9b5afe9f4f873d0"
+    sha256 cellar: :any_skip_relocation, catalina:      "2276ffa48c694379540f63a5241c39b738f1dcb7424aceec54beb2e7be172489"
+    sha256 cellar: :any_skip_relocation, mojave:        "0dca09521f16b6e49e2c21ae9dec6069fee065a9ffd4b8191dca66b1957937d6"
+    sha256                               x86_64_linux:  "223e8a0d0ccda242cb92668da34874e273f3f51da657d4b40f449b1e7cbd6e64"
   end
+
+  keg_only :provided_by_macos
 
   uses_from_macos "m4"
 
-  keg_only :provided_by_macos, "some formulae require a newer version of bison"
-
   def install
-    # https://www.mail-archive.com/bug-guix@gnu.org/msg13512.html
-    ENV.deparallelize unless OS.mac?
     system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+                          "--enable-relocatable",
+                          "--prefix=/output"
+    system "make", "install", "DESTDIR=#{buildpath}"
+    prefix.install Dir["#{buildpath}/output/*"]
   end
 
   test do

@@ -3,17 +3,23 @@ class Mcrypt < Formula
   homepage "https://mcrypt.sourceforge.io"
   url "https://downloads.sourceforge.net/project/mcrypt/MCrypt/2.6.8/mcrypt-2.6.8.tar.gz"
   sha256 "5145aa844e54cca89ddab6fb7dd9e5952811d8d787c4f4bf27eb261e6c182098"
+  license "GPL-3.0-or-later"
 
   bottle do
-    rebuild 2
-    sha256 "c9d3313218375e8bca6e22b00fcb47f11550c386ae64422bb59869af161cf6eb" => :catalina
-    sha256 "b79e4ba583c523e382d1cc08430c96252c8e048cc1661ab3a9bed90468c8b06c" => :mojave
-    sha256 "e11c2a7a1caf26c2a1d3d171d3291888e065ba0328f6934882cffcaec72475cd" => :high_sierra
-    sha256 "a556f4e54cb7e198599081cf0abd3e42d0dd10c6af8abab80f4255ab90c3a77c" => :x86_64_linux
+    rebuild 4
+    sha256 arm64_big_sur: "849ffa4e23dff9bff130c10d8ace02994034120b7d97ad36e9d7f6e8c048f97a"
+    sha256 big_sur:       "e3182ac2f12baccfab81146bb4c6944b05154259a65165d694ca64e43d1f03f7"
+    sha256 catalina:      "a52070083dfe080bbe0b8f71597a8a619c6b1421970c4670c6f40f5f2ba0fafe"
+    sha256 mojave:        "6a23409a37396e2b2256485737a8195b06dcdea3607583e509f1d87d6a75faec"
+    sha256 x86_64_linux:  "60108bc35f779aeb24a8c55c51482f4dcdc0b32e96009a3d28c9f9f195b5a5b3"
   end
 
+  # Added automake as a build dependency to update config files in libmcrypt.
+  # Please remove in future if there is a patch upstream which recognises aarch64 macos.
+  depends_on "automake" => :build
   depends_on "mhash"
-  depends_on "zlib" unless OS.mac?
+
+  uses_from_macos "zlib"
 
   resource "libmcrypt" do
     url "https://downloads.sourceforge.net/project/mcrypt/Libmcrypt/2.5.8/libmcrypt-2.5.8.tar.gz"
@@ -25,7 +31,15 @@ class Mcrypt < Formula
   patch :DATA
 
   def install
+    # Work around configure issues with Xcode 12
+    ENV.append "CFLAGS", "-Wno-implicit-function-declaration"
+
     resource("libmcrypt").stage do
+      # Workaround for ancient config files not recognising aarch64 macos.
+      %w[config.guess config.sub].each do |fn|
+        cp "#{Formula["automake"].opt_prefix}/share/automake-#{Formula["automake"].version.major_minor}/#{fn}", fn
+      end
+
       system "./configure", "--prefix=#{prefix}",
                             "--mandir=#{man}"
       system "make", "install"

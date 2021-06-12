@@ -1,10 +1,18 @@
 class Phpunit < Formula
   desc "Programmer-oriented testing framework for PHP"
   homepage "https://phpunit.de"
-  url "https://phar.phpunit.de/phpunit-8.5.0.phar"
-  sha256 "b12f0348e81d05007720c5cee4df6a1328f6205a3429548c50e5a6e444846678"
+  url "https://phar.phpunit.de/phpunit-9.5.5.phar"
+  sha256 "8136c06c3a91ec3967bcc28bb8924921035b6d3283ed35abca238dfabeb04669"
+  license "BSD-3-Clause"
 
-  bottle :unneeded
+  livecheck do
+    url "https://phar.phpunit.de/"
+    regex(/href=.*?phpunit[._-]v?(\d+(?:\.\d+)+)\.phar/i)
+  end
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "1a46b22bea25ce8c49e80de198016f000208d71d8a6c89411dda7ceb789e202d"
+  end
 
   depends_on "php" => :test
 
@@ -105,6 +113,7 @@ class Phpunit < Formula
       }
 
     EOS
-    assert_match /^OK \(3 tests, 3 assertions\)$/, shell_output("#{bin}/phpunit --bootstrap src/autoload.php tests/EmailTest.php")
+    assert_match(/^OK \(3 tests, 3 assertions\)$/,
+      shell_output("#{bin}/phpunit --bootstrap src/autoload.php tests/EmailTest.php"))
   end
 end

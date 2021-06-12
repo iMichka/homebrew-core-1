@@ -1,15 +1,16 @@
 class Sqlcipher < Formula
   desc "SQLite extension providing 256-bit AES encryption"
   homepage "https://www.zetetic.net/sqlcipher/"
-  url "https://github.com/sqlcipher/sqlcipher/archive/v4.3.0.tar.gz"
-  sha256 "fccb37e440ada898902b294d02cde7af9e8706b185d77ed9f6f4d5b18b4c305f"
+  url "https://github.com/sqlcipher/sqlcipher/archive/v4.4.3.tar.gz"
+  sha256 "b8df69b998c042ce7f8a99f07cf11f45dfebe51110ef92de95f1728358853133"
+  license "BSD-3-Clause"
   head "https://github.com/sqlcipher/sqlcipher.git"
 
   bottle do
-    cellar :any
-    sha256 "1de7fda1b6e412d3bb49f18cb7a174f40af184d917064c79c047a9abf65d89ae" => :catalina
-    sha256 "76195cf0c62a5045b8d977b937938d448a3b9fc842b69f0b2a126ad918c6b7dd" => :mojave
-    sha256 "66462c093665ae487d19de677d544489a2608e239792317d4cbacd75d692d8a6" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "2395b5999cde9cd6c8f53dd595a2827d8e2bdef8b801879b753378728a3cc94f"
+    sha256 cellar: :any, big_sur:       "97328f386addff936379b66ae032b3341cc6f047b7453e1a837cdc8a00b06653"
+    sha256 cellar: :any, catalina:      "826fa6703434de743eec33ca60db392fe772ace12e4eb3720c106d675c3edc70"
+    sha256 cellar: :any, mojave:        "123c63643cec4a0503993ba6f9a124a5f781db317c311103da82d91a895808e9"
   end
 
   depends_on "openssl@1.1"
@@ -24,7 +25,8 @@ class Sqlcipher < Formula
     ]
 
     # Build with full-text search enabled
-    args << "CFLAGS=-DSQLITE_HAS_CODEC -DSQLITE_ENABLE_JSON1 -DSQLITE_ENABLE_FTS3 -DSQLITE_ENABLE_FTS3_PARENTHESIS -DSQLITE_ENABLE_FTS5"
+    args << "CFLAGS=-DSQLITE_HAS_CODEC -DSQLITE_ENABLE_JSON1 -DSQLITE_ENABLE_FTS3 " \
+                   "-DSQLITE_ENABLE_FTS3_PARENTHESIS -DSQLITE_ENABLE_FTS5 -DSQLITE_ENABLE_COLUMN_METADATA"
 
     system "./configure", *args
     system "make"

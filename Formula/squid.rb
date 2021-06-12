@@ -1,18 +1,25 @@
 class Squid < Formula
   desc "Advanced proxy caching server for HTTP, HTTPS, FTP, and Gopher"
   homepage "http://www.squid-cache.org/"
-  url "http://www.squid-cache.org/Versions/v4/squid-4.9.tar.xz"
-  sha256 "1cb1838c6683b0568a3a4050f4ea2fc1eaa5cbba6bdf7d57f7258c7cd7b41fa1"
+  url "http://www.squid-cache.org/Versions/v4/squid-4.15.tar.xz"
+  sha256 "b693a4e5ab2811a8a854f60de0a62afbbf3a952bb1d047952c9ae01321f84a25"
+  license "GPL-2.0"
+
+  livecheck do
+    url "http://www.squid-cache.org/Versions/v4/"
+    regex(/href=.*?squid[._-]v?(\d+(?:\.\d+)+)-RELEASENOTES\.html/i)
+  end
 
   bottle do
-    sha256 "eb88a0963a5793de409259e8cb913b9e24bd3d3b536112142426ad1fcef7428f" => :catalina
-    sha256 "ee3a1e05ca15a5505baef58f33ad86d109cf104edeec514de69310a2532eafeb" => :mojave
-    sha256 "6e4b5b7033c57b70fb6f9de126bc5526c4bad7a153151bf80569ec31d77ffc24" => :high_sierra
-    sha256 "8f2ca880dcc34e7e1d033c3d99db1abbfdd4c39ad0c0c9a26dc920878a274a28" => :x86_64_linux
+    sha256 arm64_big_sur: "87d1e9c13ebf59f67218b7385eecb7690eac4dacf2c4d30a536001bfdc846812"
+    sha256 big_sur:       "9ea3f1e311ff4be0efdafbeb3dd87a4592e66af17b6a5fb01a6f58f7bce72075"
+    sha256 catalina:      "731cd0467205f2ad7aef705f2a39d4309870259b46ffab1248826cb00eea5011"
+    sha256 mojave:        "ce9248b843b329305536ec35a7592dc931d403e2ddeb3d3d023f885a508945d6"
+    sha256 x86_64_linux:  "d3f7f6073b0ebf01fbf38e10b3cfb7b2aaa273b56925cbecc7699e53c6e4ab9a"
   end
 
   head do
-    url "lp:squid", :using => :bzr
+    url "lp:squid", using: :bzr
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
@@ -50,30 +57,31 @@ class Squid < Formula
     system "make", "install"
   end
 
-  plist_options :manual => "squid"
+  plist_options manual: "squid"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>KeepAlive</key>
-      <true/>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/squid</string>
-        <string>-N</string>
-        <string>-d 1</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>WorkingDirectory</key>
-      <string>#{var}</string>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>KeepAlive</key>
+        <true/>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_sbin}/squid</string>
+          <string>-N</string>
+          <string>-d 1</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>WorkingDirectory</key>
+        <string>#{var}</string>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do

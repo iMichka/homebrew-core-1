@@ -1,22 +1,23 @@
 class Audacious < Formula
   desc "Free and advanced audio player based on GTK+"
   homepage "https://audacious-media-player.org/"
-  revision 1
+  license "BSD-2-Clause"
 
   stable do
-    url "https://distfiles.audacious-media-player.org/audacious-3.10.1.tar.bz2"
-    sha256 "8366e840bb3c9448c2cf0cf9a0800155b0bd7cc212a28ba44990c3d2289c6b93"
+    url "https://distfiles.audacious-media-player.org/audacious-4.1.tar.bz2"
+    sha256 "1f58858f9789e867c513b5272987f13bdfb09332b03c2814ad4c6e29f525e35c"
 
     resource "plugins" do
-      url "https://distfiles.audacious-media-player.org/audacious-plugins-3.10.1.tar.bz2"
-      sha256 "eec3177631f99729bf0e94223b627406cc648c70e6646e35613c7b55040a2642"
+      url "https://distfiles.audacious-media-player.org/audacious-plugins-4.1.tar.bz2"
+      sha256 "dad6fc625055349d589e36e8e5c8ae7dfafcddfe96894806509696d82bb61d4c"
     end
   end
 
   bottle do
-    sha256 "158dca9a2823c05fa18355c498c98dc7499adcb0c47307f513f0ae4194a0a29c" => :catalina
-    sha256 "e543093afa490963a3a18befc35964fb8693a9c9c6d34e86a346799159ea5781" => :mojave
-    sha256 "867c89b2a22b253cbb645c7a171144e3a8868d90417cd6c06b7ac4674b860c41" => :high_sierra
+    sha256 arm64_big_sur: "6b34c0f40150465828af36152ce2bced63ee27c4fe488f64f63f699648cc1f43"
+    sha256 big_sur:       "1343e3cb7f51a3885cef9fde5c81aca7833f2c94d8a2c933bafb23046861ac51"
+    sha256 catalina:      "e213d649e83a181aa0996996bd7455435c00bcc3bb87850c5571d27bc6a9333e"
+    sha256 mojave:        "c1c64e34044dff95f4db265a541aa7f979b36580de6a63ce86bf3b13434f7058"
   end
 
   head do
@@ -25,14 +26,11 @@ class Audacious < Formula
     resource "plugins" do
       url "https://github.com/audacious-media-player/audacious-plugins.git"
     end
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
   end
 
   depends_on "gettext" => :build
-  depends_on "make" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "faad2"
   depends_on "ffmpeg"
@@ -42,48 +40,53 @@ class Audacious < Formula
   depends_on "lame"
   depends_on "libbs2b"
   depends_on "libcue"
+  depends_on "libmodplug"
   depends_on "libnotify"
+  depends_on "libopenmpt"
   depends_on "libsamplerate"
   depends_on "libsoxr"
   depends_on "libvorbis"
   depends_on "mpg123"
   depends_on "neon"
-  depends_on "qt"
+  depends_on "qt@5"
   depends_on "sdl2"
   depends_on "wavpack"
-  uses_from_macos "python@2"
 
   def install
-    args = %W[
-      --prefix=#{prefix}
-      --disable-coreaudio
-      --disable-gtk
-      --disable-mpris2
-      --enable-mac-media-keys
-      --enable-qt
+    args = std_meson_args + %w[
+      -Ddbus=false
+      -Dgtk=false
+      -Dqt=true
     ]
 
-    system "./autogen.sh" if build.head?
-    system "./configure", *args
-    system "make"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
 
     resource("plugins").stage do
-      ENV.prepend_path "PKG_CONFIG_PATH", "#{lib}/pkgconfig"
+      args += %w[
+        -Dcoreaudio=false
+        -Dmpris2=false
+        -Dmac-media-keys=true
+      ]
 
-      system "./autogen.sh" if build.head?
-
-      system "./configure", *args
-      system "make"
-      system "make", "install"
+      ENV.prepend_path "PKG_CONFIG_PATH", lib/"pkgconfig"
+      mkdir "build" do
+        system "meson", *args, ".."
+        system "ninja", "-v"
+        system "ninja", "install", "-v"
+      end
     end
   end
 
-  def caveats; <<~EOS
-    audtool does not work due to a broken dbus implementation on macOS, so is not built
-    coreaudio output has been disabled as it does not work (Fails to set audio unit input property.)
-    GTK+ gui is not built by default as the QT gui has better integration with macOS, and when built, the gtk gui takes precedence
-  EOS
+  def caveats
+    <<~EOS
+      audtool does not work due to a broken dbus implementation on macOS, so it is not built.
+      Core Audio output has been disabled as it does not work (fails to set audio unit input property).
+      GTK+ GUI is not built by default as the Qt GUI has better integration with macOS, and the GTK GUI would take precedence if present.
+    EOS
   end
 
   test do

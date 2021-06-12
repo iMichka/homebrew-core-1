@@ -1,42 +1,28 @@
-require "language/haskell"
-
 class Futhark < Formula
-  include Language::Haskell::Cabal
-
   desc "Data-parallel functional programming language"
   homepage "https://futhark-lang.org/"
-  url "https://github.com/diku-dk/futhark/archive/v0.13.2.tar.gz"
-  sha256 "51b1c4bf3cac469dabbf66955049480273411cf5eb50da235f0a4c96cffe2b8e"
+  url "https://github.com/diku-dk/futhark/archive/v0.19.6.tar.gz"
+  sha256 "54f2f80a6f776c0b644a7599d1238b0b2212e387ca5bd67371d154713a203ef9"
+  license "ISC"
   head "https://github.com/diku-dk/futhark.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "ebc6081107afb474297808dc8b632fa237a0e0a8580232077f04409a6561b0c9" => :catalina
-    sha256 "ab8c1168033238ab7ca0ed6ae5855a18943472ac6d69a564ba335428628c9bb3" => :mojave
-    sha256 "2644ffab0014bb6967fe0bc2d4f55bbcb1b7f4f888234420d68f6c9e83027d10" => :high_sierra
+    sha256 cellar: :any_skip_relocation, big_sur:      "b07cce8318db4102eac3a4f59cb3beb34724c31079798f46cc92f2c59f46c7a9"
+    sha256 cellar: :any_skip_relocation, catalina:     "fce4f4bc59c4228914bb8d9e7e400e5515aa4c19df1231b3f21fdb326094736e"
+    sha256 cellar: :any_skip_relocation, mojave:       "17d63014d7da322f475ea1fa5644813b7c07af99674459296446c4f01df9bba9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "58103fb9781b0d350f8fccd3deefff15051ef92cbd3741aa1c3068d1a34ecadf"
   end
 
   depends_on "cabal-install" => :build
   depends_on "ghc" => :build
   depends_on "sphinx-doc" => :build
-  unless OS.mac?
-    depends_on "ncurses"
-    depends_on "zlib"
-  end
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
   def install
-    cabal_sandbox do
-      # Futhark provides a cabal.project.freeze for pinning Cabal
-      # dependencies, but this is only picked up by "v2" builds, and
-      # as of this writing, Homebrew still does sandboxed "v1" builds.
-      # Fortunately, the file formats seem to be compatible.
-      mv "cabal.project.freeze", "cabal.config"
-
-      cabal_install "hpack"
-      system "./.cabal-sandbox/bin/hpack"
-
-      install_cabal_package :using => ["alex", "happy"]
-    end
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
 
     system "make", "-C", "docs", "man"
     man1.install Dir["docs/_build/man/*.1"]

@@ -1,8 +1,9 @@
 class Phpstan < Formula
   desc "PHP Static Analysis Tool"
   homepage "https://github.com/phpstan/phpstan"
-  url "https://github.com/phpstan/phpstan/releases/download/0.12.3/phpstan.phar"
-  sha256 "5195d4dcd27a1e3f72d72a22968f60d398202dd61b2ce8af47d896e33028ca23"
+  url "https://github.com/phpstan/phpstan/releases/download/0.12.89/phpstan.phar"
+  sha256 "70d4b052e7f8ac32b20c918982996b79b4917a6c492f6b72b8b6ba5d47000cf0"
+  license "MIT"
 
   bottle :unneeded
 
@@ -71,6 +72,7 @@ class Phpstan < Formula
             }
         }
     EOS
-    assert_match /^\n \[OK\] No errors/, shell_output("#{bin}/phpstan analyse --level max --autoload-file src/autoload.php src/Email.php")
+    assert_match(/^\n \[OK\] No errors/,
+      shell_output("#{bin}/phpstan analyse --level max --autoload-file src/autoload.php src/Email.php"))
   end
 end

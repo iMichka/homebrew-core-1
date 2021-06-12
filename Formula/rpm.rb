@@ -1,15 +1,22 @@
 class Rpm < Formula
   desc "Standard unix software packaging tool"
   homepage "https://rpm.org/"
-  url "http://ftp.rpm.org/releases/rpm-4.15.x/rpm-4.15.1.tar.bz2"
-  sha256 "ddef45f9601cd12042edfc9b6e37efcca32814e1e0f4bb8682d08144a3e2d230"
+  url "http://ftp.rpm.org/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2"
+  mirror "https://ftp.osuosl.org/pub/rpm/releases/rpm-4.16.x/rpm-4.16.1.3.tar.bz2"
+  sha256 "513dc7f972b6e7ccfc9fc7f9c01d5310cc56ee853892e4314fa2cad71478e21d"
+  license "GPL-2.0-only"
   version_scheme 1
 
+  livecheck do
+    url "https://rpm.org/download.html"
+    regex(/href=.*?rpm[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    sha256 "001127e004c5bda9299956bdcdfc4fc95b9c9894a191f23c9325fa0f3f47ac55" => :catalina
-    sha256 "36a81d3e478ca4d48554954373f56d9cd31539504b25038e72c4aead4ab82270" => :mojave
-    sha256 "77a3a72aa150d019c2ef6b5ed2e4ee30c2289325e597c5bb591ba0fdcaf5be0f" => :high_sierra
-    sha256 "ca30c79af6db9a7c096254a651a9eacf8cd4843a8dbef4d6df06b2f34bcf208d" => :x86_64_linux
+    sha256 big_sur:      "cb96a7acd3064a24034996032a19c451f03ad1fede1c6a672331869220c4bc80"
+    sha256 catalina:     "3f7de90218b2fbf8c42e63a4ae14f50244e058aff631e795197ac69e287a1d09"
+    sha256 mojave:       "239cee186295db10924b8bf891a20c36169002d551389f934dec8b107df03ed6"
+    sha256 x86_64_linux: "47339e6b27849b4bdc339f21468ca70e49f7321cbf2cb0ce4e19acada061cbd7"
   end
 
   depends_on "berkeley-db"
@@ -48,8 +55,17 @@ class Rpm < Formula
                           "--with-external-db",
                           "--with-crypto=openssl",
                           "--without-apidocs",
-                          "--with-vendor=homebrew"
+                          "--with-vendor=homebrew",
+                          # Don't allow superenv shims to be saved into lib/rpm/macros
+                          "__MAKE=/usr/bin/make",
+                          "__SED=/usr/bin/sed",
+                          "__GIT=/usr/bin/git",
+                          "__LD=/usr/bin/ld"
     system "make", "install"
+
+    on_macos do
+      inreplace lib/"rpm/macros", "#{HOMEBREW_SHIMS_PATH}/mac/super/", ""
+    end
   end
 
   def post_install
@@ -95,13 +111,10 @@ class Rpm < Formula
   test do
     (testpath/"rpmbuild").mkpath
 
-    # Falsely flagged by RuboCop.
-    # rubocop:disable Style/FormatStringToken
     (testpath/".rpmmacros").write <<~EOS
       %_topdir		#{testpath}/rpmbuild
-      %_tmppath		%{_topdir}/tmp
+      %_tmppath		%\{_topdir}/tmp
     EOS
-    # rubocop:enable Style/FormatStringToken
 
     system "#{bin}/rpm", "-vv", "-qa", "--dbpath=#{testpath}/var/lib/rpm"
     assert_predicate testpath/"var/lib/rpm/Packages", :exist?,

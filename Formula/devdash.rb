@@ -1,24 +1,25 @@
 class Devdash < Formula
   desc "Highly Configurable Terminal Dashboard for Developers"
   homepage "https://thedevdash.com"
-  url "https://github.com/Phantas0s/devdash/archive/v0.2.0.tar.gz"
-  sha256 "11760bb308680bcbfb138dd57df4a6b4b069ce082cf9e53275028bd23ea23b78"
+  url "https://github.com/Phantas0s/devdash/archive/v0.5.0.tar.gz"
+  sha256 "633a0a599a230a93b7c4eeacdf79a91a2bb672058ef3d5aacce5121167df8d28"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "61dad3989ec4abe1974a3c4f3b07df45c2b1595a5130cde2fcf318b30f3c5183" => :catalina
-    sha256 "5ac83d288c59595929f60649342a0f858063c34588b50a7419b55b85fe3173e9" => :mojave
-    sha256 "b4111ca6ffa4de540c174abbbd902d533a63c628d1bdd050f9b5afc3e5aeb19c" => :high_sierra
-    sha256 "8f10f122b884d968784849c0e2213e5a168dd1018869682ca321927733148b46" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "688199921a304a5ba1c0ac78096d29c86c63076eafd6288085664a32b7e70056"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e71157c4ff045c0e9330fc916b473b38983af56bef7aefd3cdbfd833d9467c18"
+    sha256 cellar: :any_skip_relocation, catalina:      "5589478caf3652ea9a8ba5dd95ead4a927f5a2d4436abb394113e027b0fea805"
+    sha256 cellar: :any_skip_relocation, mojave:        "a247529d915f53e3d43ea23b017373a905b11a51e8f2f18dc19a8eb90c5e9f96"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "56c5db3f21d8043e1aa69135c3621eecf11bccedadefe7b1b191e7521a715964"
   end
 
   depends_on "go" => :build
 
   def install
-    system "go", "build", "-o", "#{bin}/devdash", "./cmd/devdash"
+    system "go", "build", *std_go_args
   end
 
   test do
-    system bin/"devdash", "-term"
+    system bin/"devdash", "-h"
   end
 end

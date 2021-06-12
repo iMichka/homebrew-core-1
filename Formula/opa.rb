@@ -1,29 +1,26 @@
 class Opa < Formula
   desc "Open source, general-purpose policy engine"
   homepage "https://www.openpolicyagent.org"
-  url "https://github.com/open-policy-agent/opa/archive/v0.15.1.tar.gz"
-  sha256 "b51fd9ba0d99d084c01ceace50cd31b900a12f61dd9d6c6fb5ce7f026a8556b2"
+  url "https://github.com/open-policy-agent/opa/archive/v0.29.4.tar.gz"
+  sha256 "f9b1926d9149aab07b19f3f558f698c96db39216b166b7a4ca45dbf3471e2f08"
+  license "Apache-2.0"
+  head "https://github.com/open-policy-agent/opa.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "37d22a6a5edbb5ed64ce8bd154f284a872c6b8cafe4becb64b6cfcfd824879f1" => :catalina
-    sha256 "2b27039e065eb1f89b6dac2fc2a57506d7c069c72d3d04daf41f02d6907669f2" => :mojave
-    sha256 "57651d6c3244f6eb86696da89b9c64737e6e0c4ddee8616bf71d262feb4d42d2" => :high_sierra
-    sha256 "8b7f3f9cccedc248d1cf7167f22ff058c72b3b514804dc80bf7885285e067e2e" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1b0f699e0dbd5b7259ad0061909a6f2e6ae7db77f62152721238cda2c0dc8e2f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e7223cb375b1f7108325ff126341b3d4642e019468993aaaa9789916d233a19a"
+    sha256 cellar: :any_skip_relocation, catalina:      "28d1149bf4040790b7a4af3c0d647cb36a529304fa6debd502135c76d7990b2a"
+    sha256 cellar: :any_skip_relocation, mojave:        "046d4d3fe898d1decf4a7014f39721f9b09f35e59f2e747832bb32eaa61087e8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6a2522bfe75d835a8427e99bc5dd4c6cdf7cef92534d97963f02b4ebcbe0e3c4"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/open-policy-agent/opa").install buildpath.children
-
-    cd "src/github.com/open-policy-agent/opa" do
-      system "go", "build", "-o", bin/"opa", "-installsuffix", "static",
-                   "-ldflags",
-                   "-X github.com/open-policy-agent/opa/version.Version=#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args,
+              "-ldflags", "-X github.com/open-policy-agent/opa/version.Version=#{version}"
+    system "./build/gen-man.sh", "man1"
+    man.install "man1"
   end
 
   test do

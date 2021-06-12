@@ -1,26 +1,25 @@
 class PythonMarkdown < Formula
+  include Language::Python::Virtualenv
+
   desc "Python implementation of Markdown"
-  homepage "https://pypi.python.org/pypi/Markdown"
-  url "https://files.pythonhosted.org/packages/ac/df/0ae25a9fd5bb528fe3c65af7143708160aa3b47970d5272003a1ad5c03c6/Markdown-3.1.1.tar.gz"
-  sha256 "2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a"
+  homepage "https://python-markdown.github.io"
+  url "https://files.pythonhosted.org/packages/49/02/37bd82ae255bb4dfef97a4b32d95906187b7a7a74970761fca1360c4ba22/Markdown-3.3.4.tar.gz"
+  sha256 "31b5b491868dcc87d6c24b7e3d19a0d730d59d3e46f4eea6430a321bed387a49"
+  license "BSD-3-Clause"
+  head "https://github.com/Python-Markdown/markdown.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "70dccbcd84e8e9151940ee81433a43284dd7e0b4f20b54a98f63bae19719bb61" => :catalina
-    sha256 "997125a0155bbebdc066d74272cfb4d7be2ebe1299204b1626db52d2a35ccd21" => :mojave
-    sha256 "997125a0155bbebdc066d74272cfb4d7be2ebe1299204b1626db52d2a35ccd21" => :high_sierra
-    sha256 "db626ba3ff3da1197a29fb621d15400790acf7e11d3adf9a5c022361f6554f3b" => :sierra
-    sha256 "d88b9dd0b34545a84816bb6b084648f5671a9164c9907f4cf77d5d93ed7fb31f" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "43873534a708de73d549d2c4d0bc5b9bd096f3f1e75ea3e143aa82925ef3e6f2"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b4ef9a4f29b3c51b03907e50b89b0a9ef7f2a87951c624956beba0e1627f4618"
+    sha256 cellar: :any_skip_relocation, catalina:      "689b8240e4c6c352ba8d00bbb736a4e0bfa9854a4ab3b741231df6dc670a172f"
+    sha256 cellar: :any_skip_relocation, mojave:        "aefbd3f47aa88aadf990c0d3ae108da38a89cdbab7cf7bcfd1e81eadbca06340"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "de5a97dfdfc73fb4e0ee710277023f7d9245f7ce6cdd42fa59fbfb6b1b0fd131"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
   def install
-    xy = Language::Python.major_minor_version "python3"
-    ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{xy}/site-packages"
-    system "python3", *Language::Python.setup_install_args(libexec)
-    bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => ENV["PYTHONPATH"])
+    virtualenv_install_with_resources
   end
 
   test do

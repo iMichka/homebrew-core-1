@@ -1,17 +1,22 @@
 class Hdf5AT18 < Formula
   desc "File format designed to store large amounts of data"
   homepage "https://www.hdfgroup.org/HDF5"
-  url "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.21/src/hdf5-1.8.21.tar.bz2"
-  sha256 "e5b1b1dee44a64b795a91c3321ab7196d9e0871fe50d42969761794e3899f40d"
-  revision 1
+  # NOTE: 1.8.23 is expected to be the last release for HDF5-1.8
+  # (see: https://portal.hdfgroup.org/display/support/HDF5%201.8.22#HDF51.8.22-futureFutureofHDF5-1.8).
+  url "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.22/src/hdf5-1.8.22.tar.bz2"
+  sha256 "689b88c6a5577b05d603541ce900545779c96d62b6f83d3f23f46559b48893a4"
+  revision OS.mac? ? 2 : 3
+
+  livecheck do
+    url "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/"
+    regex(%r{href=["']?hdf5[._-]v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0c2c48212b24bc407e6ee83a640dcc35348eed417d7ca0f8742701af4f6975b1" => :catalina
-    sha256 "1485cae9d86cf8858cbad57558e7fe5c87092df6558cf89781daf10abad1af5f" => :mojave
-    sha256 "ec5ff75dd845f8718f816e2729ede6cb163866e86c16a9a206eea7a243846f94" => :high_sierra
-    sha256 "3830625c54aa43948efd6bf23a84caee2be2427bf1345183b7b08075c32e7d3d" => :sierra
-    sha256 "bd203c55e5405a9b492bd4f9e9baf4eaea8e9528d60bd9146a653ab2dbb2b878" => :x86_64_linux
+    sha256 cellar: :any,                 big_sur:      "25f4af91d8f934b8d706271bb31d27a6b1f42e9fa4c6186687cea9078c0e56a0"
+    sha256 cellar: :any,                 catalina:     "65d03686011e2cd7c575c56829b9b639a0b04e1a94fb827f97e4897de2a9126c"
+    sha256 cellar: :any,                 mojave:       "b2af62b2ad8128b5df29097a95d32555b072aaf10f39ab2d0f3b36ca5c8b5d56"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "fb5d96cff72171f2334091b7f61274cc26c8f0b0c690f797ecb1c258fa31a6d0"
   end
 
   keg_only :versioned_formula
@@ -23,12 +28,17 @@ class Hdf5AT18 < Formula
   depends_on "szip"
 
   def install
-    inreplace %w[c++/src/h5c++.in fortran/src/h5fc.in tools/misc/h5cc.in],
-      "${libdir}/libhdf5.settings", "#{pkgshare}/libhdf5.settings"
+    inreplace %w[c++/src/h5c++.in fortran/src/h5fc.in bin/h5cc.in],
+      "${libdir}/libhdf5.settings",
+      "#{pkgshare}/libhdf5.settings"
 
     inreplace "src/Makefile.am", "settingsdir=$(libdir)", "settingsdir=#{pkgshare}"
 
     system "autoreconf", "-fiv"
+
+    # necessary to avoid compiler paths that include shims directory being used
+    ENV["CC"] = "/usr/bin/cc"
+    ENV["CXX"] = "/usr/bin/c++"
 
     args = %W[
       --disable-dependency-tracking

@@ -1,35 +1,35 @@
 class Miller < Formula
   desc "Like sed, awk, cut, join & sort for name-indexed data such as CSV"
   homepage "https://github.com/johnkerl/miller"
-  url "https://github.com/johnkerl/miller/releases/download/v5.6.0/mlr-5.6.0.tar.gz"
-  sha256 "325f9acabd5b1b00663b03c6454f609981825ba12d3f82d000772399a28a1ff2"
+  url "https://github.com/johnkerl/miller/releases/download/v5.10.2/mlr-5.10.2.tar.gz"
+  sha256 "4f41ff06c1fbf524127574663873ba83bb3f4e3eb31e29faf5c2ef3fc6595cb4"
+  license "BSD-2-Clause"
   head "https://github.com/johnkerl/miller.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "1b66317a06c90c4727dbb51796ac0b2b79690dcef5c19f703da41d43dae7a173" => :catalina
-    sha256 "39fad1f8eaee23cb0135469b016b01dc6f1117f05f197df2e483e4661ebe2710" => :mojave
-    sha256 "a3c4e36c09ecf0d8335527e8261d9a4caa9277f6510b35daae4bd758e7b43dbf" => :high_sierra
-    sha256 "dbaab2613849972d394e25503cffbf89f2aae99492e63dc3ddac8115607f8af4" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "43dbaa91eb0f047f2189f6108860b7fcf572315186e21ad3f32e753ed9826969"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f6a4e253c2f653c0d988aca0a2ed81cf8b8e2ce4040cc43a27582759ba8759f6"
+    sha256 cellar: :any_skip_relocation, catalina:      "5538dc76e119ce1507806b67eaa7612af4c68a9a491257a10844545ee2d5a669"
+    sha256 cellar: :any_skip_relocation, mojave:        "c04494a29315e246aaa9a553eff17ee4ab4e83a1dfe9a46995ea6e0eebc1221a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "34f52f05692f42d573dc3ca33d5d5343822ba1630b327ad3a9380250a8c0d33c"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
 
-  depends_on "flex" => :build unless OS.mac?
+  uses_from_macos "flex" => :build
 
   def install
     # Profiling build fails with Xcode 11, remove it
-    inreplace "c/Makefile.am", /noinst_PROGRAMS=\s*mlrg\s*\\\n\s*mlrp/, ""
+    inreplace "c/Makefile.am", /noinst_PROGRAMS=\s*mlrg/, ""
     system "autoreconf", "-fvi"
 
     system "./configure", "--prefix=#{prefix}", "--disable-silent-rules",
                           "--disable-dependency-tracking"
     system "make"
     # Time zone related tests fail. Reported upstream https://github.com/johnkerl/miller/issues/237
-    system "make", "check" unless OS.linux? && ENV["CI"]
+    system "make", "check" if !OS.mac? && ENV["HOMEBREW_GITHUB_ACTIONS"]
     system "make", "install"
   end
 
@@ -40,6 +40,6 @@ class Miller < Formula
       4,5,6
     EOS
     output = pipe_output("#{bin}/mlr --csvlite cut -f a test.csv")
-    assert_match /a\n1\n4\n/, output
+    assert_match "a\n1\n4\n", output
   end
 end

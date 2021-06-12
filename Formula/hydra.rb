@@ -1,17 +1,17 @@
 class Hydra < Formula
   desc "Network logon cracker which supports many services"
   homepage "https://github.com/vanhauser-thc/thc-hydra"
-  url "https://github.com/vanhauser-thc/thc-hydra/archive/v9.0.tar.gz"
-  sha256 "56672e253c128abaa6fb19e77f6f59ba6a93762a9ba435505a009ef6d58e8d0e"
-  revision 4
+  url "https://github.com/vanhauser-thc/thc-hydra/archive/v9.2.tar.gz"
+  sha256 "1a28f064763f9144f8ec574416a56ef51c0ab1ae2276e35a89ceed4f594ec5d2"
+  license "AGPL-3.0-only"
   head "https://github.com/vanhauser-thc/thc-hydra.git"
 
   bottle do
-    cellar :any
-    sha256 "c45914c437ca6bf8b969a88da0249b24045a713c3ef1f5c8d66c67cafd2505f8" => :catalina
-    sha256 "72663c807cdbc3f18e0f0f69c2139e75a7bc11b73138aba9b58d3c75061bdd23" => :mojave
-    sha256 "61c6734cca2ae64fa62747afd14eb05bd869bf521fee854079aff6861ac38992" => :high_sierra
-    sha256 "e08afabe65a3ef426e7a367ffcff7effa260c3163b0a03936f0a53b71480c7b7" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "17478cc89073f649064ce5ed78103261eef8543df11a2601fdcfb6d19ad44154"
+    sha256 cellar: :any,                 big_sur:       "e3077504146989bf221da7acd53224ecec02d95349682c98f3132e9795d79481"
+    sha256 cellar: :any,                 catalina:      "310e71af53f35765106b99e890a4989f9b3856e09822f68201e288ebe0c91ff9"
+    sha256 cellar: :any,                 mojave:        "61dce3743fe0b7ce2db21bd833c3a99fea8c571f2c97ce57930ffb078516af4d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "40345226845558ff97a4dae41989b74a730f3b79811c6503df4441e95ce68ac3"
   end
 
   depends_on "pkg-config" => :build
@@ -45,6 +45,11 @@ class Hydra < Formula
     # https://github.com/vanhauser-thc/thc-hydra/issues/22
     system "./configure", "--prefix=#{prefix}"
     bin.mkpath
+    # remove unsupported ld flags on mac
+    # related to https://github.com/vanhauser-thc/thc-hydra/issues/622
+    on_macos do
+      inreplace "Makefile", "-Wl,--allow-multiple-definition", ""
+    end
     system "make", "all", "install"
     share.install prefix/"man" # Put man pages in correct place
   end

@@ -1,25 +1,41 @@
 class Xrootd < Formula
   desc "High performance, scalable, fault-tolerant access to data"
   homepage "https://xrootd.slac.stanford.edu/"
-  url "https://xrootd.slac.stanford.edu/download/v4.11.1/xrootd-4.11.1.tar.gz"
-  sha256 "87fa867168e5accc36a37cfe66a3b64f2cf2a91e2975b85adbf5efda6c9d7029"
+  url "https://xrootd.slac.stanford.edu/download/v5.2.0/xrootd-5.2.0.tar.gz"
+  sha256 "e4a90116bd4868c7738024a9091d5b393f649d891da97d7436d520b4a8f87859"
+  license "LGPL-3.0-or-later"
   head "https://github.com/xrootd/xrootd.git"
 
+  livecheck do
+    url "http://xrootd.org/dload.html"
+    regex(/href=.*?xrootd[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "d29cb551e03ec90aa36831aa84cb2d28ad99face2d169feb7f4a3eafd9f17c7b" => :catalina
-    sha256 "271295a2f20f4f1cc34644078a0f3d95b2a7353fcae19eefb8bcf78212cafff8" => :mojave
-    sha256 "5c02484e8eef5000acad850087bbdd06e6ea995b2ce83e5c317e42ca64fba442" => :high_sierra
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "ec10800dc260fe5f5d3d2c8eaf59bcc4dd66b26e5ef6711d5d69cbdfa127890b"
+    sha256 cellar: :any,                 big_sur:       "175899de5aa39c513c96846122deb2d39ce36a337a3bac290a8aab6b5e12df77"
+    sha256 cellar: :any,                 catalina:      "6d8692b31b1075069e7e91f3544761fca89cc61bebcf196990b80cfc858be647"
+    sha256 cellar: :any,                 mojave:        "e4b86a28028400f6e4f152af77b0784adaf7f0b65c4b2bdf6dece891cf45268a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8b466362fa8c5b711b2a56d8ebf032adbb006e92cfe32cc83d37e6276a42e306"
   end
 
   depends_on "cmake" => :build
   depends_on "openssl@1.1"
   depends_on "readline"
+
+  uses_from_macos "libxml2"
   uses_from_macos "zlib"
+
+  on_linux do
+    depends_on "util-linux"
+  end
 
   def install
     mkdir "build" do
-      system "cmake", "..", *std_cmake_args, "-DENABLE_PYTHON=OFF"
+      system "cmake", "..", *std_cmake_args,
+                            "-DENABLE_PYTHON=OFF",
+                            "-DCMAKE_INSTALL_RPATH=#{rpath}"
       system "make", "install"
     end
   end

@@ -1,29 +1,23 @@
 class Zabbix < Formula
   desc "Availability and monitoring solution"
   homepage "https://www.zabbix.com/"
-  url "https://downloads.sourceforge.net/project/zabbix/ZABBIX%20Latest%20Stable/4.4.3/zabbix-4.4.3.tar.gz"
-  sha256 "9d6f599283e10014c3b10688c92255f9fbe36d5efc071d59fe69cf146b7cf3e6"
+  url "https://cdn.zabbix.com/zabbix/sources/stable/5.4/zabbix-5.4.1.tar.gz"
+  sha256 "dbfbcf6c6da31b832abb60e3ebdd93efff89a46015b0f250aebc01bf17afb57b"
+  license "GPL-2.0-or-later"
+  head "https://github.com/zabbix/zabbix.git"
 
   bottle do
-    sha256 "6c068804843138afab45916c8f9ce11adf9f52159f0e2f0a32f9173f843f775b" => :catalina
-    sha256 "9c737e8374decfa86743a737180b555960ac4450af75b0acf25174859ae3ad33" => :mojave
-    sha256 "98dc9939625487b25b427a878e4508d46bf7623ea1d8ea1d373b5dcacf829bb6" => :high_sierra
-    sha256 "bfce0ebf7403dc5458f492db26a348e602c2d7fe5848069d79b4e268093367e3" => :x86_64_linux
+    sha256 arm64_big_sur: "83510e5fff52c13c1444e73a71af668dc75539c477c3a4586ced65c0fba46241"
+    sha256 big_sur:       "ace808c83e45d41f02a585d948c5ef5b9e7ba5b7a34872fb4aaff08e7c3baa7d"
+    sha256 catalina:      "b87a7328b7bfae7369231ded96ef6b9cf0b65d7b5136eb5b19b628502956730d"
+    sha256 mojave:        "9105ab4213b17a94068cfd75962d338df6c1f864021b7b3979029941fb9de6ca"
+    sha256 x86_64_linux:  "6bcab8c6f5814d7b6b555633fee94d4bb48e5e718f25da1388fac20e0834bff0"
   end
 
   depends_on "openssl@1.1"
   depends_on "pcre"
 
-  def brewed_or_shipped(db_config)
-    brewed_db_config = "#{HOMEBREW_PREFIX}/bin/#{db_config}"
-    (File.exist?(brewed_db_config) && brewed_db_config) || which(db_config)
-  end
-
   def install
-    if OS.mac?
-      sdk = MacOS::CLT.installed? ? "" : MacOS.sdk_path
-    end
-
     args = %W[
       --disable-dependency-tracking
       --prefix=#{prefix}
@@ -33,13 +27,9 @@ class Zabbix < Formula
       --with-openssl=#{Formula["openssl@1.1"].opt_prefix}
     ]
 
-    if OS.mac?
+    on_macos do
+      sdk = MacOS::CLT.installed? ? "" : MacOS.sdk_path
       args << "--with-iconv=#{sdk}/usr"
-    end
-
-    if OS.mac? && MacOS.version == :el_capitan && MacOS::Xcode.version >= "8.0"
-      inreplace "configure", "clock_gettime(CLOCK_REALTIME, &tp);",
-                             "undefinedgibberish(CLOCK_REALTIME, &tp);"
     end
 
     system "./configure", *args

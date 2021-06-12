@@ -1,15 +1,16 @@
 class HowardHinnantDate < Formula
   desc "C++ library for date and time operations based on <chrono>"
   homepage "https://github.com/HowardHinnant/date"
-  url "https://github.com/HowardHinnant/date/archive/v2.4.1.tar.gz"
-  sha256 "98907d243397483bd7ad889bf6c66746db0d7d2a39cc9aacc041834c40b65b98"
+  url "https://github.com/HowardHinnant/date/archive/v3.0.1.tar.gz"
+  sha256 "7a390f200f0ccd207e8cff6757e04817c1a0aec3e327b006b7eb451c57ee3538"
+  license "MIT"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "7afeb7e1b64e9e78d766be80a2e95c51b404092eeb1e5deb4d84956eeb02aff3" => :catalina
-    sha256 "d1601c1a3c38241472d597a126ed120124995919e42d5a9cc10357c699d1b5e7" => :mojave
-    sha256 "f7600a317e2569e37ac78be36abaff96f8f572cd7650d9c202a5a758f59f46f8" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "deff47e2027f805ef5cd430d0700470cf8bada0cde442e8674ae6a832e3b9888"
+    sha256 cellar: :any,                 big_sur:       "b8fc90e684f2d3b711fcb405c082f8ad637eac8f6c5816b746284c911950eb5a"
+    sha256 cellar: :any,                 catalina:      "bebf754666baa69673a77fb5eeb3c0ebe9931b7aa2d3991a3f6fa235a439d11b"
+    sha256 cellar: :any,                 mojave:        "d140b4b590c5ef8c25e80abaa8466dbcb6f10a95ca0dec551de7fb0e213171b4"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "477b4054dcafec93fbc85d99d15400bc6115ffc21d44fdf6972b40ccb05fe6f9"
   end
 
   depends_on "cmake" => :build
@@ -18,7 +19,8 @@ class HowardHinnantDate < Formula
     system "cmake", ".", *std_cmake_args,
                          "-DENABLE_DATE_TESTING=OFF",
                          "-DUSE_SYSTEM_TZ_DB=ON",
-                         "-DBUILD_SHARED_LIBS=ON"
+                         "-DBUILD_SHARED_LIBS=ON",
+                         "-DBUILD_TZ_LIB=ON"
     system "make", "install"
   end
 
@@ -32,7 +34,7 @@ class HowardHinnantDate < Formula
         std::cout << t << std::endl;
       }
     EOS
-    system ENV.cxx, "test.cpp", "-std=c++1y", "-L#{lib}", "-ltz", "-o", "test"
+    system ENV.cxx, "test.cpp", "-std=c++1y", "-L#{lib}", "-ldate-tz", "-o", "test"
     system "./test"
   end
 end

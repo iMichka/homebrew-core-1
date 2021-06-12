@@ -1,24 +1,29 @@
 class Openldap < Formula
   desc "Open source suite of directory software"
   homepage "https://www.openldap.org/software/"
-  url "https://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.4.48.tgz"
-  sha256 "d9523ffcab5cd14b709fcf3cb4d04e8bc76bb8970113255f372bc74954c6074d"
-  revision 1
+  url "https://www.openldap.org/software/download/OpenLDAP/openldap-release/openldap-2.5.5.tgz"
+  sha256 "74ecefda2afc0e054d2c7dc29166be6587fa9de7a4087a80183bc9c719dbf6b3"
+  license "OLDAP-2.8"
+
+  livecheck do
+    url "https://www.openldap.org/software/download/OpenLDAP/openldap-release/"
+    regex(/href=.*?openldap[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "644e0ba997bdc81cddd8906cb7eee96bd44ed7e6ad4a586db6313f13e251b0e2" => :catalina
-    sha256 "9094f2a881c3ceebec82e0be185a684ffbed08b05ddca3d6a87c7b730021b351" => :mojave
-    sha256 "910f65142bf5df01cc618a8896b51b1cd925e162078afc599256232e2804eb71" => :high_sierra
-    sha256 "2f8144b9e6930366b005469d4cc33f57d80048d402a60b3c1f3bf4783139ddd0" => :sierra
-    sha256 "23fc6f3708d69544ffdfb79c94bfb989e31631095ed5ec77b0a19b7e577c4a10" => :x86_64_linux
+    sha256 arm64_big_sur: "8b66ccd0a169b6f2ecdff69946a458d404fcb34fe2d4171f83530e9f66318c3f"
+    sha256 big_sur:       "4c98f6da7b2d08b95410c87a6a378dea1299bad5f44dbf2583f468495e05da30"
+    sha256 catalina:      "79ff7be2a569b51a09ee8c6239c36bf55b7f5553cae099550471d930b08a18b7"
+    sha256 mojave:        "82aef6314649c3b0f5b32085976caa677e230829b4dbdca77fcf143182b48209"
+    sha256 x86_64_linux:  "a1507a170d8679783d3a47790bcd63a113916db1299cf63c522a9f62a103b833"
   end
 
   keg_only :provided_by_macos
 
   depends_on "openssl@1.1"
-  unless OS.mac?
-    depends_on "groff" => :build
-    depends_on "util-linux" # for libuuid.so.1
+
+  on_linux do
+    depends_on "util-linux"
   end
 
   def install
@@ -45,7 +50,13 @@ class Openldap < Formula
       --enable-translucent
       --enable-unique
       --enable-valsort
+      --without-systemd
     ]
+
+    # Disable manpage generation
+    inreplace "Makefile.in" do |s|
+      s.change_make_var! "SUBDIRS", "include libraries clients servers"
+    end
 
     system "./configure", *args
     system "make", "install"

@@ -5,18 +5,17 @@ class Vf < Formula
   sha256 "6418d188b88d5f3885b7a8d24520ac47accadb5144ae24e836aafbea4bd41859"
   head "https://github.com/glejeune/vf.git"
 
-  bottle :unneeded
-
   def install
     # Since the shell file is sourced instead of run
     # install to prefix instead of bin
     prefix.install Dir["*"]
   end
 
-  def caveats; <<~EOS
-    To complete installation, add the following line to your shell's rc file:
-      source #{opt_prefix}/vf.sh
-  EOS
+  def caveats
+    <<~EOS
+      To complete installation, add the following line to your shell's rc file:
+        source #{opt_prefix}/vf.sh
+    EOS
   end
 
   test do

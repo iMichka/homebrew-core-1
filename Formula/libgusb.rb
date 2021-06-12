@@ -1,38 +1,35 @@
 class Libgusb < Formula
+  include Language::Python::Shebang
+
   desc "GObject wrappers for libusb1"
   homepage "https://github.com/hughsie/libgusb"
-  url "https://people.freedesktop.org/~hughsient/releases/libgusb-0.3.1.tar.xz"
-  sha256 "4b677a372e97748970b1bb3dac076da2d051e4376c5960e77b7159701c851fed"
+  url "https://people.freedesktop.org/~hughsient/releases/libgusb-0.3.7.tar.xz"
+  sha256 "da5f25d6873622689b3351486cbe028efc254403f646dd81225dfe8542d8c67d"
+  license "LGPL-2.1-only"
+  head "https://github.com/hughsie/libgusb.git"
 
   bottle do
-    sha256 "76f5259965a34d7103b135620a99a241d201ddbbc8ae487f5baf27f2fb5b9c0f" => :catalina
-    sha256 "6e79520023ec8b49404af47096b7daafb31d195feb90026beb4bc445a9a8a1bd" => :mojave
-    sha256 "9878b11715c9148335365c0886554b34f576b9c4a0319fd91afcf278725f067b" => :high_sierra
+    sha256 arm64_big_sur: "a03dfea8e1edf9bdf901a7d17cb8cbc9aeb7fe4188376db74d51a0f2d9b0a04c"
+    sha256 big_sur:       "2fd0b79da4ed73da54bae2ae8624ea7b669cb5fc0ff56271e59a54d17f849095"
+    sha256 catalina:      "87dfd4dbc0d2061835c78347f1ea1e37def0091e66ab1da1409b32c03f4a210e"
+    sha256 mojave:        "9eda4fe4eae3ab04d80b218ec9f2f5c631b8eadc31a12b0708af1adb7fb44371"
   end
 
   depends_on "gobject-introspection" => :build
-  depends_on "meson-internal" => :build
+  depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
   depends_on "vala" => :build
   depends_on "glib"
   depends_on "libusb"
-
-  # The original usb.ids file can be found at http://www.linux-usb.org/usb.ids
-  # It is updated over time and its checksum changes, we maintain a copy
-  resource "usb.ids" do
-    url "https://raw.githubusercontent.com/Homebrew/formula-patches/4235be3ce12f415f75869349af9a4198543f167a/simple-scan/usb.ids"
-    sha256 "ceceb3759e48eaf47451d7bca81ef4174fced1d4300f9ed33e2b53ee23160c6b"
-  end
-
-  # see https://github.com/hughsie/libgusb/issues/11
-  patch :DATA
+  depends_on "usb.ids"
 
   def install
-    (share/"hwdata/").install resource("usb.ids")
+    rewrite_shebang detected_python_shebang, "contrib/generate-version-script.py"
+
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", "-Ddocs=false", "-Dusb_ids=#{share}/hwdata/usb.ids", ".."
+      system "meson", *std_meson_args, "-Ddocs=false", "-Dusb_ids=#{Formula["usb.ids"].opt_share}/misc/usb.ids", ".."
       system "ninja"
       system "ninja", "install"
     end
@@ -74,26 +71,3 @@ class Libgusb < Formula
     system "./test"
   end
 end
-
-__END__
-diff --git a/gusb/meson.build b/gusb/meson.build
-index c39a8f1..4bee8ef 100644
---- a/gusb/meson.build
-+++ b/gusb/meson.build
-@@ -37,8 +37,6 @@ install_headers([
-   subdir : 'gusb-1/gusb',
- )
-
--mapfile = 'libgusb.ver'
--vflag = '-Wl,--version-script,@0@/@1@'.format(meson.current_source_dir(), mapfile)
- gusb = shared_library(
-   'gusb',
-   sources : [
-@@ -62,8 +60,6 @@ gusb = shared_library(
-       root_incdir,
-       lib_incdir,
-   ],
--  link_args : vflag,
--  link_depends : mapfile,
-   install : true
- )

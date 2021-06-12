@@ -1,14 +1,16 @@
 class Libpeas < Formula
   desc "GObject plugin library"
   homepage "https://developer.gnome.org/libpeas/stable/"
-  url "https://download.gnome.org/sources/libpeas/1.24/libpeas-1.24.1.tar.xz"
-  sha256 "9c3acf7a567cbb4f8bf62b096e013f12c3911cc850c3fa9900cbd5aa4f6ec284"
+  url "https://download.gnome.org/sources/libpeas/1.30/libpeas-1.30.0.tar.xz"
+  sha256 "0bf5562e9bfc0382a9dcb81f64340787542568762a3a367d9d90f6185898b9a3"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "0b0f838272f0a44cb81c70fffb984a054a12ea63f6b515aab1f1158bc96bad1b" => :catalina
-    sha256 "504886a5e23802e49f8a10de0bc0547f4235854ae3eae3ac87fa3aed39ab50c1" => :mojave
-    sha256 "be6e36451525d6b365159b177eea7a1b92fc2cae3376a923970eef2f432cba16" => :high_sierra
-    sha256 "fc6db6779ede131586cf8da9b98aae0632edc250f3135fde58a23651ef262482" => :x86_64_linux
+    sha256 arm64_big_sur: "826333c759333b483af3466322a0c7f21cb723674f4a71e118ca8ad78ade4a70"
+    sha256 big_sur:       "204fd26d92f3a9585d6823fff5df8a8108a0ed904c80a845e0bfd5173152c934"
+    sha256 catalina:      "cddddc6a29c533bbff776cb2635a4494f3d7024f0c4aeb80e4e378427f790100"
+    sha256 mojave:        "1df3679b835916a8c135edbbfa246e27cfdeac82717250505363f117130f9832"
+    sha256 x86_64_linux:  "5eb3cf28f87b9a261ee7f403db1355c9ed63464c81e024b8a2588d445bc8c00d"
   end
 
   depends_on "meson" => :build
@@ -19,20 +21,10 @@ class Libpeas < Formula
   depends_on "gobject-introspection"
   depends_on "gtk+3"
   depends_on "pygobject3"
-  depends_on "python"
-
-  # patch submitted upstream as https://gitlab.gnome.org/GNOME/libpeas/merge_requests/22
-  patch do
-    url "https://gitlab.gnome.org/GNOME/libpeas/commit/d5f5749372.diff"
-    sha256 "a46c4229656423de2e277bf5dd96e7f595cee19cc112c10f422c29c960cf4dcc"
-  end
+  depends_on "python@3.9"
 
   def install
-    # Needed by intltool (xml::parser)
-    ENV.prepend_path "PERL5LIB", "#{Formula["intltool"].libexec}/lib/perl5" unless OS.mac?
-
-    args = %W[
-      --prefix=#{prefix}
+    args = std_meson_args + %w[
       -Dpython3=true
       -Dintrospection=true
       -Dvapi=true
@@ -79,7 +71,9 @@ class Libpeas < Formula
       -lgobject-2.0
       -lpeas-1.0
     ]
-    flags << "-lintl" if OS.mac?
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end

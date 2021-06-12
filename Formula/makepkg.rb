@@ -1,19 +1,20 @@
 class Makepkg < Formula
   desc "Compile and build packages suitable for installation with pacman"
   homepage "https://wiki.archlinux.org/index.php/makepkg"
-  url "https://projects.archlinux.org/git/pacman.git",
-      :tag      => "v5.0.2",
-      :revision => "0c633c27eaeab2a9d30efb01199579896ccf63c9"
-  revision 1
-  head "https://projects.archlinux.org/git/pacman.git"
+  url "https://git.archlinux.org/pacman.git",
+      tag:      "v5.0.2",
+      revision: "0c633c27eaeab2a9d30efb01199579896ccf63c9"
+  license "GPL-2.0"
+  head "https://git.archlinux.org/pacman.git"
 
   bottle do
-    sha256 "d57aacac971c91dc50c67e1549ace86763107a3dd2f29f3053f6b4517ef1097e" => :catalina
-    sha256 "d6609f75988babfe82d73c7dd85874092fcacfd24fae84bf6bfdec8262ab4279" => :mojave
-    sha256 "b8c32c0be56ad6c19d8838c7f27aff105ccd03602bd9357206724efdc6f0c270" => :high_sierra
-    sha256 "70ffabbc97bdd9dc1567bd18c7c39151870717835988e3d3fb4ffa7f46c564ca" => :sierra
-    sha256 "e7c77a0cf6ac20334d2b15482930b3af1d6e29cf6597c3f60873b8bed18ab3b5" => :x86_64_linux
+    rebuild 2
+    sha256 catalina:     "fb89c76eb6c2a50b14d2380ad1440b37f96e86f39d5bd60378ab5ac85cd02b08"
+    sha256 mojave:       "b6606a63e0727072c1016ffa8b60db28de0de67d3b5d3f495aa8d0728b7325c9"
+    sha256 high_sierra:  "c8f2f6999669c56b5e40e2608ad1e0adfe2c8eb73f8cef959a229856d21da6ed"
   end
+
+  disable! date: "2022-03-28", because: "depends on fakeroot which does not build"
 
   depends_on "asciidoc" => :build
   depends_on "autoconf" => :build
@@ -25,12 +26,9 @@ class Makepkg < Formula
   depends_on "fakeroot"
   depends_on "gettext"
   depends_on "libarchive"
-  # libalpm now calls fstatat, which is only available for >= 10.10
-  # Regression due to https://git.archlinux.org/pacman.git/commit/?id=16718a21
-  # Reported 19 Jun 2016: https://bugs.archlinux.org/task/49771
-  depends_on :macos => :yosemite
   depends_on "openssl@1.1"
-  depends_on "m4" => :build unless OS.mac?
+
+  uses_from_macos "m4" => :build
   uses_from_macos "libxslt"
 
   def install
@@ -50,11 +48,6 @@ class Makepkg < Formula
       pkgrel=0
       pkgver=0
     EOS
-    # Won't run as root, use more permissive test
-    if ENV["USER"] == "root"
-      assert_match "makepkg (pacman) #{version}", pipe_output("#{bin}/makepkg --version")
-    else
-      assert_match "md5sums=('e232a2683c0", pipe_output("#{bin}/makepkg -dg 2>&1")
-    end
+    assert_match "md5sums=('e232a2683c0", pipe_output("#{bin}/makepkg -dg 2>&1")
   end
 end

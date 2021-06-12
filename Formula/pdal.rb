@@ -1,16 +1,27 @@
 class Pdal < Formula
   desc "Point data abstraction library"
   homepage "https://www.pdal.io/"
-  url "https://github.com/PDAL/PDAL/releases/download/2.0.1/PDAL-2.0.1-src.tar.gz"
-  sha256 "7632808f49ff7defa042e810ab8696beb3e59458082126edd14f7be7ae463cbe"
+  url "https://github.com/PDAL/PDAL/releases/download/2.3.0/PDAL-2.3.0-src.tar.gz"
+  sha256 "5b0b92258874ef722b5027054d64c8b318b524e7a9b2b250d0330d76e19b8618"
+  license "BSD-3-Clause"
   head "https://github.com/PDAL/PDAL.git"
 
+  # The upstream GitHub repository sometimes tags a commit with only a
+  # major/minor version (`1.2`) and then uses major/minor/patch (`1.2.3`) for
+  # the release (with downloadable assets). This inconsistency can be a problem
+  # if we need to substitute the version from livecheck in the `stable` URL, so
+  # we use the `GithubLatest` strategy here.
+  livecheck do
+    url :stable
+    regex(/href=.*?PDAL[._-]v?(\d+(?:\.\d+)+)[._-]src\.t/i)
+    strategy :github_latest
+  end
+
   bottle do
-    rebuild 1
-    sha256 "cd83816acd8f7f4328f7e327eb33fda0d40dece97255a40415fc1f3c19539e52" => :catalina
-    sha256 "deb26dd7d9f1fff59e075aa2e290bc6b8ce5a9852838a232f2954e77ef220907" => :mojave
-    sha256 "f2865ee1f77d01b1f5b62b24ef4f3a4aeb4db2cdab9cbd0b315c3d9666fd8b31" => :high_sierra
-    sha256 "6a2b3f0fd70ea54404c434a486faff6f74154d4e09b0b2da67908d0a829ba3d4" => :x86_64_linux
+    sha256 arm64_big_sur: "bab6bc4359165c0114f42bfaa336efd455f4be53504b4c9ccd730f69fa4138e6"
+    sha256 big_sur:       "c5b53c3b047b1cc147c4b7a2b32337c219f29b04ca5badb054ba2c5d282f6d6f"
+    sha256 catalina:      "5ed3e147a0d6078d4757b59ec97edd1b582c6e696f0c1a7b458deed020be38c7"
+    sha256 mojave:        "c907f76ffd95101e6d7555cc0f7da93c0380e03a54973b03c02e0be0998e8b79"
   end
 
   depends_on "cmake" => :build
@@ -33,6 +44,7 @@ class Pdal < Formula
                          "-DBUILD_PLUGIN_SQLITE=ON"
 
     system "make", "install"
+    rm_rf "test/unit"
     doc.install "examples", "test"
   end
 

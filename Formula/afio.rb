@@ -6,11 +6,13 @@ class Afio < Formula
   head "https://github.com/kholtman/afio.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "a0f6de009260949cb2199851b08f77fb82b99b92cd1c9e680cd557ed2515b42f" => :mojave
-    sha256 "38f4da84d7056b33a6b7685f5206c32691ea673824faf3a971045feee8f52d93" => :high_sierra
-    sha256 "e235a62bd03e7c65ebd55b6e47d668d50bf7681d8be9a4022263a835333a6047" => :sierra
-    sha256 "f895412f6f0381b725670711528ee6647e9d97edd048a1fc872cc65be1ea670c" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "ca63097a9d1a29c00ae8a799941e937c7359b9df59c723b6110cd7b5cfe7c943"
+    sha256 cellar: :any_skip_relocation, big_sur:       "0daf7df23f36271e3141cc11cab067b33ed5855b9faba53bc697d5259deb82ca"
+    sha256 cellar: :any_skip_relocation, catalina:      "28494133d10acea2c1a298fe858d26889ba8567422b9f431710b156a4a8ac858"
+    sha256 cellar: :any_skip_relocation, mojave:        "733a4169a7be82dc173cc302994ad205493a9085580634b92faa38c96c84608b"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "53dbb826f2c3e050bd70078945d92772a4c434b0aa75e1a71cb29e56ed8e62fa"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "16d40fe84882c72ac33669b7aad35d8266f227a4e4322104c2de094040d332a6"
   end
 
   def install

@@ -3,16 +3,16 @@ require "language/node"
 class WebtorrentCli < Formula
   desc "Command-line streaming torrent client"
   homepage "https://webtorrent.io/"
-  url "https://registry.npmjs.org/webtorrent-cli/-/webtorrent-cli-3.0.4.tgz"
-  sha256 "5102f46937056db4e1268bc9ce6244435d0b3fab2dc5973911ecf5db4e372b8d"
+  url "https://registry.npmjs.org/webtorrent-cli/-/webtorrent-cli-3.3.0.tgz"
+  sha256 "f612dabb40fd603e62cd16a591228419876310b9633140c16c2bf9b932780e56"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e2c73414925c70265f2b60fc20aabaa24ad8513fdfa1db350fd52216283c1976" => :catalina
-    sha256 "feb8ebedf0ae71e606138a3aade95976433bbf97066a45bbb77b7667b7940ecd" => :mojave
-    sha256 "f8ce4a50913b23cf1f8d587d7fc51fbb071a6fb44d34be6b005a47d6cc20f435" => :high_sierra
-    sha256 "01b1f9ab124ec3310f09f202d98fdc03a4a8a4fc969a5304da464faadf04bf5e" => :sierra
-    sha256 "6937d452cdf3dbc3b82749a0f4479a9869d439c281e9b28f53d407d4958b0e01" => :x86_64_linux
+    sha256                               arm64_big_sur: "7d1af4299dfafdc66adc1dd7d0f12cf1b852e094586c77974f703610121182d1"
+    sha256                               big_sur:       "cfd6f86031ba394886c9dd05b42d338170bd02880bf6e8df93f10beacaab631a"
+    sha256                               catalina:      "20603de85a9c75267a8371717d99bb9d407bb98afb034d1ee20e1af90788c613"
+    sha256                               mojave:        "7fea3d8455de1f96f6df67ad06182beb354ade9a8803461af71d5aaf92912b28"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "64c5afeaeba09aa37235bc4dd96be8913f450c2a65a86cc2cba3bc4a87fc0b17"
   end
 
   depends_on "node"
@@ -30,7 +30,7 @@ class WebtorrentCli < Formula
       &tr=https://tracker.archlinux.org:443/announce
     EOS
 
-    assert_equal <<~EOS.chomp, shell_output("#{bin}/webtorrent info '#{magnet_uri}'")
+    expected_output_raw = <<~EOS
       {
         "xt": "urn:btih:9eae210fe47a073f991c83561e75d439887be3f3",
         "dn": "archlinux-2017.02.01-x86_64.iso",
@@ -47,5 +47,10 @@ class WebtorrentCli < Formula
         "urlList": []
       }
     EOS
+    expected_json = JSON.parse(expected_output_raw)
+    actual_output_raw = shell_output("#{bin}/webtorrent info '#{magnet_uri}'")
+    actual_json = JSON.parse(actual_output_raw)
+    assert_equal expected_json["tr"].to_set, actual_json["tr"].to_set
+    assert_equal expected_json["announce"].to_set, actual_json["announce"].to_set
   end
 end

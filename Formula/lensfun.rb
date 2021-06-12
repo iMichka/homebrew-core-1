@@ -1,15 +1,24 @@
 class Lensfun < Formula
+  include Language::Python::Shebang
+
   desc "Remove defects from digital images"
   homepage "https://lensfun.github.io/"
   url "https://downloads.sourceforge.net/project/lensfun/0.3.95/lensfun-0.3.95.tar.gz"
   sha256 "82c29c833c1604c48ca3ab8a35e86b7189b8effac1b1476095c0529afb702808"
-  revision 1
+  license all_of: [
+    "LGPL-3.0-only",
+    "GPL-3.0-only",
+    "CC-BY-3.0",
+    :public_domain,
+  ]
+  revision 4
 
   bottle do
-    sha256 "51bfd4a5907768d1449902b4d6ab730563d21e0cf509379ea6dcf783351daf5a" => :catalina
-    sha256 "071b05645a8d0fc6e87a80ab75dfd3ec1047ce6ab8dd33e193ddc1117d3da36c" => :mojave
-    sha256 "ee89d7a5565ec4c467319ea4264a11f29574c82ac74b2fb68528b3acf0931530" => :high_sierra
-    sha256 "1e5895e7d6b2d2788c8839fc4a846ad3d48352892d06ae6115fff36e934032cb" => :sierra
+    sha256 arm64_big_sur: "976711172998eae467ddaba1feb590e0229cc0b41f11ac58e1db2d833a57c99c"
+    sha256 big_sur:       "48cd331c4214979daa6c122e2b776000af76208cb051562e27f4cef4f3aa3b93"
+    sha256 catalina:      "b0d8cdbcf20af0b1d577626e04643687955030785f57911e9d0a708a7ef95997"
+    sha256 mojave:        "526b6752883c94e7e2807fa06e6803e9dc45060189be102be5ed79c24b187af6"
+    sha256 x86_64_linux:  "05576b2d090c7f55b4d7dc56d4a1b74b82ebe60dddcc7f553f292ce9bc7266cd"
   end
 
   depends_on "cmake" => :build
@@ -17,11 +26,20 @@ class Lensfun < Formula
   depends_on "gettext"
   depends_on "glib"
   depends_on "libpng"
-  depends_on "python"
+  depends_on "python@3.9"
+
+  # This patch can be removed when new Lensfun release (v0.3.96) is available.
+  patch do
+    url "https://github.com/lensfun/lensfun/commit/de954c952929316ea2ad0f6f1e336d9d8164ace0.patch?full_index=1"
+    sha256 "67f0d2f33160bb1ab2b4d1e0465ad5967dbd8f8e3ba1d231b5534ec641014e3b"
+  end
 
   def install
     system "cmake", ".", *std_cmake_args
     system "make", "install"
+
+    rewrite_shebang detected_python_shebang,
+      bin/"lensfun-add-adapter", bin/"lensfun-convert-lcp", bin/"lensfun-update-data"
   end
 
   test do

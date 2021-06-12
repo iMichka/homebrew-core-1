@@ -1,26 +1,31 @@
 class Pidgin < Formula
   desc "Multi-protocol chat client"
   homepage "https://pidgin.im/"
-  url "https://downloads.sourceforge.net/project/pidgin/Pidgin/2.13.0/pidgin-2.13.0.tar.bz2"
-  sha256 "2747150c6f711146bddd333c496870bfd55058bab22ffb7e4eb784018ec46d8f"
-  revision 3
+  url "https://downloads.sourceforge.net/project/pidgin/Pidgin/2.14.5/pidgin-2.14.5.tar.bz2"
+  sha256 "26db80d2a3c1e740952757bd53c15b8fc8dd780dc8819a74b53b2ef3bfaf041f"
+  license "GPL-2.0-or-later"
+
+  livecheck do
+    url "https://sourceforge.net/projects/pidgin/files/Pidgin/"
+    regex(%r{href=.*?/v?(\d+(?:\.\d+)+)/?["' >]}i)
+    strategy :page_match
+  end
 
   bottle do
-    rebuild 1
-    sha256 "8a3f1b5f6bbe3b68064460deb492a76cdd94640def0ea85b2bb3d13c631ba0e7" => :catalina
-    sha256 "5447d58ebdfdbb28a8488c9fa0d77e4aee6787955826e2674cf53ba903268638" => :mojave
-    sha256 "735db47d591766486801549430960db2e83651ee373add2901ef71333eefea75" => :high_sierra
-    sha256 "f862f996bd1a302d21b13182cc9ac2ba4a00b6a87b63f0a78c9d6a7c2f293b6a" => :sierra
+    sha256 arm64_big_sur: "26a5922da1b2ab10d9f391523db4b75961721b18935d501e5d3f6a52386cce1b"
+    sha256 big_sur:       "f5f7649f02dedb9a642ffec5fd1451d9edf67156401c3ee3a560f8ad1d4e3bbb"
+    sha256 catalina:      "3103fe5f131ea00af6003582fada8f03d10439f691824c57a7db375cd52d2359"
+    sha256 mojave:        "f4bc83125a756e4b2aa4fbf92170d2484cfa852ce12481b99ef4df1e016b5b78"
   end
 
   depends_on "intltool" => :build
   depends_on "pkg-config" => :build
   depends_on "cairo"
   depends_on "gettext"
-  depends_on "glib"
   depends_on "gnutls"
   depends_on "gtk+"
   depends_on "libgcrypt"
+  depends_on "libgnt"
   depends_on "libidn"
   depends_on "libotr"
   depends_on "pango"
@@ -54,6 +59,14 @@ class Pidgin < Formula
 
     ENV["ac_cv_func_perl_run"] = "yes" if MacOS.version == :high_sierra
 
+    # patch pidgin to read plugins and allow them to live in separate formulae which can
+    # all install their symlinks into these directories. See:
+    #   https://github.com/Homebrew/homebrew-core/pull/53557
+    inreplace "finch/finch.c", "LIBDIR", "\"#{HOMEBREW_PREFIX}/lib/finch\""
+    inreplace "libpurple/plugin.c", "LIBDIR", "\"#{HOMEBREW_PREFIX}/lib/purple-2\""
+    inreplace "pidgin/gtkmain.c", "LIBDIR", "\"#{HOMEBREW_PREFIX}/lib/pidgin\""
+    inreplace "pidgin/gtkutils.c", "DATADIR", "\"#{HOMEBREW_PREFIX}/share\""
+
     system "./configure", *args
     system "make", "install"
 
@@ -67,5 +80,10 @@ class Pidgin < Formula
 
   test do
     system "#{bin}/finch", "--version"
+    system "#{bin}/pidgin", "--version"
+
+    pid = fork { exec "#{bin}/pidgin", "--config=#{testpath}" }
+    sleep 5
+    Process.kill "SIGTERM", pid
   end
 end

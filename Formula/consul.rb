@@ -2,30 +2,36 @@ class Consul < Formula
   desc "Tool for service discovery, monitoring and configuration"
   homepage "https://www.consul.io"
   url "https://github.com/hashicorp/consul.git",
-      :tag      => "v1.6.2",
-      :revision => "1200f25eabc75368484a78698e75f1e61b6ed010"
-  head "https://github.com/hashicorp/consul.git",
-       :shallow => false
+      tag:      "v1.9.6",
+      revision: "bbcbb733b416acd7066fe4e0157c58678e4ba1e4"
+  license "MPL-2.0"
+  head "https://github.com/hashicorp/consul.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "32643f0e02d5a1671be58ecc6038214ffbd60742cdcc70b83a6a72c9f419898b" => :catalina
-    sha256 "ffc918f234d61990e4762992d8e337e73d839a64e4c43f9e2fc8bb1d512aca3e" => :mojave
-    sha256 "c9c3305b87e39ffd0b4ae5a31a8b3fd6e811aa3a1314b93a252390ce3edd0bba" => :high_sierra
-    sha256 "0b8593c7c00196501bad9cfa3d69ed7e35280f9807c27b3607bc2f6d22034be5" => :x86_64_linux
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "go@1.12" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, big_sur:      "2a396a822a98275144d59a0caf3dccef184484b4acd02684b63db15c2b26a52e"
+    sha256 cellar: :any_skip_relocation, catalina:     "ae11c89db309a6ea6a9ad05a918a53498fa5463de720f082bffa1a51e34d3143"
+    sha256 cellar: :any_skip_relocation, mojave:       "d863e04c43a5a89df5b2692ee264e2cbc1836230c50a01bdcb394b1bf7ac6a3f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "2ec64f3af458436c173573caeed67dbe5f0bc7ddfd1d5f4ea24a109db7a52987"
+  end
+
+  depends_on "go" => :build
   depends_on "gox" => :build
-  depends_on "zip" => :build unless OS.mac?
+
+  uses_from_macos "zip" => :build
 
   def install
-    inreplace *(OS.mac? ? "scripts/build.sh" : "build-support/functions/20-build.sh"), "-tags=\"${GOTAGS}\" \\", "-tags=\"${GOTAGS}\" -parallel=4 \\"
-
-    # Avoid running `go get`
-    inreplace "GNUmakefile", "go get -u -v $(GOTOOLS)", ""
-
-    ENV["XC_OS"] = OS.mac? ? "darwin" : "linux"
+    # Specificy the OS, else all platforms will be built
+    on_macos do
+      ENV["XC_OS"] = "darwin"
+    end
+    on_linux do
+      ENV["XC_OS"] = "linux"
+    end
     ENV["XC_ARCH"] = "amd64"
     ENV["GOPATH"] = buildpath
     contents = Dir["{*,.git,.gitignore}"]
@@ -40,49 +46,66 @@ class Consul < Formula
     end
   end
 
-  plist_options :manual => "consul agent -dev -advertise 127.0.0.1"
+  plist_options manual: "consul agent -dev -bind 127.0.0.1"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
         <dict>
-          <key>SuccessfulExit</key>
-          <false/>
+          <key>KeepAlive</key>
+          <dict>
+            <key>SuccessfulExit</key>
+            <false/>
+          </dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/consul</string>
+            <string>agent</string>
+            <string>-dev</string>
+            <string>-bind</string>
+            <string>127.0.0.1</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>WorkingDirectory</key>
+          <string>#{var}</string>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/consul.log</string>
+          <key>StandardOutPath</key>
+          <string>#{var}/log/consul.log</string>
         </dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/consul</string>
-          <string>agent</string>
-          <string>-dev</string>
-          <string>-advertise</string>
-          <string>127.0.0.1</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>WorkingDirectory</key>
-        <string>#{var}</string>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/consul.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/consul.log</string>
-      </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do
-    # Workaround for Error creating agent: Failed to get advertise address: Multiple private IPs found. Please configure one.
-    return if ENV["CI"]
-
+    http_port = free_port
     fork do
-      exec "#{bin}/consul", "agent", *("-bind" unless OS.mac?), *("127.0.0.1" unless OS.mac?), "-data-dir", "."
+      # most ports must be free, but are irrelevant to this test
+      system(
+        "#{bin}/consul",
+        "agent",
+        "-dev",
+        "-bind", "127.0.0.1",
+        "-dns-port", "-1",
+        "-grpc-port", "-1",
+        "-http-port", http_port,
+        "-serf-lan-port", free_port,
+        "-serf-wan-port", free_port,
+        "-server-port", free_port
+      )
     end
+
+    # wait for startup
     sleep 3
-    system "#{bin}/consul", "leave"
+
+    k = "brew-formula-test"
+    v = "value"
+    system "#{bin}/consul", "kv", "put", "-http-addr", "127.0.0.1:#{http_port}", k, v
+    assert_equal v, shell_output("#{bin}/consul kv get -http-addr 127.0.0.1:#{http_port} #{k}").chomp
   end
 end

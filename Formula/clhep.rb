@@ -1,16 +1,21 @@
 class Clhep < Formula
   desc "Class Library for High Energy Physics"
   homepage "https://proj-clhep.web.cern.ch/proj-clhep/"
-  url "https://proj-clhep.web.cern.ch/proj-clhep/dist1/clhep-2.4.1.2.tgz"
-  sha256 "ff96e7282254164380460bc8cf2dff2b58944084eadcd872b5661eb5a33fa4b8"
+  url "https://proj-clhep.web.cern.ch/proj-clhep/dist1/clhep-2.4.4.2.tgz"
+  sha256 "0782964fc19f06b55998a091d5a0b70e1adb682f6c062bcb5a25467a2c060e8d"
+  license "GPL-3.0"
+
+  livecheck do
+    url :homepage
+    regex(%r{atest release.*?<b>v?(\d+(?:\.\d+)+)</b>}im)
+  end
 
   bottle do
-    cellar :any
-    sha256 "116324dfc55263b65af4a0cd44e1d701ef67a5a285ce2ed2ad68b7bb19c8485b" => :catalina
-    sha256 "b432a92dd9070812caa48707ed9068257b8a0162c81f8a2a3aaaf04285b75757" => :mojave
-    sha256 "b9c5dded0bd84d70329d4c974018fd74d7b7b01363de2e1fd22d8500b0c51c40" => :high_sierra
-    sha256 "7962be3355266b1c103eb87b5b46e649d4b6ca4b8925bd41f03f52a4d2abc19e" => :sierra
-    sha256 "2285127892196e7d1d1f9db03dc092ab9344675f6395f26ef4f190aa137f4358" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "bb4176442facaae5d335409ef825aab4a561a4d3a59316c04b66268d49f9d808"
+    sha256 cellar: :any,                 big_sur:       "73ed5e5dcdf0b6d8b50f91cb6e8839fb967be25a02f8374e185cc1cdc6718dce"
+    sha256 cellar: :any,                 catalina:      "e441759f93337bcadd69460a709ec0adc4c1655fdf1677893471f7497d840bac"
+    sha256 cellar: :any,                 mojave:        "77c920470ac55af4f79d2b6fced83301cbe187c13b2e238ab637d9bceb642120"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b30f5f2c3a27cb6aa43151d8c963de22edc26634179988d86dd538726ec44f6b"
   end
 
   head do
@@ -43,7 +48,7 @@ class Clhep < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "-L#{lib}", "-lCLHEP", "-I#{include}/CLHEP",
+    system ENV.cxx, "-std=c++11", "-L#{lib}", "-lCLHEP", "-I#{include}/CLHEP",
            testpath/"test.cpp", "-o", "test"
     assert_equal "r: 3.74166 phi: 1.10715 cos(theta): 0.801784",
                  shell_output("./test").chomp

@@ -1,31 +1,24 @@
 class SshVault < Formula
   desc "Encrypt/decrypt using SSH keys"
   homepage "https://ssh-vault.com/"
-  url "https://github.com/ssh-vault/ssh-vault.git",
-      :tag      => "0.12.5",
-      :revision => "a72db6da6b949f6adbfd82e1f44c4e12e17d0970"
+  url "https://github.com/ssh-vault/ssh-vault/archive/0.12.7.tar.gz"
+  sha256 "1fbe2036f4af167fe034371a7171577d732c52744b7093142cf5c836dfa5e2f2"
+  license "BSD-3-Clause"
   head "https://github.com/ssh-vault/ssh-vault.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "12e3e14671d317e1e337a81348962dd1abcad4994eb36d3d088f367cba4174b9" => :catalina
-    sha256 "a77d9ec9d764fec99d165746b07282934357081d313be6dd43f85de40534299a" => :mojave
-    sha256 "8670837a09a5eb5fccef4f7f6393b25ef208fcb332fcde26ecbe0fee66f04e5b" => :high_sierra
-    sha256 "e22d8fbfde41b9f87722cedda4811132b6656d99faffb4f3e41808ff7171266c" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "899d6b9dc54456774fd31aa01dbffa3c7c054f5792524a62f1af479775693ae8"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4756846a8d3c600174697c14690d4a58153aca8a3ed091a7d50f8f879a91cbfa"
+    sha256 cellar: :any_skip_relocation, catalina:      "8527d8a5b043f0cbac3be3baf52fa9e98957e4be715e6ce3ba5dbde6be167c4e"
+    sha256 cellar: :any_skip_relocation, mojave:        "4022c12c0a3f06ca6c3ea6a9ca5188b8b7f8962afd1baf4510da3e660b28e563"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "321ee2422cd9be8f8ed05295616fbbeab870c68660ee7c1783029c211fd0ba1c"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/ssh-vault/ssh-vault").install buildpath.children
-    cd "src/github.com/ssh-vault/ssh-vault" do
-      system "dep", "ensure", "-vendor-only"
-      ldflags = "-s -w -X main.version=#{version}"
-      system "go", "build", "-ldflags", ldflags, "-o", "#{bin}/ssh-vault", "cmd/ssh-vault/main.go"
-      prefix.install_metafiles
-    end
+    ldflags = "-s -w -X main.version=#{version}"
+    system "go", "build", *std_go_args(ldflags: ldflags), "cmd/ssh-vault/main.go"
   end
 
   test do

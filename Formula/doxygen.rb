@@ -1,33 +1,28 @@
 class Doxygen < Formula
   desc "Generate documentation for several programming languages"
-  homepage "http://www.doxygen.org/"
-  url "http://doxygen.nl/files/doxygen-1.8.16.src.tar.gz"
-  mirror "https://downloads.sourceforge.net/project/doxygen/rel-1.8.16/doxygen-1.8.16.src.tar.gz"
-  sha256 "ff981fb6f5db4af9deb1dd0c0d9325e0f9ba807d17bd5750636595cf16da3c82"
+  homepage "https://www.doxygen.org/"
+  url "https://doxygen.nl/files/doxygen-1.9.1.src.tar.gz"
+  mirror "https://downloads.sourceforge.net/project/doxygen/rel-1.9.1/doxygen-1.9.1.src.tar.gz"
+  sha256 "67aeae1be4e1565519898f46f1f7092f1973cce8a767e93101ee0111717091d1"
+  license "GPL-2.0-only"
   head "https://github.com/doxygen/doxygen.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "709545ed8f509c407d1a8ac2f36f396f783bd732c98ed18d79e57aa26e79fd74" => :mojave
-    sha256 "882a5c055350590d2dfa31cbc786dab9760acfd222a05ecbabd7833cd09a66d9" => :high_sierra
-    sha256 "5d002c6ee6d2619c5c5c9752c65537b81a135361f2c99f566a3e178de4f448f8" => :sierra
-    sha256 "9013ab089a62f4f9b62085dfed45ac52a547cad16a105bfb0710e3a89058bf69" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "2b5b2de93ac8703785860bfaf3e14f3268a07dc29bac9def13172785bcac7c5f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b8e1ea1bb601d8cc7cd7cf66b67a544e9e5534c2793cee5ac90bef5d076ad1e5"
+    sha256 cellar: :any_skip_relocation, catalina:      "10e13f7bf6977bee6487366b3fc1dc55b4c191d5d505cb816997838504b3e0a4"
+    sha256 cellar: :any_skip_relocation, mojave:        "0422adc9bfa6e1558cdcca24f8f4266f0927cf4c10fe3e245fe8e3017a7717b5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4a4bdafe1082ed127d04f7cdb589df6aefec88bc133fe65d15deacf0dd3e783e"
   end
 
   depends_on "bison" => :build
   depends_on "cmake" => :build
-  unless OS.mac?
-    depends_on "bison"
-    depends_on "flex"
-  end
+
+  uses_from_macos "flex" => :build
 
   def install
-    args = std_cmake_args + %W[
-      -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=#{MacOS.version}
-    ]
-
     mkdir "build" do
-      system "cmake", "..", *args
+      system "cmake", "..", *std_cmake_args
       system "make"
     end
     bin.install Dir["build/bin/*"]

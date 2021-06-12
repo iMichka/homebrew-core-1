@@ -1,19 +1,13 @@
 class GitVendor < Formula
   desc "Command for managing git vendored dependencies"
   homepage "https://brettlangdon.github.io/git-vendor"
-  url "https://github.com/brettlangdon/git-vendor/archive/v1.1.2.tar.gz"
-  sha256 "1ae2c12ae535669d0f65d297f5ff79d36d37dabf372feb6bda3f7856cf14ef97"
+  url "https://github.com/brettlangdon/git-vendor/archive/v1.2.1.tar.gz"
+  sha256 "7e2fb2f0299b8af152b5c9fd16133d50263a52dc8ecdc7a06111f7c0c5afc184"
+  license "MIT"
   head "https://github.com/brettlangdon/git-vendor.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "18f987b67a107a3bf300ecde0a8bfe9ae11876f150450697b43d13d76f8df840" => :catalina
-    sha256 "ce617fdad4c3a2eda141623da2e9eff59435f4ffd1c6a192efb6a8b5d13faa44" => :mojave
-    sha256 "468cfcc770bb7a88baf9961d665262be06de01bc85cfce19385e03d6e381521c" => :high_sierra
-    sha256 "24e13e681254ae28aae5d51dffda26d70c0cbfbca7c52b61f16f7496822c7d1f" => :sierra
-    sha256 "9461c5ce8f0b418d4ab1180c1fff22ef847b0d0af740489b3553d1715a8dc8c0" => :el_capitan
-    sha256 "62a8d29afff9e7e99c93917cfee92a68495443234346a72f16c8167d6310126a" => :yosemite
-    sha256 "962f05607dbd8ea0669f081039ce2fad01cddcdbfe53859b57c9ef69d89cde45" => :mavericks
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "0ad163b4e752517720cf3ed6c8de5c67c1fa88764ebfeb793d81bf22d29b3cc1"
   end
 
   def install

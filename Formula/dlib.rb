@@ -1,21 +1,22 @@
 class Dlib < Formula
   desc "C++ library for machine learning"
   homepage "http://dlib.net/"
-  url "http://dlib.net/files/dlib-19.19.tar.bz2"
-  sha256 "1decfe883635ce51acd72869cebe870ab9b85eb094d417adc8f48aa7b8c60cd7"
+  url "http://dlib.net/files/dlib-19.22.tar.bz2"
+  sha256 "20b8aad5d65594a34e22f59abbf0bf89450cb4a2a6a8c3b9eb49c8308f51d572"
+  license "BSL-1.0"
   head "https://github.com/davisking/dlib.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "8ae2a8809bfe9eb63be8ec74adb0be4d84a84b80d6e31b090d7c17537b0adf12" => :catalina
-    sha256 "8eff561df45210fe1a71101d62ecd8b3ae1055d49e7c0442735b60bffe4dc034" => :mojave
-    sha256 "394c9aeeb51f9fa1c0cc5fc3b8343e42a3b439e27ac1a938c0d993bb6a0712eb" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "db4b583ba9e3005a3c2d36fdc5ba78e2cb3ccdebd85216c8e7a00ccbdd81106e"
+    sha256 cellar: :any,                 big_sur:       "5d20cfc1befae91082d391364cb07dfc68d99713694ac81539d027e2138cc5bc"
+    sha256 cellar: :any,                 catalina:      "158a5e823cfda7ed8ef3ea9439d28b7c6508bb108f28fe8c94639bd35a9620e2"
+    sha256 cellar: :any,                 mojave:        "40748e73bb88c567e6ca5b991f8e4282e46422e625ec2dcc0ff0f11a5ed76f4c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a47a985d68a8b70e77ba1d03254f9e655268d876ab778ac1ccb0014355389fdf"
   end
 
   depends_on "cmake" => :build
   depends_on "jpeg"
   depends_on "libpng"
-  depends_on :macos => :el_capitan if OS.mac? # needs thread-local storage
   depends_on "openblas"
 
   def install
@@ -27,11 +28,12 @@ class Dlib < Formula
       -Dcblas_lib=#{Formula["openblas"].opt_lib}/libopenblas.dylib
       -Dlapack_lib=#{Formula["openblas"].opt_lib}/libopenblas.dylib
       -DDLIB_NO_GUI_SUPPORT=ON
-      -DUSE_SSE2_INSTRUCTIONS=ON
+      -DBUILD_SHARED_LIBS=ON
     ]
 
-    if MacOS.version.requires_sse4?
-      args << "-DUSE_SSE4_INSTRUCTIONS=ON"
+    if Hardware::CPU.intel?
+      args << "-DUSE_SSE2_INSTRUCTIONS=ON"
+      args << "-DUSE_SSE4_INSTRUCTIONS=ON" if MacOS.version.requires_sse4?
     end
 
     mkdir "dlib/build" do
@@ -49,8 +51,8 @@ class Dlib < Formula
         dlog << dlib::LINFO << "The answer is " << 42;
       }
     EOS
-    system ENV.cxx, *("-pthread" unless OS.mac?), "-std=c++11", "test.cpp", "-o", "test", "-I#{include}",
+    system ENV.cxx, "-pthread", "-std=c++11", "test.cpp", "-o", "test", "-I#{include}",
                     "-L#{lib}", "-ldlib"
-    assert_match /INFO.*example: The answer is 42/, shell_output("./test")
+    assert_match(/INFO.*example: The answer is 42/, shell_output("./test"))
   end
 end

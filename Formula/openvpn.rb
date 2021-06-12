@@ -1,25 +1,35 @@
 class Openvpn < Formula
   desc "SSL/TLS VPN implementing OSI layer 2 or 3 secure network extension"
-  homepage "https://openvpn.net/index.php/download/community-downloads.html"
-  url "https://swupdate.openvpn.org/community/releases/openvpn-2.4.8.tar.xz"
-  mirror "https://build.openvpn.net/downloads/releases/openvpn-2.4.8.tar.xz"
-  sha256 "fb8ca66bb7807fff595fbdf2a0afd085c02a6aa47715c9aa3171002f9f1a3f91"
+  homepage "https://openvpn.net/community/"
+  url "https://swupdate.openvpn.org/community/releases/openvpn-2.5.2.tar.xz"
+  mirror "https://build.openvpn.net/downloads/releases/openvpn-2.5.2.tar.xz"
+  sha256 "b12743836901f365efaf82ab2493967e1b21c21eb43ce9a8da1002a17c9c1dc8"
+  license "GPL-2.0-only" => { with: "openvpn-openssl-exception" }
+
+  livecheck do
+    url "https://openvpn.net/community-downloads/"
+    regex(/href=.*?openvpn[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "5d765e9c0b189897133a930ab956c4a861bf36532a225b7d11a4f19cfba91a26" => :catalina
-    sha256 "c4216f771502095c9ef56440c4c6061d907100ad9530bd4f3e9ac8beb98a743e" => :mojave
-    sha256 "3be2664f28a1df4bd39f4f70b68274efa08d02338572aa857820692a0f50f116" => :high_sierra
+    sha256 arm64_big_sur: "5e6986332d574ba7bdc3144396db4f709ab9a63dcdfb6017dcb422dd7497c7b5"
+    sha256 big_sur:       "8d7ea075eed8132ff0032e63db26afcae982f1348a524de87290551d1b90f3f0"
+    sha256 catalina:      "b44a899e4774a47fd25522cfddd4a28e46df11e796745c5c1bdeffe6e7e2f54c"
+    sha256 mojave:        "4b5ea16d5633f96a6009eb964a56d36fd0cc4f84d420a4cae21e13adc55f405d"
+    sha256 x86_64_linux:  "ebca6702c2ce03f256b4504321cfc47e93982b3b41ec690190a546f1a9db4894"
   end
 
   depends_on "pkg-config" => :build
   depends_on "lz4"
   depends_on "lzo"
 
-  # Requires tuntap for < 10.10
-  depends_on :macos => :yosemite
-
   depends_on "openssl@1.1"
   depends_on "pkcs11-helper"
+
+  on_linux do
+    depends_on "linux-pam"
+    depends_on "net-tools"
+  end
 
   def install
     system "./configure", "--disable-debug",
@@ -28,6 +38,17 @@ class Openvpn < Formula
                           "--with-crypto-library=openssl",
                           "--enable-pkcs11",
                           "--prefix=#{prefix}"
+    if OS.mac?
+      inreplace "sample/sample-plugins/Makefile",
+                HOMEBREW_SHIMS_PATH/"mac/super/pkg-config",
+                Formula["pkg-config"].opt_bin/"pkg-config"
+    end
+    unless OS.mac?
+      inreplace "sample/sample-plugins/Makefile" do |s|
+        s.gsub! HOMEBREW_LIBRARY/"Homebrew/shims/linux/super/ld",
+                "ld"
+      end
+    end
     system "make", "install"
 
     inreplace "sample/sample-config-files/openvpn-startup.sh",
@@ -45,36 +66,37 @@ class Openvpn < Formula
     (var/"run/openvpn").mkpath
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd";>
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_sbin}/openvpn</string>
-        <string>--config</string>
-        <string>#{etc}/openvpn/openvpn.conf</string>
-      </array>
-      <key>OnDemand</key>
-      <false/>
-      <key>RunAtLoad</key>
-      <true/>
-      <key>TimeOut</key>
-      <integer>90</integer>
-      <key>WatchPaths</key>
-      <array>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd";>
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_sbin}/openvpn</string>
+          <string>--config</string>
+          <string>#{etc}/openvpn/openvpn.conf</string>
+        </array>
+        <key>OnDemand</key>
+        <false/>
+        <key>RunAtLoad</key>
+        <true/>
+        <key>TimeOut</key>
+        <integer>90</integer>
+        <key>WatchPaths</key>
+        <array>
+          <string>#{etc}/openvpn</string>
+        </array>
+        <key>WorkingDirectory</key>
         <string>#{etc}/openvpn</string>
-      </array>
-      <key>WorkingDirectory</key>
-      <string>#{etc}/openvpn</string>
-    </dict>
-    </plist>
-  EOS
+      </dict>
+      </plist>
+    EOS
   end
 
   test do

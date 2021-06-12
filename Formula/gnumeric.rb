@@ -1,13 +1,15 @@
 class Gnumeric < Formula
   desc "GNOME Spreadsheet Application"
   homepage "https://projects.gnome.org/gnumeric/"
-  url "https://download.gnome.org/sources/gnumeric/1.12/gnumeric-1.12.46.tar.xz"
-  sha256 "9fdc67377af52dfe69a7db4f533938024a75f454fc5d25ab43b8e6739be0b5e1"
+  url "https://download.gnome.org/sources/gnumeric/1.12/gnumeric-1.12.50.tar.xz"
+  sha256 "758819ba1bd6983829f9e7c6d71a7fa20cd75a3652a271e5bb003d5d8bcc14b8"
+  license any_of: ["GPL-3.0-only", "GPL-2.0-only"]
 
   bottle do
-    sha256 "0f2c5361ccf199dca09ec37db79df9c9b9bd4b703afd9d5f947d6f70676c7325" => :catalina
-    sha256 "d8dcf90b5c5c8b53b9d9ef0c043e755baf102da1b7b0a5a4f72161ebb7e4a91c" => :mojave
-    sha256 "ac070ba1756593dc9781a771d674a866e7d03ba71987cc62d88de8e6dc0a0e2e" => :high_sierra
+    sha256 arm64_big_sur: "e35e87954fd36d10ba7d5eb67eb55cda22480501b0244d11d73227efac32eb84"
+    sha256 big_sur:       "308986adac6fc8ee0439f78fc88b3800dec488f3c19059e188d7b89703976517"
+    sha256 catalina:      "c6629015a88979e534383df04b19b371e4f579670538abd057159371d769d9f6"
+    sha256 mojave:        "783045a4b518267f8dad893ba2768701065af8d3f170d37cb2ae1658d96d5474"
   end
 
   depends_on "intltool" => :build
@@ -19,7 +21,30 @@ class Gnumeric < Formula
   depends_on "libxml2"
   depends_on "rarian"
 
+  uses_from_macos "bison"
+
+  on_linux do
+    depends_on "perl"
+
+    resource "XML::Parser" do
+      url "https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.44.tar.gz"
+      sha256 "1ae9d07ee9c35326b3d9aad56eae71a6730a73a116b9fe9e8a4758b7cc033216"
+    end
+  end
+
   def install
+    on_linux do
+      ENV.prepend_create_path "PERL5LIB", libexec/"lib/perl5"
+
+      resources.each do |res|
+        res.stage do
+          system "perl", "Makefile.PL", "INSTALL_BASE=#{libexec}"
+          system "make", "PERL5LIB=#{ENV["PERL5LIB"]}"
+          system "make", "install"
+        end
+      end
+    end
+
     # ensures that the files remain within the keg
     inreplace "component/Makefile.in",
               "GOFFICE_PLUGINS_DIR = @GOFFICE_PLUGINS_DIR@",

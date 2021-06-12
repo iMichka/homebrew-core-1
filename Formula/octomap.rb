@@ -1,21 +1,21 @@
 class Octomap < Formula
   desc "Efficient probabilistic 3D mapping framework based on octrees"
   homepage "https://octomap.github.io/"
-  url "https://github.com/OctoMap/octomap/archive/v1.9.1.tar.gz"
-  sha256 "9abce615d9f3f97a15ba129a10e3a01f9bef9aad178f2ef398f9a925f793c7b9"
+  url "https://github.com/OctoMap/octomap/archive/v1.9.7.tar.gz"
+  sha256 "3e9ac020686ceb4e17e161bffc5a0dafd9cccab33adeb9adee59a61c418ea1c1"
+  license "BSD-3-Clause"
 
   bottle do
-    sha256 "5c4e53e0a23b76ad71f3c8a74118d9538ea1871e90c034ed1a9d2b75f60fc8d3" => :catalina
-    sha256 "a4d0d866ab76835817fdc0dcd1b3bb1cf9248e338223aba24af680daf53d65c3" => :mojave
-    sha256 "9432c0567beb3f4fbad243670cc65054421383dbd07e78faaaff109032a435e5" => :high_sierra
-    sha256 "6fd99eabeaacf5bfd2d6bf7c42d8d911f895d37d881ff4d088bc12d6ff14945c" => :x86_64_linux
+    sha256                               arm64_big_sur: "80ee7ff92e3207223ab883c128606951c9e570909faa586c7b40b22838959332"
+    sha256                               big_sur:       "476b64c7554e93e2f14955fb5d0063bddfc097cb5bcef1e06ffc934e182fff2c"
+    sha256                               catalina:      "de360e7e0e3d6ec32157a5efe614481a077913b80540eca1f3dfc65f0c32bf80"
+    sha256                               mojave:        "2108b9e2a70a4e8f2eb6581ff525570d83eb7a603f4af0cb69c2d9caeb5c16b5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8c1d8649f77df789d363e6ac9a3e06281c755fef1ff63b400eff264ee8311d16"
   end
 
   depends_on "cmake" => :build
 
   def install
-    inreplace "octomap/src/math/CMakeLists.txt", "INSTALL_NAME_DIR", "#INSTALL_NAME_DIR"
-
     cd "octomap" do
       system "cmake", ".", *std_cmake_args
       system "make", "install"

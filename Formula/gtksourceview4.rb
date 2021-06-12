@@ -1,15 +1,21 @@
 class Gtksourceview4 < Formula
   desc "Text view with syntax, undo/redo, and text marks"
   homepage "https://projects.gnome.org/gtksourceview/"
-  url "https://download.gnome.org/sources/gtksourceview/4.4/gtksourceview-4.4.0.tar.xz"
-  sha256 "9ddb914aef70a29a66acd93b4f762d5681202e44094d2d6370e51c9e389e689a"
-  revision 1
+  url "https://download.gnome.org/sources/gtksourceview/4.8/gtksourceview-4.8.1.tar.xz"
+  sha256 "d163d71b5fcafbc5b1eec6dd841edbdbcddd3a7511cd5fdcffd86b8bbfe69ac1"
+  license "LGPL-2.1-or-later"
+
+  livecheck do
+    url :stable
+    regex(/gtksourceview[._-]v?(4\.([0-8]\d*?)?[02468](?:\.\d+)*?)\.t/i)
+  end
 
   bottle do
-    sha256 "6cd8a161e089c7f2b37688bfb882cf303f7d8ca828b3995a9563376e4fd2beb0" => :catalina
-    sha256 "611a6c5aa42071174d2cb5d24691bcdfd8c3d5cd04e9eee0cd0749e13236a093" => :mojave
-    sha256 "d8f1ec0bea4affe7983bd13af677a98bc820432697f036172f2c9d7def8b7347" => :high_sierra
-    sha256 "c9055f2e6655afe9506a1a3977619c4dc4631e882d7f76df428471d2f907d350" => :x86_64_linux
+    sha256 arm64_big_sur: "6dfdf21c1f61af35c5cdf091a8b110d8c7d0aecd10aabbc3309d8fbb6bf5f1c1"
+    sha256 big_sur:       "9777a274cb8a7fb9bcddbcf6870242cfaf0100398b31c7492b950eb577245b8a"
+    sha256 catalina:      "43ca1ff6338153338fc2334f41cfc0d1959ad613e224751e4fbcb1902c09af9f"
+    sha256 mojave:        "f0cea7568ac88d30a82d86eacb95d36083fccae6343e08c87f238a9a657ca147"
+    sha256 x86_64_linux:  "6e387ae3fd80c66ad8f03163100e1a3349965818da1eb14d24e89d944c9b2292"
   end
 
   depends_on "gobject-introspection" => :build
@@ -19,12 +25,8 @@ class Gtksourceview4 < Formula
   depends_on "vala" => :build
   depends_on "gtk+3"
 
-  # submitted upstream as https://gitlab.gnome.org/GNOME/gtksourceview/merge_requests/61
-  patch :DATA
-
   def install
-    args = %W[
-      --prefix=#{prefix}
+    args = std_meson_args + %w[
       -Dgir=true
       -Dvapi=true
     ]
@@ -97,49 +99,14 @@ class Gtksourceview4 < Formula
       -lpango-1.0
       -lpangocairo-1.0
     ]
-    if OS.mac?
-      flags << "-lintl -lgtksourceview-4.0"
-    else
+    on_macos do
+      flags << "-lintl"
+      flags << "-lgtksourceview-4.0"
+    end
+    on_linux do
       flags << "-lgtksourceview-4"
     end
     system ENV.cc, "test.c", "-o", "test", *flags
     system "./test"
   end
 end
-
-__END__
-diff --git a/gtksourceview/meson.build b/gtksourceview/meson.build
-index 14603ffe..82a28d2b 100644
---- a/gtksourceview/meson.build
-+++ b/gtksourceview/meson.build
-@@ -248,6 +248,7 @@ if cc.get_id() == 'msvc'
- else
-   gtksource_lib = shared_library(package_string, gtksource_res,
-                   version: lib_version,
-+          darwin_versions: lib_osx_version,
-       include_directories: gtksourceview_include_dirs,
-              dependencies: gtksource_deps,
-                link_whole: gtksource_libs,
-diff --git a/meson.build b/meson.build
-index 78c2fc59..ef3d5d6b 100644
---- a/meson.build
-+++ b/meson.build
-@@ -21,10 +21,14 @@ version_micro = version_arr[2].to_int()
- api_version = '4'
-
- lib_version = '0.0.0'
--lib_version_arr = version.split('.')
--lib_version_major = version_arr[0].to_int()
--lib_version_minor = version_arr[1].to_int()
--lib_version_micro = version_arr[2].to_int()
-+lib_version_arr = lib_version.split('.')
-+lib_version_major = lib_version_arr[0].to_int()
-+lib_version_minor = lib_version_arr[1].to_int()
-+lib_version_micro = lib_version_arr[2].to_int()
-+
-+osx_current = lib_version_minor + 1
-+lib_osx_version = [osx_current, '@0@.@1@'.format(osx_current, lib_version_micro)]
-+
-
- package_name = meson.project_name()
- package_string = '@0@-@1@'.format(package_name, api_version)

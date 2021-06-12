@@ -4,7 +4,9 @@ class Crash < Formula
   url "https://search.maven.org/remotecontent?filepath=org/crashub/crash.distrib/1.3.2/crash.distrib-1.3.2.tar.gz"
   sha256 "9607a84c34b01e5df999ac5bde6de2357d2a0dfb7c5c0ce2a5aea772b174ef01"
 
-  bottle :unneeded
+  livecheck do
+    url "https://github.com/crashub/crash"
+  end
 
   resource "docs" do
     url "https://search.maven.org/remotecontent?filepath=org/crashub/crash.distrib/1.3.2/crash.distrib-1.3.2-docs.tar.gz"

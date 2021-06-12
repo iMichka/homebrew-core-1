@@ -1,22 +1,27 @@
 class Acpica < Formula
   desc "OS-independent implementation of the ACPI specification"
   homepage "https://www.acpica.org/"
-  url "https://acpica.org/sites/acpica/files/acpica-unix-20191018.tar.gz"
-  sha256 "029db4014600e4b771b11a84276d2d76eb40fb26eabc85864852ef1f962be95f"
+  url "https://acpica.org/sites/acpica/files/acpica-unix-20210331.tar.gz"
+  sha256 "b49237a2c3df58b57310612ec3a6ebee69e1a525b5efeec7152faf32a03b7068"
+  license any_of: ["Intel-ACPI", "GPL-2.0-only", "BSD-3-Clause"]
   head "https://github.com/acpica/acpica.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "d2fb3b1810659d78691bdb2a184c9160d901eca267ff0b95cd34b460e6fa2b17" => :catalina
-    sha256 "597666a9b6c06fcf02e990681f9dca68a46cf4a9cc87ffb16f5a0d2ffa556526" => :mojave
-    sha256 "cace68099063a2a9aca3277aa6e4ee074714c624c13752c3f2cc89af5ba841a1" => :high_sierra
+  livecheck do
+    url "https://acpica.org/downloads"
+    regex(/current release of ACPICA is version <strong>v?(\d{6,8}) </i)
   end
 
-  unless OS.mac?
-    depends_on "bison" => :build
-    depends_on "flex" => :build
-    depends_on "m4" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1aa1f43b792f60fd751df642ca64bbee5ddf5c79d12ff3c82bd24bbd866cb057"
+    sha256 cellar: :any_skip_relocation, big_sur:       "be80e8afae9ba18c0c99947feaabad58d99307c8dacae431e6f107f437f344ad"
+    sha256 cellar: :any_skip_relocation, catalina:      "60ab88557d60cad5f69ef2909a4870b2bc9b9b31aaa5f5e2e51236d734d9aae9"
+    sha256 cellar: :any_skip_relocation, mojave:        "cc1aa5177a3b6734225d42af684200266fc9e03771954907d6ced096742f0fe1"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2412ad45a42558691bb1d3bb019f98055ac70a6981745b783e7f0bd2585d183e"
   end
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+  uses_from_macos "m4" => :build
 
   def install
     ENV.deparallelize

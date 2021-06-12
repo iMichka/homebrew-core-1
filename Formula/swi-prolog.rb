@@ -1,17 +1,19 @@
 class SwiProlog < Formula
   desc "ISO/Edinburgh-style Prolog interpreter"
   homepage "https://www.swi-prolog.org/"
-  url "https://www.swi-prolog.org/download/stable/src/swipl-8.0.3.tar.gz"
-  sha256 "cee59c0a477c8166d722703f6e52f962028f3ac43a5f41240ecb45dbdbe2d6ae"
-  revision 1
+  url "https://www.swi-prolog.org/download/stable/src/swipl-8.2.4.tar.gz"
+  sha256 "f4bcc78437f9080ab089762e9e6afa7071df7f584c14999b92b9a90a4efbd7d8"
+  license "BSD-2-Clause"
   head "https://github.com/SWI-Prolog/swipl-devel.git"
 
+  livecheck do
+    url "https://www.swi-prolog.org/download/stable/src/"
+    regex(/href=.*?swipl[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    sha256 "7c4d1bfaa974db039bdd7ec219d22206b63833b4c2a2d078db52c8f6742031ce" => :catalina
-    sha256 "587beb4ccaa5e7fb85d1c4465487fb315e4ef168a30ad674c614d8c0ba84ca6b" => :mojave
-    sha256 "fff29cb6a95e692fb68bda037ccef83164a91e550e784d643446f777a9cb8ccc" => :high_sierra
-    sha256 "3cbd050f46aef41c733b56ab49dc081c6bd39ad67c79d3a24381a01291c8a1ad" => :sierra
-    sha256 "3bfc6cd486dd41098cfcb582a98585645002ad42d466d110f2da45c5b5699228" => :x86_64_linux
+    rebuild 1
+    sha256 x86_64_linux: "12ecb163975e72690071c6011e3c7e50b6460ddc493a8c6ae8900aa96969b985"
   end
 
   depends_on "cmake" => :build
@@ -28,12 +30,15 @@ class SwiProlog < Formula
 
   def install
     mkdir "build" do
+      cc_args = %w[
+        -DCMAKE_C_COMPILER=/usr/bin/gcc
+        -DCMAKE_CXX_COMPILER=/usr/bin/g++
+      ]
       system "cmake", "..", *std_cmake_args,
                       "-DSWIPL_PACKAGES_JAVA=OFF",
                       "-DSWIPL_PACKAGES_X=OFF",
                       "-DCMAKE_INSTALL_PREFIX=#{libexec}",
-                      *("-DCMAKE_C_COMPILER=/usr/bin/clang" if OS.mac?),
-                      *("-DCMAKE_CXX_COMPILER=/usr/bin/clang++" if OS.mac?)
+                      *cc_args
       system "make", "install"
     end
 

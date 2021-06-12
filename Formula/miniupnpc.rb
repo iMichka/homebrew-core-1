@@ -1,18 +1,26 @@
 class Miniupnpc < Formula
   desc "UPnP IGD client library and daemon"
   homepage "https://miniupnp.tuxfamily.org"
-  url "https://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-2.1.tar.gz"
-  sha256 "e19fb5e01ea5a707e2a8cb96f537fbd9f3a913d53d804a3265e3aeab3d2064c6"
+  url "http://miniupnp.tuxfamily.org/files/download.php?file=miniupnpc-2.2.2.tar.gz"
+  sha256 "888fb0976ba61518276fe1eda988589c700a3f2a69d71089260d75562afd3687"
+  license "BSD-3-Clause"
+
+  # We only match versions with only a major/minor since versions like 2.1 are
+  # stable and versions like 2.1.20191224 are unstable/development releases.
+  livecheck do
+    url "https://miniupnp.tuxfamily.org/files/"
+    regex(/href=.*?miniupnpc[._-]v?(\d+\.\d+(?>.\d{1,7})*)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "de583006c4f55d9d085ac9bb94123bc55e769aba1e7f483fcb51f7a1db490c84" => :catalina
-    sha256 "7207c8a442fc73842141aba18994652a9dcea64813b0e5ad86901a8e9ae026f2" => :mojave
-    sha256 "266556f31f0430f41a1d64b3fb96daea2a4804b1a85c4486c5e39de0f2808d35" => :high_sierra
-    sha256 "ed39714d275ffb083e29c72b3a5d9142c0a4081fb8c8479950f71bbddbe5d196" => :sierra
-    sha256 "b65b947374b703c4473c6f4daa74090181c7372e4b2d663a05890f988605eab9" => :el_capitan
-    sha256 "4b4163403ad69516b8a598c388de2f3662564405288576bf87605f79dbbeddf3" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "bb414f85009c261710a00d438afdd3270f5c38039c02992eae612a8fa71442d0"
+    sha256 cellar: :any,                 big_sur:       "8493cfd956df3566d8025042e44d4cf60995ff0a7a1c1cce4d6ef388e20c0b58"
+    sha256 cellar: :any,                 catalina:      "bde7e04d31203a1a5b1c89d167c8cc4e7962ba4beaa351f1edffe47e03561223"
+    sha256 cellar: :any,                 mojave:        "f9d73d4839a56b72369a506c52676b055a584135f9ec94d6ecd9ebb1e6407f9e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c4b56a42945bc6e5b05410705592a103d97de767d5abe436b6dd0154527e36e8"
   end
+
+  conflicts_with "wownero", because: "wownero ships its own copy of miniupnpc"
 
   def install
     system "make", "INSTALLPREFIX=#{prefix}", "install"

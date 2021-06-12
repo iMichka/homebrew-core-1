@@ -3,14 +3,14 @@ class LibbitcoinClient < Formula
   homepage "https://github.com/libbitcoin/libbitcoin-client"
   url "https://github.com/libbitcoin/libbitcoin-client/archive/v3.6.0.tar.gz"
   sha256 "75969ac0a358458491b101cae784de90452883b5684199d3e3df619707802420"
-  revision 2
+  license "AGPL-3.0"
+  revision 7
 
   bottle do
-    cellar :any
-    sha256 "67029f654c45056f7faf25ca11b9af04d10445d7069c61ae75809fef722f9b16" => :catalina
-    sha256 "4dbcca399cd43cb845edac0cf63a158225b1f3fb40b9f48c11e12075099ea316" => :mojave
-    sha256 "1a0523b5f60efb58a6f4686ce98eaf023054823abddb4c485015df2235f95b17" => :high_sierra
-    sha256 "440e593fbe96d541212c8ce2f00f006c2f78ac05bbd116508e5a8baccde376bd" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "1436d1f380bb51199a8b92053c9822e314c0febac9bc8757bf0f4c51fbcc7798"
+    sha256 cellar: :any, big_sur:       "8c0a09aefcaf36a2b9831884c7ce698d2ad533f3aca8b4d30a4f63611022535a"
+    sha256 cellar: :any, catalina:      "d44ec063ad2da0e31a12d9f59c65962b03e60c1fedfbe002b62dbae6cedc727a"
+    sha256 cellar: :any, mojave:        "fed0d06847db159818373b9c8845f185dc58dbeaa761f0f8a8bc6267f3b4030a"
   end
 
   depends_on "autoconf" => :build
@@ -20,16 +20,19 @@ class LibbitcoinClient < Formula
   depends_on "libbitcoin-protocol"
 
   def install
+    ENV.cxx11
     ENV.prepend_path "PKG_CONFIG_PATH", Formula["libbitcoin"].opt_libexec/"lib/pkgconfig"
 
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
   end
 
   test do
+    boost = Formula["boost"]
     (testpath/"test.cpp").write <<~EOS
       #include <bitcoin/client.hpp>
       class stream_fixture
@@ -89,7 +92,7 @@ class LibbitcoinClient < Formula
     system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test",
                     "-L#{Formula["libbitcoin"].opt_lib}", "-lbitcoin",
                     "-L#{lib}", "-lbitcoin-client",
-                    "-L#{Formula["boost"].opt_lib}", "-lboost_system"
+                    "-L#{boost.opt_lib}", "-lboost_system"
     system "./test"
   end
 end

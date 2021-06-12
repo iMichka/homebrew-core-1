@@ -1,31 +1,30 @@
 class RustupInit < Formula
-  desc "The Rust toolchain installer"
-  homepage "https://github.com/rust-lang/rustup.rs"
-  url "https://github.com/rust-lang/rustup.rs/archive/1.21.0.tar.gz"
-  sha256 "5dc7e1b16ec57c8cf9015f7f2b9780c09527b5f8783e8d5a62ddae7553a9587b"
+  desc "Rust toolchain installer"
+  homepage "https://github.com/rust-lang/rustup"
+  url "https://github.com/rust-lang/rustup/archive/1.24.3.tar.gz"
+  sha256 "24a8cede4ccbbf45ab7b8de141d92f47d1881bb546b3b9180d5a51dc0622d0f6"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "dcfa31ebf56502047530a96d741e8d5a5631e25cff964d108963327fd2f31068" => :catalina
-    sha256 "59a05d34a7ac1dd39d96698c46865c6c6113a5465aaa9e82bfe99ce0c7d45f4f" => :mojave
-    sha256 "8c279d7a186437297b3cb28359392ed779561142e38c898d6a02a2370f1f6b3c" => :high_sierra
-    sha256 "351cafd9b550f611296376a1d33888350e26b2247220e8af9cd14cf1017a7111" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d7de5aa4538303b308d1f136c475fdc83f8fa3b418da46a66cf8146a6f0d6ff2"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d2bae6f97776cee5d796444ceb7c54f46e9dd56e51f9a1f439bbe7c842015572"
+    sha256 cellar: :any_skip_relocation, catalina:      "7807b533709be5c92d7db4bd4189ae81ecf9f881544673591c7acb340d081b68"
+    sha256 cellar: :any_skip_relocation, mojave:        "681169de63d0e8a0dddbbe88388a64c4c15963e9c5b0dbf4029e1f2e75778667"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "75f836c81ba484d79c379abcb576abdc299e03af0fc4938845112200ff5bf584"
   end
 
   depends_on "rust" => :build
-  unless OS.mac?
-    depends_on "curl"
-    depends_on "openssl@1.1"
+
+  uses_from_macos "curl"
+  uses_from_macos "xz"
+
+  on_linux do
     depends_on "pkg-config" => :build
+    depends_on "openssl@1.1"
   end
 
   def install
-    cargo_home = buildpath/"cargo_home"
-    cargo_home.mkpath
-    ENV["CARGO_HOME"] = cargo_home
-
-    system "cargo", "install", "--locked", "--root", prefix, "--path", ".",
-                    "--features", "no-self-update"
+    system "cargo", "install", "--features", "no-self-update", *std_cargo_args
   end
 
   test do

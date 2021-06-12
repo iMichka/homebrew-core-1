@@ -1,15 +1,17 @@
 class OcamlNum < Formula
   desc "OCaml legacy Num library for arbitrary-precision arithmetic"
   homepage "https://github.com/ocaml/num"
-  url "https://github.com/ocaml/num/archive/v1.3.tar.gz"
-  sha256 "4f79c30e81ea9553c5b2c5b5b57bb19968ccad1e85256b3c446b5df58f33e94d"
+  url "https://github.com/ocaml/num/archive/v1.4.tar.gz"
+  sha256 "015088b68e717b04c07997920e33c53219711dfaf36d1196d02313f48ea00f24"
+  license "LGPL-2.1"
+  revision 2
 
   bottle do
-    cellar :any
-    sha256 "9767a628e3b326207c0800fbc84a6cb061d487d1de215073672c263674a4f37e" => :catalina
-    sha256 "db56cb0607b94417b31c5e0479631ae0b2e712786140a204bc990d247ab843c3" => :mojave
-    sha256 "6034f0ae346d64a651e72ea1da790f6d49869eb319bc447b53bde54cc93f1345" => :high_sierra
-    sha256 "a0ff127240adb231463c09398a26379e891f09442197c8ff538693b357a43d06" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "f1f22afab148209110159c9fcbe9cdfd7f27ca6a25b55ddd11358c130da033fb"
+    sha256 cellar: :any,                 big_sur:       "4563053ebf720e623e0afeb935f803ab1aedc3c15d6d99d6bc2818301eeb4ecb"
+    sha256 cellar: :any,                 catalina:      "26b165d15abd314baafa8c8a055236684eb26ae86740d85edca087321c5c311c"
+    sha256 cellar: :any,                 mojave:        "c14f476a964f149d3dc3145cb219286fea6585962351ada79aa1ed4606d9f781"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5a1c868a11d738fe6cb17ccde268f12c2b2d7f14d4a828528852b62b2f95e5b2"
   end
 
   depends_on "ocaml-findlib" => :build
@@ -22,8 +24,9 @@ class OcamlNum < Formula
     cp Formula["ocaml"].opt_lib/"ocaml/Makefile.config", lib/"ocaml"
 
     # install in #{lib}/ocaml not #{HOMEBREW_PREFIX}/lib/ocaml
-    inreplace lib/"ocaml/Makefile.config", /^prefix=#{HOMEBREW_PREFIX}$/,
-                                           "prefix=#{prefix}"
+    inreplace lib/"ocaml/Makefile.config" do |s|
+      s.change_make_var! "prefix", prefix
+    end
 
     system "make"
     (lib/"ocaml/stublibs").mkpath # `make install` assumes this directory exists

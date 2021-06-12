@@ -1,30 +1,25 @@
 class Rust < Formula
   desc "Safe, concurrent, practical language"
   homepage "https://www.rust-lang.org/"
+  license any_of: ["Apache-2.0", "MIT"]
 
   stable do
-    url "https://static.rust-lang.org/dist/rustc-1.39.0-src.tar.gz"
-    sha256 "b4a1f6b6a93931f270691aba4fc85eee032fecda973e6b9c774cd06857609357"
+    url "https://static.rust-lang.org/dist/rustc-1.52.1-src.tar.gz"
+    sha256 "3a6f23a26d0e8f87abbfbf32c5cd7daa0c0b71d0986abefc56b9a5fbfbd0bf98"
 
     resource "cargo" do
       url "https://github.com/rust-lang/cargo.git",
-          :tag      => "0.40.0",
-          :revision => "1c6ec66d5bae40e9dfd2fb82f091b5172c212d73"
-    end
-
-    resource "racer" do
-      # Racer should stay < 2.1 for now as 2.1 needs the nightly build of rust
-      # See https://github.com/racer-rust/racer/tree/v2.1.2#installation
-      url "https://github.com/racer-rust/racer/archive/2.0.14.tar.gz"
-      sha256 "0442721c01ae4465843cb73b24f6caa0127c3308d72b944ad75736164756e522"
+          tag:      "0.53.0",
+          revision: "69767412acbf7f64773427b1fb53e45296712c3c"
     end
   end
 
   bottle do
-    sha256 "feea87a17ac222cb84b952d964067ce591063ff41f408cad6e7ad4d0c71d33d8" => :catalina
-    sha256 "0d7c179f204475b6ae4438435fc59ef898fdc7399f9f43cc73e6f4b9114e12a9" => :mojave
-    sha256 "0e2ee5ccad46ffafad625ed4c97d7b918be1e6e54dea0cbc72e323ed59d0bad9" => :high_sierra
-    sha256 "e484bb62502831f72565382fcc6339dd2869239c124a376cb038bcb4e8eb37ba" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "47225bcea0cee3fdde165f92e8db8e3862a2ea2be584714ffbc7223cc553696d"
+    sha256 cellar: :any,                 big_sur:       "d5d58fa69604a8fa9118677f51c84fc34c2f0da80361b32cc00c80f864087609"
+    sha256 cellar: :any,                 catalina:      "68f71286e9087960f23f172072edbee80db7d0e566eeb05cdc456a9862778b18"
+    sha256 cellar: :any,                 mojave:        "17e87ad3d2be474d472243c08868ee9e36df5cb1688255d4a11337399aec132d"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "fff677b4e77a5882cea81859ec30b06a53417ac3cf58246d5629074fc432861c"
   end
 
   head do
@@ -33,51 +28,51 @@ class Rust < Formula
     resource "cargo" do
       url "https://github.com/rust-lang/cargo.git"
     end
-
-    resource "racer" do
-      url "https://github.com/racer-rust/racer.git"
-    end
   end
 
   depends_on "cmake" => :build
+  depends_on "ninja" => :build
+  depends_on "python@3.9" => :build
   depends_on "libssh2"
   depends_on "openssl@1.1"
   depends_on "pkg-config"
 
-  unless OS.mac?
+  uses_from_macos "curl"
+  uses_from_macos "zlib"
+
+  on_linux do
     depends_on "binutils"
-    depends_on "curl"
-    depends_on "python@2"
-    depends_on "zlib"
   end
 
   resource "cargobootstrap" do
-    if OS.mac?
+    on_macos do
       # From https://github.com/rust-lang/rust/blob/#{version}/src/stage0.txt
-      url "https://static.rust-lang.org/dist/2019-09-26/cargo-0.39.0-x86_64-apple-darwin.tar.gz"
-      sha256 "107af82e268dfe7dbb35908ab0dfd96d0356c3750520612f1add1ecb8ecbc535"
-    elsif OS.linux?
+      if Hardware::CPU.arm?
+        url "https://static.rust-lang.org/dist/2021-03-25/cargo-1.51.0-aarch64-apple-darwin.tar.gz"
+        sha256 "3eb0eb6192635c4b844deb97004a7e38a631bb4507b1284c055df8533c00e77a"
+      else
+        url "https://static.rust-lang.org/dist/2021-03-25/cargo-1.51.0-x86_64-apple-darwin.tar.gz"
+        sha256 "37eb709e5ed8fe02d2c8d89bc0be3dc1d642cff223c25df311ff5a82eab53d4b"
+      end
+    end
+
+    on_linux do
       # From: https://github.com/rust-lang/rust/blob/#{version}/src/stage0.txt
-      url "https://static.rust-lang.org/dist/2019-09-26/cargo-0.39.0-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "406ea5822851cf853a14b250386d47df0a60000410ce8ae92b47dedf8162ba9c"
+      url "https://static.rust-lang.org/dist/2021-03-25/cargo-1.51.0-x86_64-unknown-linux-gnu.tar.gz"
+      sha256 "fe8abe2c2b467ac5f5021ff8020eda70de9e9f8f45b4a2e834afbd3b78323a31"
     end
   end
 
   def install
+    ENV.prepend_path "PATH", Formula["python@3.9"].opt_libexec/"bin"
+
     # Fix build failure for compiler_builtins "error: invalid deployment target
     # for -stdlib=libc++ (requires OS X 10.7 or later)"
-    ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version if OS.mac?
+    on_macos { ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version }
 
     # Ensure that the `openssl` crate picks up the intended library.
     # https://crates.io/crates/openssl#manual-configuration
     ENV["OPENSSL_DIR"] = Formula["openssl@1.1"].opt_prefix
-
-    # Fix build failure for cmake v0.1.24 "error: internal compiler error:
-    # src/librustc/ty/subst.rs:127: impossible case reached" on 10.11, and for
-    # libgit2-sys-0.6.12 "fatal error: 'os/availability.h' file not found
-    # #include <os/availability.h>" on 10.11 and "SecTrust.h:170:67: error:
-    # expected ';' after top level declarator" among other errors on 10.12
-    ENV["SDKROOT"] = MacOS.sdk_path if OS.mac?
 
     args = ["--prefix=#{prefix}"]
     if build.head?
@@ -86,6 +81,7 @@ class Rust < Formula
     else
       args << "--release-channel=stable"
     end
+
     system "./configure", *args
     system "make"
     system "make", "install"
@@ -97,22 +93,15 @@ class Rust < Formula
 
     resource("cargo").stage do
       ENV["RUSTC"] = bin/"rustc"
-      system "cargo", "install", "--root", prefix, "--path", ".", *("--features" if OS.mac?), *("curl-sys/force-system-lib-on-osx" if OS.mac?)
+      args = %W[--root #{prefix} --path . --features curl-sys/force-system-lib-on-osx]
+      args -= %w[--features curl-sys/force-system-lib-on-osx] unless OS.mac?
+      system "cargo", "install", *args
+      man1.install Dir["src/etc/man/*.1"]
+      bash_completion.install "src/etc/cargo.bashcomp.sh"
+      zsh_completion.install "src/etc/_cargo"
     end
 
-    resource("racer").stage do
-      ENV.prepend_path "PATH", bin
-      cargo_home = buildpath/"cargo_home"
-      cargo_home.mkpath
-      ENV["CARGO_HOME"] = cargo_home
-      system "cargo", "install", "--root", libexec, "--path", "."
-      (bin/"racer").write_env_script(libexec/"bin/racer", :RUST_SRC_PATH => pkgshare/"rust_src")
-    end
-
-    # Remove any binary files; as Homebrew will run ranlib on them and barf.
-    rm_rf Dir["src/{llvm-project,llvm-emscripten,test,librustdoc,etc/snapshot.pyc}"]
-    (pkgshare/"rust_src").install Dir["src/*"]
-
+    (lib/"rustlib/src/rust").install "library"
     rm_rf prefix/"lib/rustlib/uninstall.sh"
     rm_rf prefix/"lib/rustlib/install.log"
   end

@@ -4,14 +4,15 @@ class LmSensors < Formula
   url "https://github.com/lm-sensors/lm-sensors/archive/V3-6-0.tar.gz"
   version "3.6.0"
   sha256 "0591f9fa0339f0d15e75326d0365871c2d4e2ed8aa1ff759b3a55d3734b7d197"
-  # tag "linux"
+  license any_of: ["GPL-2.0-or-later", "LGPL-2.1-or-later"]
 
   bottle do
-    sha256 "bf3fea16c4ebf78f4234e9c7d00088fb4990433d135e5bb958a1c107dcbf63cd" => :x86_64_linux
+    sha256 x86_64_linux: "bf3fea16c4ebf78f4234e9c7d00088fb4990433d135e5bb958a1c107dcbf63cd"
   end
 
   depends_on "bison" => :build
   depends_on "flex" => :build
+  depends_on :linux
 
   def install
     args = %W[

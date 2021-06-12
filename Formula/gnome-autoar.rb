@@ -1,14 +1,23 @@
 class GnomeAutoar < Formula
   desc "GNOME library for archive handling"
   homepage "https://github.com/GNOME/gnome-autoar"
-  url "https://download.gnome.org/sources/gnome-autoar/0.2/gnome-autoar-0.2.4.tar.xz"
-  sha256 "0a34c377f8841abbf4c29bc848b301fbd8e4e20c03d7318c777c58432033657a"
+  url "https://download.gnome.org/sources/gnome-autoar/0.3/gnome-autoar-0.3.3.tar.xz"
+  sha256 "272400f73a375a7e88fdf1e12591bfb8f3f03edf01780cadcd74f70b613e5c04"
+  license "LGPL-2.1-or-later"
+
+  # gnome-autoar doesn't seem to follow the typical GNOME version format where
+  # even-numbered minor versions are stable, so we override the default regex
+  # from the `Gnome` strategy.
+  livecheck do
+    url :stable
+    regex(/gnome-autoar[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "e98e396441864f69d9866921363bbff8fe3a0e6e7048e9fcebfa98d0f8e3100c" => :catalina
-    sha256 "8f87552420faa2d64fee8cf655a15c58eb988bba92284b00e4fcb3cf2f10ce82" => :mojave
-    sha256 "bc17062bdb3f3b299c5122ffd887ff872d22f9d3021faed94db07da9687d096c" => :high_sierra
+    sha256 arm64_big_sur: "f807cdbfa1846ce767f5da3f9963d23ad06cc76265d513826bbae251d1640f36"
+    sha256 big_sur:       "6d3385e2abadeed4cb9eee7cd106fe2606d34283a1b377898f0ca5bb8581c473"
+    sha256 catalina:      "68285e5d4bb577d383397ea433eb689d2056a1a8ca2802afbf9c259989c19fc9"
+    sha256 mojave:        "81cf65e7c5a708728565785c9ebb3cb9fb3558a3031964e37657961b613fd184"
   end
 
   depends_on "pkg-config" => :build

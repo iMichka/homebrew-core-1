@@ -1,39 +1,41 @@
 class Stella < Formula
   desc "Atari 2600 VCS emulator"
   homepage "https://stella-emu.github.io/"
-  url "https://github.com/stella-emu/stella/releases/download/6.0.2/stella-6.0.2-src.tar.xz"
-  sha256 "bcbd82294f97d00457fdb727e9b08ff73b685dc7f77704cea1eceb58d8967387"
+  url "https://github.com/stella-emu/stella/releases/download/6.5.3/stella-6.5.3-src.tar.xz"
+  sha256 "b49d5e5a5aa872e1f4b6f24eabd72304abdd577801d6ec349760c73b99e7f14d"
+  license "GPL-2.0-or-later"
   head "https://github.com/stella-emu/stella.git"
 
   bottle do
-    cellar :any
-    sha256 "e8ba8548bb9a0eee1cc7ae25ece7a71ec34b659007fd28ed511785d2426f8bd9" => :catalina
-    sha256 "9eb712f39ab97788ee8d7290e866a6bbf002ac31ba72f1e926a2c07831158a4a" => :mojave
-    sha256 "8f9a6e8cfd9c54c78816526fe5050a1d299931ec150af1eead1fed485c1bd0f4" => :high_sierra
-    sha256 "1166dc2120d8630f14593580b74ffd8071267d654dd902370725ecb4d895a3de" => :x86_64_linux
+    sha256 cellar: :any,                 big_sur:      "413ec06db90b9e5fd3f704e8181e50d4d39c88ff579c0e9dc523ee74b2ad3558"
+    sha256 cellar: :any,                 catalina:     "7765c2e205dc182aab86de151356ae6a586585a076cea5f9d0d82708447a0427"
+    sha256 cellar: :any,                 mojave:       "228ac66abf639dce733dce76c6cde14c122c84c12476c1663a64243ac609994a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "a3a543f967b0422f2076273338c3de567d2c93016c3e92f98cedd9d51d472516"
   end
 
-  depends_on :xcode => :build if OS.mac?
+  depends_on xcode: :build
   depends_on "libpng"
   depends_on "sdl2"
+
+  unless OS.mac?
+    fails_with gcc: "5"
+    depends_on "gcc"
+  end
+
   uses_from_macos "zlib"
-  # Stella is using c++14
-  fails_with :gcc => "4.8" unless OS.mac?
 
   def install
     sdl2 = Formula["sdl2"]
     libpng = Formula["libpng"]
-    if OS.mac?
-      cd "src/macos" do
-        inreplace "stella.xcodeproj/project.pbxproj" do |s|
-          s.gsub! %r{(\w{24} \/\* SDL2\.framework)}, '//\1'
-          s.gsub! %r{(\w{24} \/\* png)}, '//\1'
-          s.gsub! /(HEADER_SEARCH_PATHS) = \(/,
-                  "\\1 = (#{sdl2.opt_include}/SDL2, #{libpng.opt_include},"
-          s.gsub! /(LIBRARY_SEARCH_PATHS) = ("\$\(LIBRARY_SEARCH_PATHS\)");/,
-                  "\\1 = (#{sdl2.opt_lib}, #{libpng.opt_lib}, \\2);"
-          s.gsub! /(OTHER_LDFLAGS) = "((-\w+)*)"/, '\1 = "-lSDL2 -lpng \2"'
-        end
+    cd "src/macos" do
+      inreplace "stella.xcodeproj/project.pbxproj" do |s|
+        s.gsub! %r{(\w{24} /\* SDL2\.framework)}, '//\1'
+        s.gsub! %r{(\w{24} /\* png)}, '//\1'
+        s.gsub!(/(HEADER_SEARCH_PATHS) = \(/,
+                "\\1 = (#{sdl2.opt_include}/SDL2, #{libpng.opt_include},")
+        s.gsub!(/(LIBRARY_SEARCH_PATHS) = ("\$\(LIBRARY_SEARCH_PATHS\)");/,
+                "\\1 = (#{sdl2.opt_lib}, #{libpng.opt_lib}, \\2);")
+        s.gsub!(/(OTHER_LDFLAGS) = "((-\w+)*)"/, '\1 = "-lSDL2 -lpng \2"')
       end
     end
     system "./configure", "--prefix=#{prefix}",
@@ -45,11 +47,11 @@ class Stella < Formula
   end
 
   test do
-    assert_match /Stella version #{version}/, shell_output("#{bin}/Stella -help").strip if OS.mac?
     # Test is disabled for Linux, as it is failing with:
     # ERROR: Couldn't load settings file
     # ERROR: Couldn't initialize SDL: No available video device
     # ERROR: Couldn't create OSystem
     # ERROR: Couldn't save settings file
+    assert_match "Stella version #{version}", shell_output("#{bin}/Stella -help").strip if OS.mac?
   end
 end

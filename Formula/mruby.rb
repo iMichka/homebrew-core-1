@@ -1,24 +1,30 @@
 class Mruby < Formula
   desc "Lightweight implementation of the Ruby language"
   homepage "https://mruby.org/"
-  url "https://github.com/mruby/mruby/archive/2.0.1.tar.gz"
-  sha256 "fe0c50a25b4dc7692fd7f6a7dfc1d58ba73f53fedda5762845b853692cfac810"
+  url "https://github.com/mruby/mruby/archive/3.0.0.tar.gz"
+  sha256 "95b798cdd931ef29d388e2b0b267cba4dc469e8722c37d4ef8ee5248bc9075b0"
+  license "MIT"
   head "https://github.com/mruby/mruby.git"
-  revision 1 unless OS.mac?
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d11cb38cf918e44362f4369f1c3f46414059fc2caf4703b3d32f35d34fa44606" => :catalina
-    sha256 "3279a9fe511530c4fe0a56323efcbfd555d2fa981204a0d1595f0365f56cdd59" => :mojave
-    sha256 "3e808c9c9a25a98a20a8af26a369bf688db7c9a635e3ae52836e2eda0e42b442" => :high_sierra
-    sha256 "5244571e026eefa0158a177b1b6e1c42c91760cb8e3b5ef449277660b31aaec6" => :sierra
-    sha256 "2bbc50653fade6bce8920d2085b41fdf2ed610ec1945ad7abacba46080117964" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "cc2d97074393cbb8ea736fb513759bfe505962cf19348476697a3cd72687f82f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e500f9c72174e7a92a3151ddc39d137f8e243f46f1c81201efa8855a9d78aad0"
+    sha256 cellar: :any_skip_relocation, catalina:      "346991d6204ce4e9a745c8b20e8a0f1d308c5b9a46aae05b0acc9d3845f79633"
+    sha256 cellar: :any_skip_relocation, mojave:        "aa2812c5a7a2296671a88a989c94613e1ff2e91b6f8fa8579fef3b862699393a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c40e1324ce7a1919dcc3210e577a7ebbba61df14c0e95e704e1814bfa42a5dec"
   end
 
   depends_on "bison" => :build
+
   uses_from_macos "ruby"
 
   def install
+    cp "build_config/default.rb", buildpath/"homebrew.rb"
+    inreplace buildpath/"homebrew.rb",
+      "conf.gembox 'default'",
+      "conf.gembox 'full-core'"
+    ENV["MRUBY_CONFIG"] = buildpath/"homebrew.rb"
+
     system "make"
 
     cd "build/host/" do

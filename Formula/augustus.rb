@@ -1,25 +1,32 @@
 class Augustus < Formula
   desc "Predict genes in eukaryotic genomic sequences"
-  homepage "http://bioinf.uni-greifswald.de/augustus/"
+  homepage "https://bioinf.uni-greifswald.de/augustus/"
   url "https://github.com/Gaius-Augustus/Augustus/releases/download/v3.3.3/augustus-3.3.3.tar.gz"
   sha256 "4cc4d32074b18a8b7f853ebaa7c9bef80083b38277f8afb4d33c755be66b7140"
+  license "Artistic-1.0"
+  revision OS.mac? ? 2 : 3
   head "https://github.com/Gaius-Augustus/Augustus.git"
 
+  livecheck do
+    url "https://bioinf.uni-greifswald.de/augustus/binaries/"
+    regex(/href=.*?augustus[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "397da54388ec9d56ee891b021fe313e0e4cfa2e46e80ef177ddd6d24723abec3" => :catalina
-    sha256 "67298cd2aa811dfa953f8d0c9019df12fe2f7aec6cd35ebf1cf27e38fb39e858" => :mojave
-    sha256 "030d9fced4d6863a77e5058f145e2d13560ef0b9aedd1cb01e96c593c9e3cbc6" => :high_sierra
-    sha256 "a7f288d20be68a9f4f9f65c29202f7cf000f9e3a9d5518b13b445c925eae2c61" => :x86_64_linux
+    sha256                               arm64_big_sur: "cf98b0583590e5c5c83bcae8357d9a510c18240b33b12c9f95ca4ec0318d61f4"
+    sha256 cellar: :any,                 big_sur:       "0ceda121d6ead1c2b3812f7e1a9155366751da603fd1ab6c0ccbcada6eebb668"
+    sha256 cellar: :any,                 catalina:      "526462eb67bf51a1b95fdecf402d67df75c876333adfabe5aedffe89d76946fc"
+    sha256 cellar: :any,                 mojave:        "1eab0e15ac3027334f0ccda5e4edce2d99cafeffcea50f486842aada76bf6212"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "320895ea39d8c7eafb1701d4484427655a5ba5a38b70382220af78b7d3c82eee"
   end
 
   depends_on "boost" => :build
   depends_on "bamtools"
 
-  if OS.mac?
+  uses_from_macos "zlib"
+
+  on_macos do
     depends_on "gcc"
-  else
-    depends_on "zlib"
   end
 
   def install
@@ -40,20 +47,24 @@ class Augustus < Formula
     # Compile executables for macOS. Tarball ships with executables for Linux.
     system "make", "clean"
 
-    # Clang breaks proteinprofile on macOS. This issue has been first reported
-    # to upstream in 2016 (see https://github.com/nextgenusfs/funannotate/issues/3).
-    # See also https://github.com/Gaius-Augustus/Augustus/issues/64
-    if OS.mac?
-      cd "src" do
-        with_env("HOMEBREW_CC" => "gcc-9") do
+    cd "src" do
+      on_macos do
+        # Clang breaks proteinprofile on macOS. This issue has been first reported
+        # to upstream in 2016 (see https://github.com/nextgenusfs/funannotate/issues/3).
+        # See also https://github.com/Gaius-Augustus/Augustus/issues/64
+        gcc_major_ver = Formula["gcc"].any_installed_version.major
+        with_env("HOMEBREW_CC" => Formula["gcc"].opt_bin/"gcc-#{gcc_major_ver}") do
           system "make"
         end
+      end
+      on_linux do
+        system "make"
       end
     end
 
     system "make"
     system "make", "install", "INSTALLDIR=#{prefix}"
-    bin.env_script_all_files libexec/"bin", :AUGUSTUS_CONFIG_PATH => prefix/"config"
+    bin.env_script_all_files libexec/"bin", AUGUSTUS_CONFIG_PATH: prefix/"config"
     pkgshare.install "examples"
   end
 

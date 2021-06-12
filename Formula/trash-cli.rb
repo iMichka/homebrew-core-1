@@ -3,23 +3,28 @@ class TrashCli < Formula
 
   desc "Command-line interface to the freedesktop.org trashcan"
   homepage "https://github.com/andreafrancia/trash-cli"
-  url "https://github.com/andreafrancia/trash-cli/archive/0.17.1.14.tar.gz"
-  sha256 "8fdd20e5e9c55ea4e24677e602a06a94a93f1155f9970c55b25dede5e037b974"
-  revision 1
+  url "https://files.pythonhosted.org/packages/67/a3/0d6c29913eba3b859770e90bf9f298670b0e4624f56ad0960f58177fc772/trash-cli-0.21.6.10.1.tar.gz"
+  sha256 "63c1147bd905f7f157e9056f4d519a8457d72e6ba57b6ff9ec5cd4034e14ce19"
+  license "GPL-2.0-or-later"
   head "https://github.com/andreafrancia/trash-cli.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "6fafad8c264d9c9a12f2346998a39e7407a0fef9713b5aa98541af27be124ca2" => :catalina
-    sha256 "63895ceb716e9cd3b45bc9dd676afbb973c49f82cf11445aca89ef3cc1e3da69" => :mojave
-    sha256 "c4d324ed98f547cad585e0eaa348c7e8b26e9036c77ab7bbfcc856d76c1ddeb4" => :high_sierra
-    sha256 "5cb6346603e9ba432c92d46bc20f8612dad0dfa4e32e1996e2c0cc1aaab87990" => :sierra
-    sha256 "63da42c698dc9dc8e81918e0b9dcbc8494ab7ca692dde3413530f730f1a5c072" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "828d1befbfe3e56be926c56b9715ad4453706fffc7c8dbe29abb30a5debcf92d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d697dea2bd8f7935ac6047d8bb0c86d7ed72c635dc6d8af0f19603a2686e67fb"
+    sha256 cellar: :any_skip_relocation, catalina:      "ec2930cc4dfefe732cd9a3a24c64deec8ba02d418e485ca1edf5aebf6170012f"
+    sha256 cellar: :any_skip_relocation, mojave:        "6324ae3c7943d7823d6f3b7571777e34acadfe56e2b233cff84ffaf7c3f9ba4b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "d0ccfa06ebf97796d107f333a65c214f26736e39ede9b95f5de86db3d93a4b0d"
   end
 
-  depends_on "python"
+  depends_on "python@3.9"
 
-  conflicts_with "trash", :because => "both install a `trash` binary"
+  conflicts_with "macos-trash", because: "both install a `trash` binary"
+  conflicts_with "trash", because: "both install a `trash` binary"
+
+  resource "psutil" do
+    url "https://files.pythonhosted.org/packages/e1/b0/7276de53321c12981717490516b7e612364f2cb372ee8901bd4a66a000d7/psutil-5.8.0.tar.gz"
+    sha256 "0c9ccb99ab76025f2f0bbecf341d4656e9c1351db8cc8a03ccd62e318ab4b5c6"
+  end
 
   def install
     virtualenv_install_with_resources

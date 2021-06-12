@@ -1,18 +1,24 @@
 class Talloc < Formula
   desc "Hierarchical, reference-counted memory pool with destructors"
   homepage "https://talloc.samba.org/"
-  url "https://www.samba.org/ftp/talloc/talloc-2.3.0.tar.gz"
-  sha256 "75d5bcb34482545a82ffb06da8f6c797f963a0da450d0830c669267b14992fc6"
+  url "https://www.samba.org/ftp/talloc/talloc-2.3.2.tar.gz"
+  sha256 "27a03ef99e384d779124df755deb229cd1761f945eca6d200e8cfd9bf5297bd7"
+  license "GPL-3.0-or-later"
 
-  bottle do
-    cellar :any
-    sha256 "df14ec77e221af8b085b1d1031681e4a2223f447b8a5a543ce6864f73bb01e1c" => :catalina
-    sha256 "11f688236046b8f2175be93f0d53faadddd8782acae480117ccc8544f3b04f88" => :mojave
-    sha256 "2b173d2591652195f1005dace58eee6f43fe7f82410a67887dbe807293727f5b" => :high_sierra
-    sha256 "1966ae9b4a5614cb15e6579211b8dc6440ef7e86c312b000637e959e2c89bd86" => :sierra
+  livecheck do
+    url "https://www.samba.org/ftp/talloc/"
+    regex(/href=.*?talloc[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "python" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "0075bc00e43000ac1e6aa959e7a0942a16e0097209be856cbe66b452fc937e27"
+    sha256 cellar: :any_skip_relocation, big_sur:       "52c7fce48dc4d2a7f9a9d04c6728df1ca6ef485f7e7f4db7a7f381d1069ae48b"
+    sha256 cellar: :any_skip_relocation, catalina:      "da325e962398aecb598415cbc629e3066c07904d3a7ac0e86d73a996ce44629c"
+    sha256 cellar: :any_skip_relocation, mojave:        "d16cc6d63e86849c6aad4bf0479dd245e20d488662845c4df41ffea359242995"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "57d0338aacf4fe09e7dd71740489c8eb2a337a4349fbf17a3edf8d564073dd5f"
+  end
+
+  depends_on "python@3.9" => :build
 
   def install
     system "./configure", "--prefix=#{prefix}",
@@ -39,7 +45,7 @@ class Talloc < Formula
         return ret;
       }
     EOS
-    system ENV.cc, "-I#{include}", "-L#{lib}", "test.c", "-o", "test", "-ltalloc"
+    system ENV.cc, "test.c", "-I#{include}", "-L#{lib}", "-ltalloc", "-o", "test"
     system testpath/"test"
   end
 end

@@ -1,18 +1,18 @@
 class Onedrive < Formula
   desc "Folder synchronization with OneDrive"
   homepage "https://github.com/abraunegg/onedrive"
-  url "https://github.com/abraunegg/onedrive/archive/v2.3.11.tar.gz"
-  sha256 "fff9b77612e02e38e5406e5de93e43ab2288daa59643bf2df25ae8aa74add5c3"
-  # tag "linux"
+  url "https://github.com/abraunegg/onedrive/archive/v2.4.5.tar.gz"
+  sha256 "1f1f5e1f2f37376b6d96bda2426552a94a8b195f545b4fb7f3668c4fe2e8f6a0"
+  revision 1
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "7f4aa18de24236b432a9148e200886210480e3588e365ec2a096a891b57ab01e" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "5e35136dbec90713f07ceffcebbbad5605e805c7c7a03444a42cfdba4b9e9893"
   end
 
   depends_on "dmd" => :build
   depends_on "pkg-config" => :build
-  depends_on "curl-openssl"
+  depends_on "curl"
+  depends_on :linux
   depends_on "sqlite"
 
   def install

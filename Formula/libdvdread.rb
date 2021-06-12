@@ -1,19 +1,20 @@
 class Libdvdread < Formula
   desc "C library for reading DVD-video images"
   homepage "https://www.videolan.org/developers/libdvdnav.html"
-  url "https://download.videolan.org/pub/videolan/libdvdread/6.0.2/libdvdread-6.0.2.tar.bz2"
-  sha256 "f91401af213b219cdde24b46c50a57f29301feb7f965678f1d7ed4632cc6feb0"
+  url "https://download.videolan.org/pub/videolan/libdvdread/6.1.2/libdvdread-6.1.2.tar.bz2"
+  sha256 "cc190f553758ced7571859e301f802cb4821f164d02bfacfd320c14a4e0da763"
+  license "GPL-2.0"
 
   bottle do
-    cellar :any
-    sha256 "8d8dba7bee50281bae15eaab753b224c1a75aaa4b45b5b89f41c366ef64296d0" => :catalina
-    sha256 "1e1bf0699caa152d44c3006d9b4531cb22b04fa126d4d9a8fa41ca5f58245619" => :mojave
-    sha256 "2447aa683f9a8c28266e1aab68f1b3e354a9f8a6a17e4709aa68208e3762cc64" => :high_sierra
-    sha256 "24fa90bd00bbeba4ef799afb78ddc297b8e04d63a2fc6be633a8e3fd142932fe" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "d3e2a48d9d4f4e1e39a68645094be1536cae40fa0c2c6cff7907ec408d3c4439"
+    sha256 cellar: :any,                 big_sur:       "7d0a516f36d885df836072671f8885218a1684fbab69dad9761629ed87483640"
+    sha256 cellar: :any,                 catalina:      "08b72c46e9022170d991a626a84a073bd988f99db12bc145494306fc28f33d73"
+    sha256 cellar: :any,                 mojave:        "ddd7ecdfc66b0b12b4804550aaab8939f2bbd30bcd753ac9006f3db079589515"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8583a5acc7221a024aafd45d255d7f04286e51300ff4c0afbce1e9cce5b56ab3"
   end
 
   head do
-    url "https://git.videolan.org/git/libdvdread.git"
+    url "https://code.videolan.org/videolan/libdvdread.git"
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build

@@ -3,16 +3,15 @@ class Gts < Formula
   homepage "https://gts.sourceforge.io/"
   url "https://downloads.sourceforge.net/project/gts/gts/0.7.6/gts-0.7.6.tar.gz"
   sha256 "059c3e13e3e3b796d775ec9f96abdce8f2b3b5144df8514eda0cc12e13e8b81e"
-  revision 1
+  revision 2
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "9cc937ab4e7ede848f01e8665659fae24d3c578c5aaeed0276831c17d59db647" => :catalina
-    sha256 "59aa61dfb703ff1c0cea21d248acf8d9a426115155f1f2ec1e5a1db6f71e66b4" => :mojave
-    sha256 "41a917173c363d9cf94e72bcfb58cabc874bf44fc265d3ca4d9a0fbd979ad8ad" => :high_sierra
-    sha256 "b35a110b45532e59b9f19e361984359e8bf92823b496f885eafdcbc134b18b17" => :sierra
-    sha256 "eb1bb0268b7e60724fb5acda632c7b9ff73df2f720ec5bee4adec58deab69610" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "efa1e3990e707e16709bbd258502b9c248c25bb5468e8a7b3ef491c56c3a180a"
+    sha256 cellar: :any, big_sur:       "659f27e7e8ab695125ffe0175bf4d915f5e5618fcae0c425180fc085c3388d41"
+    sha256 cellar: :any, catalina:      "8a0c9b4f60a2cbea2e2e3469880284c2373843e676aaf58c1ff28d1e31c2ccb9"
+    sha256 cellar: :any, mojave:        "e0ba5b2700ba2a0c88a6345117a699c08f47738d3e727dbc64d815d1a3b7492b"
+    sha256 cellar: :any, high_sierra:   "5aa85562ed3d0aad446825d7c4e3cc717f8044a2c638bbdcdd0e18bc0f366e81"
+    sha256 cellar: :any, x86_64_linux:  "ff29fd6a36942373d22015728231bf839d98416950cb235816d2a59b9e95c31a"
   end
 
   depends_on "pkg-config" => :build

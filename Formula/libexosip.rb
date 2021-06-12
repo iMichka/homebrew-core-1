@@ -1,16 +1,21 @@
 class Libexosip < Formula
   desc "Toolkit for eXosip2"
   homepage "https://savannah.nongnu.org/projects/exosip"
-  url "https://download.savannah.gnu.org/releases/exosip/libexosip2-5.1.0.tar.gz"
-  sha256 "41107e5bd6dca50899b7381f7f68bfd9ae8df584c534c8a4c9ca668b66a88a4b"
-  revision 1
+  url "https://download.savannah.gnu.org/releases/exosip/libexosip2-5.2.1.tar.gz"
+  mirror "https://download-mirror.savannah.gnu.org/releases/exosip/libexosip2-5.2.1.tar.gz"
+  sha256 "87256b45a406f3c038e1e75e31372d526820366527c2af3bb89329bafd87ec42"
+  license "GPL-2.0"
+
+  livecheck do
+    url "https://download.savannah.gnu.org/releases/exosip/"
+    regex(/href=.*?libexosip2[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "8a1cf2e13613b6e2f92823dd783046c608d3f57b8bef64badf9ce54e7edbf7de" => :catalina
-    sha256 "c2fc3e1f96abb5f383a1b2948757010319d63ec41544854003e48f995b3eb4b7" => :mojave
-    sha256 "645d0b89351aa41b957dfcbf4f82d6df7912dba8f4364ebe5b129c9e385039eb" => :high_sierra
-    sha256 "602438fc2690914f98d185deaa5472102cf4154278ddaea9454d612e59186a20" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "60ef1b3f024a0ec02a8e1fc59418df4d0cb1ca86728145a2b9976d62f2b01a30"
+    sha256 cellar: :any, big_sur:       "7e69d1381e87307b4dd882fbb54842378886a847d7ef8f5353e2ed409e2f3d76"
+    sha256 cellar: :any, catalina:      "a0fe16f1dc217f051a8aab3ac24c78a41f618a66983ccf52c4838e23720ed60a"
+    sha256 cellar: :any, mojave:        "5e211736f686f45183c103da6fa9181e832740019c983c57de2617133e11055a"
   end
 
   depends_on "pkg-config" => :build

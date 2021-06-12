@@ -1,14 +1,17 @@
 class Collectd < Formula
   desc "Statistics collection and monitoring daemon"
   homepage "https://collectd.org/"
-  url "https://collectd.org/files/collectd-5.9.2.tar.bz2"
-  sha256 "dfcb2a2fa7de0ab02c9e6c1457bee2069957d4ffc9b428851661e9c5e5fc35b7"
+  url "https://collectd.org/files/collectd-5.12.0.tar.bz2"
+  sha256 "5bae043042c19c31f77eb8464e56a01a5454e0b39fa07cf7ad0f1bfc9c3a09d6"
+  license "MIT"
+  revision 1
 
   bottle do
-    sha256 "4c4b4c34332287378e9b7f5fb4bd4a64b95716371c4aa90de9af3c31b992aeff" => :catalina
-    sha256 "ca86a75db509fffc8f70ce9e3b4bfe56dab5c7458955dcab91fbea615310cb50" => :mojave
-    sha256 "359ed8272530b34be21aee41b17b9ac93c65ccab30a6f8a11df19cda33089cd7" => :high_sierra
-    sha256 "f92d8093cef0b5d89917ec0deaf73d8d571dc332f32c8f45d7b7f3eb8a63974f" => :x86_64_linux
+    sha256 arm64_big_sur: "c0a9e32a3407d094ae4fe5f8bf0fc19d0b4f5f0bb40f8ce6335fe4d2241a72b3"
+    sha256 big_sur:       "73233ee8e731722660a1098db2a72ae276508b8b09475f101f50a8d5ddc49251"
+    sha256 catalina:      "33f0fa042a98883dbf363865a66d64fd53e2eaebc330829257e2d5c87c7b5a4d"
+    sha256 mojave:        "a38f5912b4ed2b48e37e7285e0dd6e4f97d31799e5e7c47f438cddd7806a1252"
+    sha256 x86_64_linux:  "d0c594e92bcf27f42d32784a20ae7e53f635d3f53f3cb7ebe4992f7d3704a2b9"
   end
 
   head do
@@ -23,6 +26,7 @@ class Collectd < Formula
   depends_on "libtool"
   depends_on "net-snmp"
   depends_on "riemann-client"
+
   uses_from_macos "bison"
   uses_from_macos "flex"
   uses_from_macos "perl"
@@ -42,33 +46,34 @@ class Collectd < Formula
     system "make", "install"
   end
 
-  plist_options :manual => "#{HOMEBREW_PREFIX}/sbin/collectd -f -C #{HOMEBREW_PREFIX}/etc/collectd.conf"
+  plist_options manual: "#{HOMEBREW_PREFIX}/sbin/collectd -f -C #{HOMEBREW_PREFIX}/etc/collectd.conf"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>KeepAlive</key>
-        <true/>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{sbin}/collectd</string>
-          <string>-f</string>
-          <string>-C</string>
-          <string>#{etc}/collectd.conf</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/collectd.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/collectd.log</string>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>KeepAlive</key>
+          <true/>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{sbin}/collectd</string>
+            <string>-f</string>
+            <string>-C</string>
+            <string>#{etc}/collectd.conf</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/collectd.log</string>
+          <key>StandardOutPath</key>
+          <string>#{var}/log/collectd.log</string>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do

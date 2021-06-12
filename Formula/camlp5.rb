@@ -1,17 +1,23 @@
 class Camlp5 < Formula
   desc "Preprocessor and pretty-printer for OCaml"
   homepage "https://camlp5.github.io/"
-  url "https://github.com/camlp5/camlp5/archive/rel710.tar.gz"
-  version "7.10"
-  sha256 "83dff83d33ee9b70cd1b9d8d365db63a118201e5feb6aab49d9d3b1d62621784"
-  head "https://gforge.inria.fr/anonscm/git/camlp5/camlp5.git"
+  url "https://github.com/camlp5/camlp5/archive/rel8.00.tar.gz"
+  sha256 "906d5325798cd0985a634e9b6b5c76c6810f3f3b8e98b80a7c30b899082c2332"
+  license "BSD-3-Clause"
+  revision 1
+  head "https://github.com/camlp5/camlp5.git"
+
+  livecheck do
+    url :homepage
+    regex(%r{The current distributed version is <b>v?(\d+(?:\.\d+)+)</b>}i)
+  end
 
   bottle do
-    sha256 "6c8c1d3f0239f92b455a1cb801e45ba6b4cb7f9021a48f36ccade3f0a9c3a679" => :catalina
-    sha256 "f20e753e899bf8d6fedf51284a5ffeabfffc3da01151d07ef6f040888ffd159a" => :mojave
-    sha256 "c6d3725bb7e79d77c00b1f430abad3f8542563eab79429eaa7f0420138a38d94" => :high_sierra
-    sha256 "6246f8aa046ae45095f20ad3c839b317d284c7c4a27b6d572b8bb3256d9a5c19" => :sierra
-    sha256 "1248bcdc1734963a30921bbcbf37b48a18a49fc9d3a6576e7460644baafa19c2" => :x86_64_linux
+    sha256 arm64_big_sur: "549ee3a8bfbc3b3d6f466087562d15fd1e1b1b092786c488ae3109c19b1ca50d"
+    sha256 big_sur:       "a01dea02114f9eb35e8d151ea3b61c34c7fcf5c2db09583cc3480a010211e7b3"
+    sha256 catalina:      "14d9affdc0d1aaeef2a2e122523acba47d3b271f7002c66e407e02387f48b1fe"
+    sha256 mojave:        "6b753cfd90a18e4d813cfc9ce3d3345547a0424527c15d51304621c9f6689b14"
+    sha256 x86_64_linux:  "468f1a1341113efc399641b3b2c5d0390a9e8294e5f3b9a18c1a6150464aa744"
   end
 
   depends_on "ocaml"
@@ -31,6 +37,7 @@ class Camlp5 < Formula
       # ocaml files are in sync with the camlp5 files.  If camlp5 has been
       # compiled with an older version of the ocaml compiler, then an error
       # "interface mismatch" will occur.
-      shell_output("#{bin}/camlp5 #{lib}/ocaml/camlp5/pa_o.cmo #{lib}/ocaml/camlp5/pr_o.cmo #{ocaml.opt_lib}/ocaml/bigarray.cma hi.ml")
+      shell_output("#{bin}/camlp5 #{lib}/ocaml/camlp5/pa_o.cmo #{lib}/ocaml/camlp5/pr_o.cmo " \
+                   "#{ocaml.opt_lib}/ocaml/bigarray.cma hi.ml")
   end
 end

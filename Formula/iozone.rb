@@ -1,21 +1,34 @@
 class Iozone < Formula
   desc "File system benchmark tool"
-  homepage "http://www.iozone.org/"
-  url "http://www.iozone.org/src/current/iozone3_487.tar"
-  sha256 "2c488a7ccddd624fd557af16e71442c367b131d6178e1b4023bbd532bacdda59"
+  homepage "https://www.iozone.org/"
+  url "https://www.iozone.org/src/current/iozone3_492.tgz"
+  sha256 "cece887183d19b566633761f69b50952300cd594327a126a8aea184afbaa18d7"
+  license :cannot_represent
+
+  livecheck do
+    url "https://www.iozone.org/src/current/"
+    regex(/href=.*?iozone[._-]?v?(\d+(?:[._]\d+)+)\.t/i)
+    strategy :page_match do |page, regex|
+      page.scan(regex).map { |match| match&.first&.gsub("_", ".") }
+    end
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "704c25cbbe9ac821b7f4bef8c23b5ac4df5117d15574062f77247769bca8e6ef" => :catalina
-    sha256 "ed77f59ddfb45e302b60e80d2f4a842e838af5973df7e6dc7d95a3d27c06d0e8" => :mojave
-    sha256 "c0f0f7a10f585f40435d1d0a07322739925c9cae2afeb8c8714fe9e121a41572" => :high_sierra
-    sha256 "09eda4f32813be63ba4e05dee24a9cac6805667d022fb8a2ed42ef8b0fafe9dc" => :sierra
-    sha256 "c16c33619fa043dabccb7e43ed18ab116b804b5499ab0287489d46fa538bed5e" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "aa676ffe3625bd4127956e10b39e4e25f51f82bb14ca061062282b81dd20318e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "f47bc3f26886b9469cc471bdea595bacd0158199ad1892d2b1836100d617f1e5"
+    sha256 cellar: :any_skip_relocation, catalina:      "ac6f70cec9ffbf1c4be9feeb737bdf2eefeed1a9f9c62f6c4609fd08b6a3de4a"
+    sha256 cellar: :any_skip_relocation, mojave:        "8098476c90a74f06fa73eda62e402629fd179b2f008f59fc97d2f0b5dd633ab5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f2b6ee8987d460b87abb78e43a0312f6109a68b864b5ae1415c4c36a9b3bae89"
   end
 
   def install
     cd "src/current" do
-      system "make", OS.mac? ? "macosx" : "linux", "CC=#{ENV.cc}"
+      on_macos do
+        system "make", "macosx", "CC=#{ENV.cc}"
+      end
+      on_linux do
+        system "make", "linux", "CC=#{ENV.cc}"
+      end
       bin.install "iozone"
       pkgshare.install %w[Generate_Graphs client_list gengnuplot.sh gnu3d.dem
                           gnuplot.dem gnuplotps.dem iozone_visualizer.pl

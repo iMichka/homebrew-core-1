@@ -1,0 +1,25 @@
+class Uni < Formula
+  desc "Unicode database query tool for the command-line"
+  homepage "https://github.com/arp242/uni"
+  url "https://github.com/arp242/uni/archive/v2.2.0.tar.gz"
+  sha256 "cf93dec8938e9e453bbeef17f9ef9a35e7253139eec9c15ab91cff52cf9643b4"
+  license "MIT"
+
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e0021a29df959c39a8e4166f7648a680565123663ccfa1aa0540e4749428ff1a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b69a7f8021f31c5b311f78890619e49724a55e6859a1a2294e021adb45603b28"
+    sha256 cellar: :any_skip_relocation, catalina:      "f614cf1e5c272d9e61cd8bfce7861c6920b479b7a1799df2dc646872fa1c7f10"
+    sha256 cellar: :any_skip_relocation, mojave:        "1ac8826cc9f1e6202dee1dd786a724d8cf193313fa52ed2e902f46d193c24791"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "bebdd06e48bd4067a0d2bf63f0b86fea3eb44a55fed072e22683fae75d6b5a0b"
+  end
+
+  depends_on "go" => :build
+
+  def install
+    system "go", "build", "-o", bin/"uni"
+  end
+
+  test do
+    assert_match "CLINKING BEER MUGS", shell_output("#{bin}/uni identify 🍻")
+  end
+end

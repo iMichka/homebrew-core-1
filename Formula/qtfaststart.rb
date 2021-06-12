@@ -3,14 +3,21 @@ class Qtfaststart < Formula
   homepage "https://libav.org/"
   url "https://libav.org/releases/libav-12.3.tar.gz"
   sha256 "115b659022dd387f662e26fbc5bc0cc14ec18daa100003ffd34f4da0479b272e"
+  license "LGPL-2.1"
+
+  livecheck do
+    url "https://libav.org/releases/"
+    regex(/href=.*?libav[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "72a7b46a652dc99b3c24df9a868008927e795f438ef2e68fb3d7456abbc3724a" => :mojave
-    sha256 "4534f204dcc950ad18c3a141119fcd8d9a9623645092ae3f003b08dd94851dcf" => :high_sierra
-    sha256 "a11b3b623a2682567830cb05810ed4445037f5b43a52f2378a10291aad70a2c6" => :sierra
-    sha256 "00ed1702b08f3fe7d0660aab963f15baab6a5bac8db02048fe5d0b4d80b4abe0" => :el_capitan
-    sha256 "d688747087c789bd6d868809fbf9232ab44eb1a491e340e5b2939f0f3f91f424" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e9190e060b5e58f6e294576e87607b43e6f9f6399ae350ba48fb3f522a511c0c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c9360f4a62eed02d2f5d7879ad4e3c4f6fd250536b3562b228e40d0d3c6c9a70"
+    sha256 cellar: :any_skip_relocation, catalina:      "abce3f470e0a8b62acd78aa2c58114a3e5b64d7b2117d8ffbaadc23c4eee186e"
+    sha256 cellar: :any_skip_relocation, mojave:        "2fac027c66defdafcbaee5b346fd5c5e6c11b5e9a267de40d604b8e837f5d2c4"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "073794a6af64b0fe9f2bc22480b4c605f9497c5ae9087d26fa8e51bdc0230b00"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "4c79b4b65fba2c35a78994ca5053be3c0a85dc45d6726352273d566aa89cd013"
   end
 
   resource "mov" do

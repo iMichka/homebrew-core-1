@@ -1,17 +1,18 @@
 require "language/node"
 
 class Ungit < Formula
-  desc "The easiest way to use git. On any platform. Anywhere"
+  desc "Easiest way to use Git. On any platform. Anywhere"
   homepage "https://github.com/FredrikNoren/ungit"
-  url "https://registry.npmjs.org/ungit/-/ungit-1.5.1.tgz"
-  sha256 "8f045f6f606e3e89a8a053f86c9d403ba85df8d047e85a31a321fcce99cd9dee"
+  url "https://registry.npmjs.org/ungit/-/ungit-1.5.18.tgz"
+  sha256 "7bc917ccbb9aa33773b8915400c4c7fbae375a346dba6613e5b0eaae7cad6fb8"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "bdbe64c67f0f71eed673c180e89ee49217bf3a668858fff4b0622c8107818366" => :catalina
-    sha256 "032b92fc6515c3e52a2e54bf2acb7da99f53242847b4349f1a14d13763c216c5" => :mojave
-    sha256 "d2c473a1cd2cccfd3b8ed5abf35c436aeb98c9c352534c114b1d4409e2f4c9c2" => :high_sierra
-    sha256 "741513770a145404cb26824e274974f84d190f9cd7517bf45fc0c549c8361a93" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "54ab4e9703e79db7145005c5f4e8a2b09001bc6a6a4c0ca0e074d20cb71b252a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "6768008e7ce0700279019566b2c5fab0a906823696b225e54b883bc30d4b52b7"
+    sha256 cellar: :any_skip_relocation, catalina:      "6768008e7ce0700279019566b2c5fab0a906823696b225e54b883bc30d4b52b7"
+    sha256 cellar: :any_skip_relocation, mojave:        "6768008e7ce0700279019566b2c5fab0a906823696b225e54b883bc30d4b52b7"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6becd0bc7ca5264cd98e44664d8186e22fc22bc6083cec8901ad290bd52527aa"
   end
 
   depends_on "node"
@@ -22,24 +23,13 @@ class Ungit < Formula
   end
 
   test do
-    require "nokogiri"
+    port = free_port
 
-    server = TCPServer.new(0)
-    port = server.addr[1]
-    server.close
+    fork do
+      exec bin/"ungit", "--no-launchBrowser", "--port=#{port}"
+    end
+    sleep 8
 
-    ppid = fork do
-      exec bin/"ungit", "--no-launchBrowser", "--port=#{port}", "--autoShutdownTimeout=6000"
-    end
-    sleep 5
-    assert_match "ungit", Nokogiri::HTML(shell_output("curl -s 127.0.0.1:#{port}/")).at_css("title").text
-  ensure
-    if ppid
-      Process.kill("TERM", ppid)
-      # ensure that there are no spawned child processes left
-      child_p = shell_output("ps -o pid,ppid").scan(/^(\d+)\s+#{ppid}\s*$/).map { |p| p[0].to_i }
-      child_p.each { |pid| Process.kill("TERM", pid) }
-      Process.wait(ppid)
-    end
+    assert_includes shell_output("curl -s 127.0.0.1:#{port}/"), "<title>ungit</title>"
   end
 end

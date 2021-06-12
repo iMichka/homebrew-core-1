@@ -1,22 +1,23 @@
 class Vale < Formula
   desc "Syntax-aware linter for prose"
   homepage "https://errata-ai.github.io/vale/"
-  url "https://github.com/errata-ai/vale/archive/v1.7.1.tar.gz"
-  sha256 "e1fee20d8fed7fc8819de310608b1ed584c0fad096cce95ecef727584ed9790f"
+  url "https://github.com/errata-ai/vale/archive/v2.10.3.tar.gz"
+  sha256 "db5e23fa5356f409c4b09fb37ad13985e404f4a4ad216a5e1b659d72322610c0"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "55d0d445b8a784ed4b3b4a3984607b47a7de9e08f965023eff3b9e4729be3d91" => :catalina
-    sha256 "76f9d344221f5121ac43b32874a303ecd2bb935bcb8d26ef39f8754046c46e3a" => :mojave
-    sha256 "7aef1f869c6f7d757897a106d22416741489f38b108c49e1c2347392b8bac045" => :high_sierra
-    sha256 "e2d49a7ccefd9808575c5f2020843e587deea696dcb02fa2c1d61b9b8d5a1708" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f392d1f7b7a6d2732300786b195268671dcc72fe94b24ca0d58fa09c6907806f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "63309f2ad4c4113344df06b93c834f453bd1e25ee38e7b5f417800950e94a71a"
+    sha256 cellar: :any_skip_relocation, catalina:      "43500d0981332bfc00573e647f8cc7ab05a338e64948153f06c20c3d52160704"
+    sha256 cellar: :any_skip_relocation, mojave:        "0eab2f5b2a741f46dc8edb3f95bb6b57f5831c124f8e69fe983bf730efd6ded5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "74986b42589a38cbe3c02d8f5ec916d38cfe837dd0f2abc412aa9b7f6401e3cf"
   end
 
   depends_on "go" => :build
 
   def install
-    flags = "-X main.version=#{version} -s -w"
-    system "go", "build", "-ldflags=#{flags}", "-o", "#{bin}/#{name}"
+    ldflags = "-X main.version=#{version} -s -w"
+    system "go", "build", *std_go_args, "-ldflags=#{ldflags}", "./cmd/vale"
   end
 
   test do
@@ -38,6 +39,6 @@ class Vale < Formula
     (testpath/"document.md").write("# heading is not capitalized")
 
     output = shell_output("#{bin}/vale --config=#{testpath}/vale.ini #{testpath}/document.md 2>&1")
-    assert_match("✖ 0 errors, 1 warning and 0 suggestions in 1 file.", output)
+    assert_match(/✖ .*0 errors.*, .*1 warning.* and .*0 suggestions.* in 1 file\./, output)
   end
 end

@@ -1,13 +1,15 @@
 class Goffice < Formula
   desc "Gnumeric spreadsheet program"
   homepage "https://developer.gnome.org/goffice/"
-  url "https://download.gnome.org/sources/goffice/0.10/goffice-0.10.46.tar.xz"
-  sha256 "058d6d3a40e1f60525682ec6b857c441d5deb50d0d30a76804f9f36f865a13a9"
+  url "https://download.gnome.org/sources/goffice/0.10/goffice-0.10.50.tar.xz"
+  sha256 "2c5c3ddc7b08b3452408c81b121c5f012a734981d75e444debccb1c58e5cbfdc"
+  license any_of: ["GPL-3.0-only", "GPL-2.0-only"]
 
   bottle do
-    sha256 "0fe21687f0305ad07a1accb75eb6235490aae734c2b11262e20b62c7ee4968c3" => :catalina
-    sha256 "5cdf0c352915329f46093c916ec4c5c2adecf6a7c46f695e70a9cb7e4f2fedae" => :mojave
-    sha256 "faf193d186c3a95533149ee9df8a360e83c277687dbf7a43150b7fe299ee190e" => :high_sierra
+    sha256 arm64_big_sur: "e571776d6027505872945c458da49905765f260bc76c197f83565ff1f9c06a6b"
+    sha256 big_sur:       "4cbc19a7ea37b8d511e2c908ab810c5655d76af9f13cffbaafdc39bac01ad009"
+    sha256 catalina:      "b21162268cc6c6dc2bdb7c63f6ea7b95eb3db9228f75536b98bf7fabff4ea9e8"
+    sha256 mojave:        "e7e8f0d817617e0b4450bc77905d988cd06918e45992881eeaba24c61b2e4030"
   end
 
   head do
@@ -29,9 +31,13 @@ class Goffice < Formula
   depends_on "librsvg"
   depends_on "pango"
   depends_on "pcre"
+
   uses_from_macos "libxslt"
 
   def install
+    # Needed by intltool (xml::parser)
+    ENV.prepend_path "PERL5LIB", "#{Formula["intltool"].libexec}/lib/perl5" unless OS.mac?
+
     args = %W[--disable-dependency-tracking --prefix=#{prefix}]
     if build.head?
       system "./autogen.sh", *args

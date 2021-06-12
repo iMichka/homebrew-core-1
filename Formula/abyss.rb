@@ -1,15 +1,22 @@
 class Abyss < Formula
   desc "Genome sequence assembler for short reads"
-  homepage "https://www.bcgsc.ca/resources/gsc-software-centre"
-  url "https://github.com/bcgsc/abyss/releases/download/2.2.3/abyss-2.2.3.tar.gz"
-  sha256 "ac7679ececbdd89cc050998eae31fa5f8bf7cdab6a0c05eb5eb1e3867c7e75cb"
+  homepage "https://www.bcgsc.ca/resources/software/abyss"
+  url "https://github.com/bcgsc/abyss/releases/download/2.3.1/abyss-2.3.1.tar.gz"
+  sha256 "664045e7903e9732411effc38edb9ebb1a0c1b7636c64b3a14a681f465f43677"
+  license all_of: ["GPL-3.0-only", "LGPL-2.1-or-later", "MIT", "BSD-3-Clause"]
+  revision 1
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "fe5e65727d390f31e0e847e30da9a6b931c7b1b5f3c0a4e6459b5aa0f4eb0ad9" => :catalina
-    sha256 "d982f22bbc71a21271eb01441f4189366e91bfb3dc8c9718df09307eb89bf11e" => :mojave
-    sha256 "482a9754933a932ca3d8860de7f753b72a1a344ddaf40104849ba999218d86a8" => :high_sierra
-    sha256 "7bf03484adc48d8071eaab2ac4ed55c0cd3f6da399d28ad2f257a3aca528ea38" => :x86_64_linux
+    sha256                               arm64_big_sur: "21d1cb2d31fa162cefea32db0630fc6011f8d3d0bb7ababa31f8e772820d1c7f"
+    sha256 cellar: :any,                 big_sur:       "e56ce6b9bf533fb34bd2f87e87fb1019e3cccdcdc94d0e665e144121c95ddcad"
+    sha256 cellar: :any,                 catalina:      "5a95037e8675013c34f4119d5a2914706ec3b99f522426878a19f27031ad4d79"
+    sha256 cellar: :any,                 mojave:        "fc1208b6ff7dbcdc23d621076a271a40f1090cab41690ce35433c81425984494"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "db702612c5696bd48af501c8a25127ba772492b38257eb539422359020e38f98"
   end
 
   head do
@@ -22,8 +29,11 @@ class Abyss < Formula
 
   depends_on "boost" => :build
   depends_on "google-sparsehash" => :build
-  depends_on "gcc" if OS.mac?
   depends_on "open-mpi"
+
+  on_macos do
+    depends_on "gcc"
+  end
 
   fails_with :clang # no OpenMP support
 
@@ -47,7 +57,7 @@ class Abyss < Formula
 
   test do
     testpath.install resource("testdata")
-    if OS.mac? || which("column")
+    if which("column")
       system "#{bin}/abyss-pe", "k=25", "name=ts", "in=reads1.fastq reads2.fastq"
     else
       # Fix error: abyss-tabtomd: column: not found

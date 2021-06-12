@@ -1,25 +1,27 @@
 class RubyAT25 < Formula
   desc "Powerful, clean, object-oriented scripting language"
   homepage "https://www.ruby-lang.org/"
-  url "https://cache.ruby-lang.org/pub/ruby/2.5/ruby-2.5.5.tar.xz"
-  sha256 "9bf6370aaa82c284f193264cc7ca56f202171c32367deceb3599a4f354175d7d"
-  revision 1
+  url "https://cache.ruby-lang.org/pub/ruby/2.5/ruby-2.5.9.tar.xz"
+  sha256 "a87f2fa901408cc77652c1a55ff976695bbe54830ff240e370039eca14b358f0"
+  license "Ruby"
 
   bottle do
-    rebuild 1
-    sha256 "058e2205b34e42502b7a43e506fc3639ed32518c9d84cbb0fb6cfd9945a0b765" => :catalina
-    sha256 "6dd94a282abc4f72881be6ff47f5d31bc2e124d0a49635bb9219ea0755b67cfc" => :mojave
-    sha256 "0dcec628a71f19d52c82b3097d347e341003e241076958dff0a7b19fef007248" => :high_sierra
-    sha256 "c36de0e091c626debd7bfefc6b69e1b8a18533231ad740e638c8a138ee8c259c" => :sierra
-    sha256 "d70be7c13b8e877b1a08ffa22b31c6ea6dd626dda5870cf34206221600c96fb4" => :x86_64_linux
+    sha256 arm64_big_sur: "deb2ee5e006f4fc7b3829dfcdb377300f3dc5f339562a6a1c1b4dec48ed21ae6"
+    sha256 big_sur:       "fb6b696623fc988abecbf9fb9f5298219c62c69851123b9d9d69c3f127b0ec3c"
+    sha256 catalina:      "8fab1468c593b5907e027c175dc19e3273b08cc8b344822ce593dcab645e857d"
+    sha256 mojave:        "ef4974800a4417e6251fb548486150157c2f0ff62275170431381480bac1c3ed"
+    sha256 x86_64_linux:  "00952d46480347241dadbbf54be90f5aa6e875f95bd1209271ec71b32eeebbfd"
   end
 
   keg_only :versioned_formula
+
+  deprecate! date: "2021-04-05", because: :unsupported
 
   depends_on "pkg-config" => :build
   depends_on "libyaml"
   depends_on "openssl@1.1"
   depends_on "readline"
+
   uses_from_macos "zlib"
 
   def api_version
@@ -44,7 +46,9 @@ class RubyAT25 < Formula
       --with-opt-dir=#{paths.join(":")}
       --without-gmp
     ]
-    args << "--disable-dtrace" if OS.mac? && !MacOS::CLT.installed?
+    on_macos do
+      args << "--disable-dtrace" unless MacOS::CLT.installed?
+    end
 
     system "./configure", *args
 
@@ -69,16 +73,6 @@ class RubyAT25 < Formula
   end
 
   def post_install
-    # Since Gem ships Bundle we want to provide that full/expected installation
-    # but to do so we need to handle the case where someone has previously
-    # installed bundle manually via `gem install`.
-    rm_f %W[
-      #{rubygems_bindir}/bundle
-      #{rubygems_bindir}/bundler
-    ]
-    rm_rf Dir[HOMEBREW_PREFIX/"lib/ruby/gems/#{api_version}/gems/bundler-*"]
-    rubygems_bindir.install_symlink Dir[libexec/"gembin/*"]
-
     # Customize rubygems to look/install in the global gem directory
     # instead of in the Cellar, making gems last across reinstalls
     config_file = lib/"ruby/#{api_version}/rubygems/defaults/operating_system.rb"
@@ -91,77 +85,79 @@ class RubyAT25 < Formula
     end
   end
 
-  def rubygems_config; <<~EOS
-    module Gem
-      class << self
-        alias :old_default_dir :default_dir
-        alias :old_default_path :default_path
-        alias :old_default_bindir :default_bindir
-        alias :old_ruby :ruby
-      end
+  def rubygems_config
+    <<~EOS
+      module Gem
+        class << self
+          alias :old_default_dir :default_dir
+          alias :old_default_path :default_path
+          alias :old_default_bindir :default_bindir
+          alias :old_ruby :ruby
+        end
 
-      def self.default_dir
-        path = [
-          "#{HOMEBREW_PREFIX}",
-          "lib",
-          "ruby",
-          "gems",
-          "#{api_version}"
-        ]
+        def self.default_dir
+          path = [
+            "#{HOMEBREW_PREFIX}",
+            "lib",
+            "ruby",
+            "gems",
+            "#{api_version}"
+          ]
 
-        @default_dir ||= File.join(*path)
-      end
+          @default_dir ||= File.join(*path)
+        end
 
-      def self.private_dir
-        path = if defined? RUBY_FRAMEWORK_VERSION then
-                 [
-                   File.dirname(RbConfig::CONFIG['sitedir']),
-                   'Gems',
-                   RbConfig::CONFIG['ruby_version']
-                 ]
-               elsif RbConfig::CONFIG['rubylibprefix'] then
-                 [
-                  RbConfig::CONFIG['rubylibprefix'],
-                  'gems',
-                  RbConfig::CONFIG['ruby_version']
-                 ]
-               else
-                 [
-                   RbConfig::CONFIG['libdir'],
-                   ruby_engine,
-                   'gems',
-                   RbConfig::CONFIG['ruby_version']
-                 ]
-               end
+        def self.private_dir
+          path = if defined? RUBY_FRAMEWORK_VERSION then
+                   [
+                     File.dirname(RbConfig::CONFIG['sitedir']),
+                     'Gems',
+                     RbConfig::CONFIG['ruby_version']
+                   ]
+                 elsif RbConfig::CONFIG['rubylibprefix'] then
+                   [
+                    RbConfig::CONFIG['rubylibprefix'],
+                    'gems',
+                    RbConfig::CONFIG['ruby_version']
+                   ]
+                 else
+                   [
+                     RbConfig::CONFIG['libdir'],
+                     ruby_engine,
+                     'gems',
+                     RbConfig::CONFIG['ruby_version']
+                   ]
+                 end
 
-        @private_dir ||= File.join(*path)
-      end
+          @private_dir ||= File.join(*path)
+        end
 
-      def self.default_path
-        if Gem.user_home && File.exist?(Gem.user_home)
-          [user_dir, default_dir, private_dir]
-        else
-          [default_dir, private_dir]
+        def self.default_path
+          if Gem.user_home && File.exist?(Gem.user_home)
+            [user_dir, default_dir, private_dir]
+          else
+            [default_dir, private_dir]
+          end
+        end
+
+        def self.default_bindir
+          "#{rubygems_bindir}"
+        end
+
+        def self.ruby
+          "#{opt_bin}/ruby"
         end
       end
-
-      def self.default_bindir
-        "#{rubygems_bindir}"
-      end
-
-      def self.ruby
-        "#{opt_bin}/ruby"
-      end
-    end
-  EOS
+    EOS
   end
 
-  def caveats; <<~EOS
-    By default, binaries installed by gem will be placed into:
-      #{rubygems_bindir}
+  def caveats
+    <<~EOS
+      By default, binaries installed by gem will be placed into:
+        #{rubygems_bindir}
 
-    You may want to add this to your PATH.
-  EOS
+      You may want to add this to your PATH.
+    EOS
   end
 
   test do

@@ -1,31 +1,37 @@
 class Libepoxy < Formula
   desc "Library for handling OpenGL function pointer management"
   homepage "https://github.com/anholt/libepoxy"
-  url "https://download.gnome.org/sources/libepoxy/1.5/libepoxy-1.5.4.tar.xz"
-  sha256 "0bd2cc681dfeffdef739cb29913f8c3caa47a88a451fd2bc6e606c02997289d2"
+  url "https://download.gnome.org/sources/libepoxy/1.5/libepoxy-1.5.8.tar.xz"
+  sha256 "cf05e4901778c434aef68bb7dc01bea2bce15440c0cecb777fb446f04db6fe0d"
+  license "MIT"
+
+  # We use a common regex because libepoxy doesn't use GNOME's "even-numbered
+  # minor is stable" version scheme.
+  livecheck do
+    url :stable
+    regex(/libepoxy[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "96e139bc93053e6bb0a03201169e16c6112ef0ab27cdc648d35a26f2d786855c" => :catalina
-    sha256 "c2f968269360ad31b30d6635d234cdc82e926fd109f3ac3aa4eb2a71f27f3ceb" => :mojave
-    sha256 "3ed4dbf8d3715738c5226c0466b7ace7a57b4a49dc838d3260d5d8acd82c1a07" => :high_sierra
-    sha256 "9a4ac2307e210de830f50bc8914a85b34054cf7243ec3762b99fc8a08c7714f6" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "af3bc3c7e7710cff30fdebbe386f52fab7cd5083b41d6d9a043eba4b2b1c049a"
+    sha256 cellar: :any,                 big_sur:       "4a6a1766bb7ff4a4c9dbd5136f655685141a3c3eae8b082edc94cada21f613ec"
+    sha256 cellar: :any,                 catalina:      "2af927d87affad9ff2ba2bce8b9410f1a7b131ddbd82ba157ffd0ec6a31b15b9"
+    sha256 cellar: :any,                 mojave:        "9ff86759f0fce587b7063d2f2b156c3da556d54d6e40a108f72e1813580329bf"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9a39c93c0a3005c10eb522b05de6d13357dbe6ef26c68f25033fdc4845eabec5"
   end
 
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
-  unless OS.mac?
+  depends_on "python@3.9" => :build
+
+  on_linux do
     depends_on "freeglut"
-    depends_on "linuxbrew/xorg/mesa"
-    depends_on "linuxbrew/xorg/xorg"
-    depends_on "linuxbrew/xorg/xorgproto"
   end
 
   def install
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", *("--libdir=#{lib}" unless OS.mac?), ".."
+      system "meson", *std_meson_args, ".."
       system "ninja"
       system "ninja", "install"
     end
@@ -38,6 +44,7 @@ class Libepoxy < Formula
       #ifdef OS_MAC
       #include <OpenGL/CGLContext.h>
       #include <OpenGL/CGLTypes.h>
+      #include <OpenGL/OpenGL.h>
       #endif
       int main()
       {
@@ -60,9 +67,11 @@ class Libepoxy < Formula
       }
     EOS
     args = %w[-lepoxy]
-    args += %w[-framework OpenGL -DOS_MAC] if OS.mac?
+    on_macos do
+      args += %w[-framework OpenGL -DOS_MAC]
+    end
     args += %w[-o test]
-    system ENV.cc, "test.c", *args
+    system ENV.cc, "test.c", "-L#{lib}", *args
     system "ls", "-lh", "test"
     system "file", "test"
     system "./test"

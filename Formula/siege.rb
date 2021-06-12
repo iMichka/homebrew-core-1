@@ -1,18 +1,26 @@
 class Siege < Formula
   desc "HTTP regression testing and benchmarking utility"
   homepage "https://www.joedog.org/siege-home/"
-  url "http://download.joedog.org/siege/siege-4.0.4.tar.gz"
-  sha256 "8f7dcf18bd722bb9cc92bc3ea4b59836b4a2f8d8f01d4a94c8d181f56d91ea6f"
-  revision 2
+  url "http://download.joedog.org/siege/siege-4.0.9.tar.gz"
+  sha256 "1dbe15860569e7becedfefca6cd60d1fdba2eed281098e51718ca70d2575f277"
+  license "GPL-3.0"
+
+  livecheck do
+    url "http://download.joedog.org/siege/?C=M&O=D"
+    regex(/href=.*?siege[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "6072653be5dfab7b9f5b2154f060daababdf65ebc3cb0a5bdb1cf9ff2b95e1b2" => :catalina
-    sha256 "8a057346938d661b2a4b2cf6523da41a76bdc9a26b76953b3e301763f1b1c804" => :mojave
-    sha256 "2313774da1f8716dd225cfe13b12808ad23af54ffa2d477dd90bdd7bef16380c" => :high_sierra
-    sha256 "3ce11d6b7f693f0f3da024c7e8a1341d57b21d532bef16f414064300998fcedb" => :sierra
+    sha256 arm64_big_sur: "1b7fdd7383aa8707ea7a82873a2e68338adc8c01bc5b6af2664738ffc448fad1"
+    sha256 big_sur:       "4e6fa02afc086f8f0426d071c9e773ac51b0c02ac9864ddcbb89c67ce33aa8d3"
+    sha256 catalina:      "8af4b0fe458e6fb3d07196f68b454d4fe47c509b693867435b6d9485a260dfdf"
+    sha256 mojave:        "1ccea122394d064b6edc165cbe4199356c8672d512129fb9908e669759661682"
+    sha256 x86_64_linux:  "f1914fb518774332f3ec8fa2f7543da4b5d58e6ad9ae6c86c030bfac1afce782"
   end
 
   depends_on "openssl@1.1"
+
+  uses_from_macos "zlib"
 
   def install
     # To avoid unnecessary warning due to hardcoded path, create the folder first
@@ -26,21 +34,22 @@ class Siege < Formula
     system "make", "install"
   end
 
-  def caveats; <<~EOS
-    macOS has only 16K ports available that won't be released until socket
-    TIME_WAIT is passed. The default timeout for TIME_WAIT is 15 seconds.
-    Consider reducing in case of available port bottleneck.
+  def caveats
+    <<~EOS
+      macOS has only 16K ports available that won't be released until socket
+      TIME_WAIT is passed. The default timeout for TIME_WAIT is 15 seconds.
+      Consider reducing in case of available port bottleneck.
 
-    You can check whether this is a problem with netstat:
+      You can check whether this is a problem with netstat:
 
-        # sysctl net.inet.tcp.msl
-        net.inet.tcp.msl: 15000
+          # sysctl net.inet.tcp.msl
+          net.inet.tcp.msl: 15000
 
-        # sudo sysctl -w net.inet.tcp.msl=1000
-        net.inet.tcp.msl: 15000 -> 1000
+          # sudo sysctl -w net.inet.tcp.msl=1000
+          net.inet.tcp.msl: 15000 -> 1000
 
-    Run siege.config to create the ~/.siegerc config file.
-  EOS
+      Run siege.config to create the ~/.siegerc config file.
+    EOS
   end
 
   test do

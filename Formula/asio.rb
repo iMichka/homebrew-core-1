@@ -1,15 +1,21 @@
 class Asio < Formula
   desc "Cross-platform C++ Library for asynchronous programming"
   homepage "https://think-async.com/Asio"
-  url "https://downloads.sourceforge.net/project/asio/asio/1.14.0%20%28Stable%29/asio-1.14.0.tar.bz2"
-  sha256 "2e1be1a518a568525f79b5734d13731b6b4e4399ec576a0961db6e2d86112973"
+  url "https://downloads.sourceforge.net/project/asio/asio/1.18.2%20%28Stable%29/asio-1.18.2.tar.bz2"
+  sha256 "3ac05d4586d4b10afc28ff09017639652fb04feb9e575f9d48410db3ab27f9f2"
+  license "BSL-1.0"
   head "https://github.com/chriskohlhoff/asio.git"
 
+  livecheck do
+    url :stable
+    regex(%r{url=.*?Stable.*?/asio[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "3f2c8ab0aadadda4d4707b834787d0c02841a31cec763b4c4d32ca3f859bd314" => :catalina
-    sha256 "7be9a1e39bbd3fa59059fc9d8d98f7f43520da052cf245f195bbdd325ec1a8ec" => :mojave
-    sha256 "ea18bc6cca19d15ff019a98be7a9c31c34e477b5daac54ce7379f02a6635247f" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "11ab7bb26a9782754a8c872dac4b9cc4c5205fc34061a4678a3eed6d173ab06a"
+    sha256 cellar: :any, big_sur:       "c51769f155b21a0c7c82862c25ece1d40e79fc7db7b919c7daa5437e4060ad85"
+    sha256 cellar: :any, catalina:      "e3fe0bf41ab84047722cb2936c604b13be10723f9a98f006e21db27d82c38d35"
+    sha256 cellar: :any, mojave:        "2f2769fda61b376035b53a8da40860b80566a7725ef294312d4d415ae5aae5e0"
   end
 
   depends_on "autoconf" => :build
@@ -35,16 +41,16 @@ class Asio < Formula
   end
 
   test do
-    found = [pkgshare/"examples/cpp11/http/server/http_server",
-             pkgshare/"examples/cpp03/http/server/http_server"].select(&:exist?)
+    found = Dir[pkgshare/"examples/cpp{11,03}/http/server/http_server"]
     raise "no http_server example file found" if found.empty?
 
+    port = free_port
     pid = fork do
-      exec found.first, "127.0.0.1", "8080", "."
+      exec found.first, "127.0.0.1", port.to_s, "."
     end
     sleep 1
     begin
-      assert_match /404 Not Found/, shell_output("curl http://127.0.0.1:8080")
+      assert_match "404 Not Found", shell_output("curl http://127.0.0.1:#{port}")
     ensure
       Process.kill 9, pid
       Process.wait pid

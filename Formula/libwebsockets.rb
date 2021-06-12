@@ -1,23 +1,30 @@
 class Libwebsockets < Formula
   desc "C websockets server library"
   homepage "https://libwebsockets.org"
-  url "https://github.com/warmcat/libwebsockets/archive/v3.2.0.tar.gz"
-  sha256 "5e731c536a20d9c03ae611631db073f05cd77bf0906a8c30d2a13638d4c8c667"
-  revision 1
+  url "https://github.com/warmcat/libwebsockets.git",
+      tag:      "v4.2.0",
+      revision: "1367c11e1ee44d9e19daa50e1d015365bae17354"
+  license "MIT"
   head "https://github.com/warmcat/libwebsockets.git"
 
+  livecheck do
+    url "https://github.com/warmcat/libwebsockets"
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
+
   bottle do
-    sha256 "695623da170149af1510d880554b7f72af10bf07fd2ae1fcabec28a5d4ec6d1c" => :catalina
-    sha256 "3196125ae013d45631b5f28fc60df1545357f98b94b3c45742e177554bec3b9f" => :mojave
-    sha256 "6195a152caa89229651dd1a0834283754ebad277d06755e8b851a0d0471cde61" => :high_sierra
-    sha256 "ff664e498d2cc5d17663d5990d4100c05de251fbb65e5a22ae1209241cb8d3f6" => :sierra
-    sha256 "925e645ed7cc5fa7d1000e95fb9fc60245f7a9602459b433af258c29e7cbb1dc" => :x86_64_linux
+    sha256 arm64_big_sur: "b3ecadf2d9037e74bc8636cf8003ca1bf4e6d0ecb0ae876b6744187eee72c0da"
+    sha256 big_sur:       "82ece83f10bd81b09a75b26d9fac42e9f47b0bc5aba2fb8f8c8b7a9e71060e36"
+    sha256 catalina:      "70b4d1619b5e14c805344c4657cd027e2ed66f40c2ee96d44894f826bf016042"
+    sha256 mojave:        "9ad37c1076e538987ca0ba85e9e89d88bf36bd51abf547f0f15084f8641b9ecf"
+    sha256 x86_64_linux:  "e11bc646d5dacbe7d5fbfc49a771621e260dd4a81abcc8559d9e66e3ba80251d"
   end
 
   depends_on "cmake" => :build
   depends_on "libevent"
   depends_on "libuv"
   depends_on "openssl@1.1"
+
   uses_from_macos "zlib"
 
   def install
@@ -48,7 +55,8 @@ class Libwebsockets < Formula
         return 0;
       }
     EOS
-    system ENV.cc, "test.c", "-I#{Formula["openssl@1.1"].opt_prefix}/include", "-L#{lib}", "-lwebsockets", "-o", "test"
+    system ENV.cc, "test.c", "-I#{Formula["openssl@1.1"].opt_prefix}/include",
+                   "-L#{lib}", "-lwebsockets", "-o", "test"
     system "./test"
   end
 end

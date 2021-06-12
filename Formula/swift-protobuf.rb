@@ -1,22 +1,21 @@
 class SwiftProtobuf < Formula
   desc "Plugin and runtime library for using protobuf with Swift"
   homepage "https://github.com/apple/swift-protobuf"
-  url "https://github.com/apple/swift-protobuf/archive/1.7.0.tar.gz"
-  sha256 "3654f75d1de8806678ea7c942903a6fcdaba477e0fc0a53439cdc381a5f3e4c0"
+  url "https://github.com/apple/swift-protobuf/archive/1.17.0.tar.gz"
+  sha256 "f3e839bb445edcbf1aeb52ce6f24ae52a16cf5c45efb1721633b4d0c73ecc537"
+  license "Apache-2.0"
+  revision 1
   head "https://github.com/apple/swift-protobuf.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1f0ba0b14f54d0a3c12fa0896b386ef58d48dbbb5261024ef81bd7c592db438b" => :catalina
-    sha256 "ea096eab639299416918e255d615aadb6cbb56aca56be28f892b0a7f293a46a9" => :mojave
-    sha256 "4ee242478ba9836401c63f4c7a920e0ed62a7ff483362a6352250b0509afb1d4" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "341ed4f82143e163938c81c909d339855450400fa7f52cabb7fe76533ea01c87"
+    sha256 cellar: :any_skip_relocation, big_sur:       "266cecf8f26476cc552225d6c1eebbb39535c810b7cdd16ce67eb39bac34cf79"
+    sha256 cellar: :any_skip_relocation, catalina:      "868901e305a317939313dc1c2c2b512a554ed41ea2fb731efc541188591fdaeb"
+    sha256 cellar: :any_skip_relocation, mojave:        "879fe5364121784c787d3be0bae22bdbf4406c8891d050cda2b8d9b9d2f5b455"
   end
 
-  depends_on :xcode => ["8.3", :build] if OS.mac?
+  depends_on xcode: ["8.3", :build]
   depends_on "protobuf"
-
-  conflicts_with "protobuf-swift",
-    :because => "both install `protoc-gen-swift` binaries"
 
   def install
     system "swift", "build", "--disable-sandbox", "-c", "release"

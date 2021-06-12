@@ -1,45 +1,26 @@
 class GetIplayer < Formula
   desc "Utility for downloading TV and radio programmes from BBC iPlayer"
   homepage "https://github.com/get-iplayer/get_iplayer"
-  url "https://github.com/get-iplayer/get_iplayer/archive/v3.23.tar.gz"
-  sha256 "0a2a2aa4b07c9d29298940a79e799b365f46f120a346444f10a268a905b0f1f2"
-  head "https://github.com/get-iplayer/get_iplayer.git", :branch => "develop"
+  url "https://github.com/get-iplayer/get_iplayer/archive/v3.27.tar.gz"
+  sha256 "2577ea7ab5dca4a0cdb27854eb945d35f36a594d9d766b14a8304b3f1e7fc6d6"
+  license "GPL-3.0"
+  head "https://github.com/get-iplayer/get_iplayer.git", branch: "develop"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "5e9ffa4537eba77f85744b48de5bd4789690d029fcd776fd2b29b0f7638c704d" => :catalina
-    sha256 "29d7dece1a8ebd486c62f370d06dbb17c0283aeef392193492e333f4a8a1cf24" => :mojave
-    sha256 "61b7b0a772d0debfcbbdea13ff0b9a24c4f9f9a85245848e1c17b79487cd6aed" => :high_sierra
-    sha256 "9ea9176e1ef7fed4b2ea4f3b951b5244b9dcbfb788031fcb06556db91db61867" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "316d77e70cbf81e41a2ff460a868ae5864eedf9c5a76b8ec42f520f73233b659"
+    sha256 cellar: :any_skip_relocation, big_sur:       "bbc950186acaa0afb086ad9b8207e7aaa0ee20223a6dd0bc511ce1dab8e706af"
+    sha256 cellar: :any_skip_relocation, catalina:      "126aaeae1f023ba9975c614627a10403f843d320f071edb5cccd5ebe9922ea49"
+    sha256 cellar: :any_skip_relocation, mojave:        "5abba49ca77ad3f725984003a9f1054d7ad98cb2a63e0e10b4f7418bbc77129c"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "caf01fdf867311755e48f77ce07f4fbbf79887f2f2b36b9c844c4e0c47d48bf4"
   end
 
   depends_on "atomicparsley"
   depends_on "ffmpeg"
-  depends_on :macos => :yosemite if OS.mac?
+
   uses_from_macos "libxml2"
   uses_from_macos "perl"
 
-  resource "IO::Socket::IP" do
-    url "https://cpan.metacpan.org/authors/id/P/PE/PEVANS/IO-Socket-IP-0.39.tar.gz"
-    sha256 "11950da7636cb786efd3bfb5891da4c820975276bce43175214391e5c32b7b96"
-  end
-
-  resource "IO::Socket::SSL" do
-    url "https://cpan.metacpan.org/authors/id/S/SU/SULLR/IO-Socket-SSL-2.066.tar.gz"
-    sha256 "0d47064781a545304d5dcea5dfcee3acc2e95a32e1b4884d80505cde8ee6ebcd"
-  end
-
-  resource "Mojolicious" do
-    url "https://cpan.metacpan.org/authors/id/S/SR/SRI/Mojolicious-7.94.tar.gz"
-    sha256 "171a1741f3ea57519657bfb1e40a5290149d7c7d69a1131464c7db23029e8f6e"
-  end
-
-  resource "Mozilla::CA" do
-    url "https://cpan.metacpan.org/authors/id/A/AB/ABH/Mozilla-CA-20180117.tar.gz"
-    sha256 "f2cc9fbe119f756313f321e0d9f1fac0859f8f154ac9d75b1a264c1afdf4e406"
-  end
-
-  unless OS.mac?
+  on_linux do
     resource "Try-Tiny" do
       url "https://cpan.metacpan.org/authors/id/E/ET/ETHER/Try-Tiny-0.30.tar.gz"
       sha256 "da5bd0d5c903519bbf10bb9ba0cb7bcac0563882bcfe4503aee3fb143eddef6b"
@@ -106,10 +87,29 @@ class GetIplayer < Formula
     end
   end
 
+  resource "IO::Socket::IP" do
+    url "https://cpan.metacpan.org/authors/id/P/PE/PEVANS/IO-Socket-IP-0.39.tar.gz"
+    sha256 "11950da7636cb786efd3bfb5891da4c820975276bce43175214391e5c32b7b96"
+  end
+
+  resource "IO::Socket::SSL" do
+    url "https://cpan.metacpan.org/authors/id/S/SU/SULLR/IO-Socket-SSL-2.066.tar.gz"
+    sha256 "0d47064781a545304d5dcea5dfcee3acc2e95a32e1b4884d80505cde8ee6ebcd"
+  end
+
+  resource "Mojolicious" do
+    url "https://cpan.metacpan.org/authors/id/S/SR/SRI/Mojolicious-7.94.tar.gz"
+    sha256 "171a1741f3ea57519657bfb1e40a5290149d7c7d69a1131464c7db23029e8f6e"
+  end
+
+  resource "Mozilla::CA" do
+    url "https://cpan.metacpan.org/authors/id/A/AB/ABH/Mozilla-CA-20180117.tar.gz"
+    sha256 "f2cc9fbe119f756313f321e0d9f1fac0859f8f154ac9d75b1a264c1afdf4e406"
+  end
+
   def install
     ENV.prepend_create_path "PERL5LIB", libexec/"lib/perl5"
     ENV["NO_NETWORK_TESTING"] = "1"
-    ENV["PERL_MM_USE_DEFAULT"] = "1" unless OS.mac?
 
     resources.each do |r|
       r.stage do
@@ -120,16 +120,15 @@ class GetIplayer < Formula
 
     inreplace ["get_iplayer", "get_iplayer.cgi"] do |s|
       s.gsub!(/^(my \$version_text);/i, "\\1 = \"#{pkg_version}-homebrew\";")
-      s.gsub! "#!/usr/bin/env perl", "#!/usr/bin/perl" if OS.mac?
     end
 
     bin.install "get_iplayer", "get_iplayer.cgi"
-    bin.env_script_all_files(libexec/"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec/"bin", PERL5LIB: ENV["PERL5LIB"])
     man1.install "get_iplayer.1"
   end
 
   test do
-    output = shell_output("\"#{bin}/get_iplayer\" --refresh --refresh-include=\"BBC None\" --quiet dontshowanymatches 2>&1")
+    output = shell_output("\"#{bin}/get_iplayer\" -f --refresh-include=\"BBC None\" -q dontshowanymatches 2>&1")
     assert_match "get_iplayer #{pkg_version}-homebrew", output, "Unexpected version"
     assert_match "INFO: 0 matching programmes", output, "Unexpected output"
     assert_match "INFO: Indexing tv programmes (concurrent)", output,

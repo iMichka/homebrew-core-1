@@ -1,69 +1,81 @@
 class Mame < Formula
   desc "Multiple Arcade Machine Emulator"
   homepage "https://mamedev.org/"
-  url "https://github.com/mamedev/mame/archive/mame0215.tar.gz"
-  version "0.215"
-  sha256 "c1b5fb0b91829df5f3dbe54ff13a7ccfa3a9f8aafa51a61c9a2f3158560ed609"
+  # NOTE: Please keep these values in sync with rom-tools.rb when updating.
+  url "https://github.com/mamedev/mame/archive/mame0232.tar.gz"
+  version "0.232"
+  sha256 "c6b464f33b9e0eb7afb528fac52619b073525ded86f35afc36cca4dd0363fe4d"
+  license "GPL-2.0-or-later"
   head "https://github.com/mamedev/mame.git"
 
-  bottle do
-    cellar :any
-    sha256 "8d6482856f7723633feed5a490addfddbb4d7fc0e525ef7e2580d388c35f0ee5" => :catalina
-    sha256 "84939184507c71fc93482c0b61097684bb75c1b5467b4701811f6182ed719aa1" => :mojave
-    sha256 "95bbfc00d59b9d9519f401761bcbbf1a852ec5cbd2591aed46927492d34053d1" => :high_sierra
+  # MAME tags (and filenames) are formatted like `mame0226`, so livecheck will
+  # report the version like `0226`. We work around this by matching the link
+  # text for the release title, since it contains the properly formatted version
+  # (e.g., 0.226).
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{release-header.*?/releases/tag/mame[._-]?\d+(?:\.\d+)*["' >]>MAME v?(\d+(?:\.\d+)+)}im)
   end
 
-  depends_on "asio" => :build
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "ea3b4c74dc0d450752a964a88a14dd379ff66c8ab879cec378515d8f7388a112"
+    sha256 cellar: :any, big_sur:       "83f0729db8addda71dfce1288eb73b0aa0ac5907764425c3de0f72ddfcbac66a"
+    sha256 cellar: :any, catalina:      "1a1350f2c2edd16f0fb522f55e8cd12c5c4939569cbb51857a958358d84ae898"
+    sha256 cellar: :any, mojave:        "73d0983e178208d21180cb9ed10f419863a430d5638379c23d7ace7fe5ae183d"
+  end
+
   depends_on "glm" => :build
   depends_on "pkg-config" => :build
-  depends_on "pugixml" => :build
+  depends_on "python@3.9" => :build
   depends_on "rapidjson" => :build
   depends_on "sphinx-doc" => :build
   depends_on "flac"
   depends_on "jpeg"
-  depends_on "lua"
-  # Need C++ compiler and standard library support C++14.
-  # Build failure on Sierra, see:
-  # https://github.com/Homebrew/homebrew-core/pull/39388
-  depends_on :macos => :high_sierra
+  # Need C++ compiler and standard library support C++17.
+  depends_on macos: :high_sierra
   depends_on "portaudio"
   depends_on "portmidi"
+  depends_on "pugixml"
   depends_on "sdl2"
   depends_on "sqlite"
   depends_on "utf8proc"
 
+  uses_from_macos "expat"
+  uses_from_macos "zlib"
+
   def install
+    # Cut sdl2-config's invalid option.
     inreplace "scripts/src/osd/sdl.lua", "--static", ""
 
-    # Mame's build system genie can't find headers and libraries with version suffix.
-    ENV.append "CPPFLAGS", "-I#{Formula["lua"].opt_include}/lua"
-    ENV.append "CPPFLAGS", "-I#{Formula["pugixml"].opt_include}/pugixml-1.9"
-    ENV.append "LDFLAGS", "-L#{Formula["pugixml"].opt_lib}/pugixml-1.9"
-
-    system "make", "USE_LIBSDL=1",
+    # Use bundled asio and lua instead of latest version.
+    # https://github.com/mamedev/mame/issues/5721
+    # https://github.com/mamedev/mame/issues/5349
+    system "make", "PYTHON_EXECUTABLE=#{Formula["python@3.9"].opt_bin}/python3",
+                   "USE_LIBSDL=1",
                    "USE_SYSTEM_LIB_EXPAT=1",
                    "USE_SYSTEM_LIB_ZLIB=1",
-                   "USE_SYSTEM_LIB_ASIO=1",
+                   "USE_SYSTEM_LIB_ASIO=",
+                   "USE_SYSTEM_LIB_LUA=",
                    "USE_SYSTEM_LIB_FLAC=1",
                    "USE_SYSTEM_LIB_GLM=1",
                    "USE_SYSTEM_LIB_JPEG=1",
-                   "USE_SYSTEM_LIB_LUA=1",
-                   "USE_SYSTEM_LIB_PORTMIDI=1",
                    "USE_SYSTEM_LIB_PORTAUDIO=1",
+                   "USE_SYSTEM_LIB_PORTMIDI=1",
                    "USE_SYSTEM_LIB_PUGIXML=1",
                    "USE_SYSTEM_LIB_RAPIDJSON=1",
                    "USE_SYSTEM_LIB_SQLITE3=1",
                    "USE_SYSTEM_LIB_UTF8PROC=1"
-    bin.install "mame64" => "mame"
+    bin.install "mame"
     cd "docs" do
       # We don't convert SVG files into PDF files, don't load the related extensions.
-      inreplace "source/conf.py", "'sphinxcontrib.rsvgconverter'", ""
+      inreplace "source/conf.py", "'sphinxcontrib.rsvgconverter',", ""
       system "make", "text"
       doc.install Dir["build/text/*"]
       system "make", "man"
       man1.install "build/man/MAME.1" => "mame.1"
     end
-    pkgshare.install %w[artwork bgfx hash ini keymaps plugins samples uismall.bdf]
+    pkgshare.install %w[artwork bgfx hash ini keymaps language plugins samples uismall.bdf]
   end
 
   test do

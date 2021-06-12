@@ -3,66 +3,69 @@ class Launchdns < Formula
   homepage "https://github.com/josh/launchdns"
   url "https://github.com/josh/launchdns/archive/v1.0.4.tar.gz"
   sha256 "60f6010659407e3d148c021c88e1c1ce0924de320e99a5c58b21c8aece3888aa"
-  revision 1
+  license "MIT"
+  revision 2
   head "https://github.com/josh/launchdns.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "cfa7f2fc765e5f4137df7fbb3f212cb1a3822edeecc095a2e5c75901e82526e8" => :catalina
-    sha256 "1572081e53a9b2234321ac9f4bb4f48507bbafcd781f29549907e7ded4873526" => :mojave
-    sha256 "9379f60efc2a0984c79a3b59dab5093ca3fdaad89a8f697a7623abda15801293" => :high_sierra
-    sha256 "ced5d6c6bdb3074c29dd65b244fc4325cc4799820d7dd38c6dedf04c2555f3cb" => :sierra
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1b7e3e37f394c83c8957c6c2253260805a3abcbb843890c90208d7d743da3328"
+    sha256 cellar: :any_skip_relocation, big_sur:       "87785cae4d4966c318e8fb8424749261b16bb543576e1c45d5fa2bae7f4c3f0e"
+    sha256 cellar: :any_skip_relocation, catalina:      "ebae3446c46a7a6662c3e9b95d61bbee372f1f277a07a4beea1eafc00d64570a"
+    sha256 cellar: :any_skip_relocation, mojave:        "38ad8be46847983774ec6b50896560517bb027b6fe5e5543395f168e489c9c27"
   end
-
-  depends_on :macos => :yosemite
 
   def install
     ENV["PREFIX"] = prefix
     system "./configure", "--with-launch-h", "--with-launch-h-activate-socket"
     system "make", "install"
 
-    (prefix/"etc/resolver/localhost").write("nameserver 127.0.0.1\nport 55353\n")
+    (prefix/"etc/resolver/localhost").write <<~EOS
+      nameserver 127.0.0.1
+      port 55353
+    EOS
   end
 
-  plist_options :manual => "launchdns"
+  plist_options manual: "launchdns"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/launchdns</string>
-          <string>--socket=Listeners</string>
-          <string>--timeout=30</string>
-        </array>
-        <key>Sockets</key>
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
         <dict>
-          <key>Listeners</key>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/launchdns</string>
+            <string>--socket=Listeners</string>
+            <string>--timeout=30</string>
+          </array>
+          <key>Sockets</key>
           <dict>
-            <key>SockType</key>
-            <string>dgram</string>
-            <key>SockNodeName</key>
-            <string>127.0.0.1</string>
-            <key>SockServiceName</key>
-            <string>55353</string>
+            <key>Listeners</key>
+            <dict>
+              <key>SockType</key>
+              <string>dgram</string>
+              <key>SockNodeName</key>
+              <string>127.0.0.1</string>
+              <key>SockServiceName</key>
+              <string>55353</string>
+            </dict>
           </dict>
+          <key>StandardErrorPath</key>
+          <string>#{var}/log/launchdns.log</string>
+          <key>StandardOutPath</key>
+          <string>#{var}/log/launchdns.log</string>
         </dict>
-        <key>StandardErrorPath</key>
-        <string>#{var}/log/launchdns.log</string>
-        <key>StandardOutPath</key>
-        <string>#{var}/log/launchdns.log</string>
-      </dict>
-    </plist>
-  EOS
+      </plist>
+    EOS
   end
 
   test do
     output = shell_output("#{bin}/launchdns --version")
-    assert_no_match(/without socket activation/, output)
+    refute_match(/without socket activation/, output)
     system bin/"launchdns", "-p0", "-t1"
   end
 end

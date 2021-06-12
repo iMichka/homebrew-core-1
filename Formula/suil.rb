@@ -1,21 +1,41 @@
 class Suil < Formula
   desc "Lightweight C library for loading and wrapping LV2 plugin UIs"
   homepage "https://drobilla.net/software/suil/"
-  url "https://download.drobilla.net/suil-0.10.6.tar.bz2"
-  sha256 "06fc70abaa33bd7089dd1051af46f89d378e8465d170347a3190132e6f009b7c"
+  url "https://download.drobilla.net/suil-0.10.10.tar.bz2"
+  sha256 "750f08e6b7dc941a5e694c484aab02f69af5aa90edcc9fb2ffb4fb45f1574bfb"
+  license "ISC"
+  revision 1
+  head "https://gitlab.com/lv2/suil.git"
+
+  livecheck do
+    url "https://download.drobilla.net/"
+    regex(/href=.*?suil[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "588d837f629e7850d05a28f561852bd990229623748baf8c13be9337dc5d8e2a" => :catalina
-    sha256 "1497f4ef4de7dc80b8f79913ecc46203ddd3dc1f0afa117fed6ba4c3f448a4d9" => :mojave
-    sha256 "811369571b4c28268a130c040b8019ebf77fa26b4410022891b45d7ad2c03eb3" => :high_sierra
+    sha256 arm64_big_sur: "11af96a8cd470b08da0bd49cb3b620ae81d89e9589c5ed44a533e2cb93d5133f"
+    sha256 big_sur:       "02a8eed42b15c099954dce4741c71b0e5f9ae652fce48921e4920a3efc779e01"
+    sha256 catalina:      "4a74f4c1cbf9b1e67c7fbda45e5ca67b5163757b70ee62c33a7e66b136a2d4c1"
+    sha256 mojave:        "2bc87e39cf2cb0a66c983c01834d39c2f1cccdddbe4db28331e0dcb6cf64c3fb"
   end
 
   depends_on "pkg-config" => :build
   depends_on "gtk+"
+  depends_on "gtk+3"
   depends_on "lv2"
+  depends_on "qt@5"
+
+  # Disable qt5_in_gtk3 because it depends upon X11
+  # Can be removed if https://gitlab.com/lv2/suil/-/merge_requests/1 is merged
+  patch do
+    url "https://gitlab.com/lv2/suil/-/commit/33ea47e18ddc1eb384e75622c0e75164d351f2c0.diff"
+    sha256 "2f335107e26c503460965953f94410e458c5e8dd86a89ce039f65c4e3ae16ba7"
+  end
 
   def install
-    system "./waf", "configure", "--prefix=#{prefix}"
+    ENV.cxx11
+    system "./waf", "configure", "--prefix=#{prefix}", "--no-x11",
+        "--gtk2-lib-name=#{shared_library("libgtk-quartz-2.0.0")}", "--gtk3-lib-name=#{shared_library("libgtk-3.0")}"
     system "./waf", "install"
   end
 

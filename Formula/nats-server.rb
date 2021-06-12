@@ -1,64 +1,57 @@
 class NatsServer < Formula
   desc "Lightweight cloud messaging system"
   homepage "https://nats.io"
-  url "https://github.com/nats-io/nats-server/archive/v2.1.2.tar.gz"
-  sha256 "2fdbda70191ba02f3e065b0d2d503236865c60e88fa4a7c7e0eae691e7e32b2d"
+  url "https://github.com/nats-io/nats-server/archive/refs/tags/v2.2.6.tar.gz"
+  sha256 "dec863683c0503cac7461970468785f65bc0771a3065f70cd3a0b4c76dd1dda9"
+  license "Apache-2.0"
   head "https://github.com/nats-io/nats-server.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "4edb45f19824f760294780d6b365916ee23c514acfc183d3fe9d52fbb4a189a9" => :catalina
-    sha256 "aa5771424fa936d191a62e0e7cdd4c3aa2bfe2ac6cd3869419015ae3808bd426" => :mojave
-    sha256 "48c033283b086a6540f0d26b4e0782de589b1b1e481968bdc6f96b86b3549f19" => :high_sierra
-    sha256 "8844b9be6d3acc703b99e66a4785dd25bd6df68ec1e205bf4d86993b54db4fdc" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "f41719f33e408ffbdf227f5b6603cfb40764330f380e6b55af130ba0d98001cf"
+    sha256 cellar: :any_skip_relocation, big_sur:       "8d432e07f71dd9dc84502b46c162060e940540ac9cde22f0402bb705c72b364b"
+    sha256 cellar: :any_skip_relocation, catalina:      "ff3b4441ca3b1ad45a46eabfe5cc01510571d0ffd70d89064cdd6db904168f5d"
+    sha256 cellar: :any_skip_relocation, mojave:        "a2ba78057b03278d91b748ced21c6c612e254251b27000059bc55cdee8c61feb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "359927b24219bb74ed07f15953345a4dcb5cf8db3c82df1a5fc83aeaa0a6f85e"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    ENV["GO111MODULE"] = "off"
-    mkdir_p "src/github.com/nats-io"
-    ln_s buildpath, "src/github.com/nats-io/nats-server"
-    buildfile = buildpath/"src/github.com/nats-io/nats-server/main.go"
-    system "go", "build", "-v", "-o", bin/"nats-server", buildfile
+    system "go", "build", "-ldflags", "-s -w", *std_go_args
   end
 
-  plist_options :manual => "nats-server"
+  plist_options manual: "nats-server"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-      <dict>
-        <key>Label</key>
-        <string>#{plist_name}</string>
-        <key>ProgramArguments</key>
-        <array>
-          <string>#{opt_bin}/nats-server</string>
-        </array>
-        <key>RunAtLoad</key>
-        <true/>
-      </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+        <dict>
+          <key>Label</key>
+          <string>#{plist_name}</string>
+          <key>ProgramArguments</key>
+          <array>
+            <string>#{opt_bin}/nats-server</string>
+          </array>
+          <key>RunAtLoad</key>
+          <true/>
+        </dict>
+      </plist>
+    EOS
   end
 
   test do
-    pid = fork do
+    port = free_port
+    fork do
       exec bin/"nats-server",
-           "--port=8085",
+           "--port=#{port}",
            "--pid=#{testpath}/pid",
            "--log=#{testpath}/log"
     end
     sleep 3
 
-    begin
-      assert_match version.to_s, shell_output("curl localhost:8085")
-      assert_predicate testpath/"log", :exist?
-    ensure
-      Process.kill "SIGINT", pid
-      Process.wait pid
-    end
+    assert_match version.to_s, shell_output("curl localhost:#{port}")
+    assert_predicate testpath/"log", :exist?
   end
 end

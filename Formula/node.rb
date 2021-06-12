@@ -1,36 +1,69 @@
 class Node < Formula
   desc "Platform built on V8 to build network applications"
   homepage "https://nodejs.org/"
-  url "https://nodejs.org/dist/v13.5.0/node-v13.5.0.tar.gz"
-  sha256 "4b8078d896a7550d7ed399c1b4ac9043e9f883be404d9b337185c8d8479f2db8"
+  url "https://nodejs.org/dist/v16.3.0/node-v16.3.0.tar.xz"
+  sha256 "7aab47b82c19702c73b2834a623c3932732a15185fddea14b9ddc710936fac5f"
+  license "MIT"
   head "https://github.com/nodejs/node.git"
 
+  livecheck do
+    url "https://nodejs.org/dist/"
+    regex(%r{href=["']?v?(\d+(?:\.\d+)+)/?["' >]}i)
+  end
+
   bottle do
-    cellar :any
-    sha256 "5a017bf46c0bea9daa538e1fce9cabaed95f9493708d829bbbfd54e96d57788b" => :catalina
-    sha256 "59bff217da4b81b562494e11f7d67c59d4af7643a149629ca579d773594da2d9" => :mojave
-    sha256 "d5653f6256b9c70966be4c071cbaa9852c4966643e0bcfa07c7b230f703c218d" => :high_sierra
-    sha256 "1d024125734761c47da8d03337027a2fb6a2d0bd7e28693948c7e367ca289907" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "3de4ebc0c132da4b125beb6c18d54d386f89e46cbece31368a80c10bad6f9361"
+    sha256 cellar: :any,                 big_sur:       "55593606699ac89f0a2d5e1e5340bc05f631bcac75ebab82ceecaa6b5cfe2f6d"
+    sha256 cellar: :any,                 catalina:      "fbfd0d5e00e9256e177c60926f0c94a632a7309a31d476d89030b5275a90a442"
+    sha256 cellar: :any,                 mojave:        "19e9b66f3ac6f089012d898efa2d8dcc4be7c42743d283bb5c35f01f30db5af6"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "45b7377363683f6eea4d0ddc3f8e1c09f7be08cb1a60af6776087dd3dde85fa8"
   end
 
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
+  depends_on "python@3.9" => :build
+  depends_on "brotli"
+  depends_on "c-ares"
   depends_on "icu4c"
+  depends_on "libuv"
+  depends_on "nghttp2"
+  depends_on "openssl@1.1"
+
+  uses_from_macos "zlib"
 
   # We track major/minor from upstream Node releases.
   # We will accept *important* npm patch releases when necessary.
   resource "npm" do
-    url "https://registry.npmjs.org/npm/-/npm-6.13.4.tgz"
-    sha256 "a063290bd5fa06a8753de14169b7b243750432f42d01213fbd699e6b85916de7"
+    url "https://registry.npmjs.org/npm/-/npm-7.15.1.tgz"
+    sha256 "c55425bbdf61e81f710bcce755289a5dcc223283a6fb1ea96869b349cd93b4cb"
   end
 
   def install
     # make sure subprocesses spawned by make are using our Python 3
-    ENV["PYTHON"] = Formula["python"].opt_bin/"python3"
+    ENV["PYTHON"] = Formula["python@3.9"].opt_bin/"python3"
 
     # Never install the bundled "npm", always prefer our
     # installation from tarball for better packaging control.
-    args = %W[--prefix=#{prefix} --without-npm --with-intl=system-icu]
+    args = %W[
+      --prefix=#{prefix}
+      --without-npm
+      --with-intl=system-icu
+      --shared-libuv
+      --shared-nghttp2
+      --shared-openssl
+      --shared-zlib
+      --shared-brotli
+      --shared-cares
+      --shared-libuv-includes=#{Formula["libuv"].include}
+      --shared-libuv-libpath=#{Formula["libuv"].lib}
+      --shared-nghttp2-includes=#{Formula["nghttp2"].include}
+      --shared-nghttp2-libpath=#{Formula["nghttp2"].lib}
+      --shared-openssl-includes=#{Formula["openssl@1.1"].include}
+      --shared-openssl-libpath=#{Formula["openssl@1.1"].lib}
+      --shared-brotli-includes=#{Formula["brotli"].include}
+      --shared-brotli-libpath=#{Formula["brotli"].lib}
+      --shared-cares-includes=#{Formula["c-ares"].include}
+      --shared-cares-libpath=#{Formula["c-ares"].lib}
+    ]
     args << "--tag=head" if build.head?
 
     system "./configure", *args
@@ -41,6 +74,8 @@ class Node < Formula
 
     bootstrap = buildpath/"npm_bootstrap"
     bootstrap.install resource("npm")
+    # These dirs must exists before npm install.
+    mkdir_p libexec/"lib"
     system "node", bootstrap/"bin/npm-cli.js", "install", "-ddd", "--global",
             "--prefix=#{libexec}", resource("npm").cached_download
 
@@ -69,13 +104,13 @@ class Node < Formula
     ln_sf node_modules/"npm/bin/npm-cli.js", HOMEBREW_PREFIX/"bin/npm"
     ln_sf node_modules/"npm/bin/npx-cli.js", HOMEBREW_PREFIX/"bin/npx"
 
-    # Let's do the manpage dance. It's just a jump to the left.
-    # And then a step to the right, with your hand on rm_f.
+    # Create manpage symlinks (or overwrite the old ones)
     %w[man1 man5 man7].each do |man|
       # Dirs must exist first: https://github.com/Homebrew/legacy-homebrew/issues/35969
       mkdir_p HOMEBREW_PREFIX/"share/man/#{man}"
+      # still needed to migrate from copied file manpages to symlink manpages
       rm_f Dir[HOMEBREW_PREFIX/"share/man/#{man}/{npm.,npm-,npmrc.,package.json.,npx.}*"]
-      cp Dir[libexec/"lib/node_modules/npm/man/#{man}/{npm,package.json,npx}*"], HOMEBREW_PREFIX/"share/man/#{man}"
+      ln_sf Dir[node_modules/"npm/man/#{man}/{npm,package-,shrinkwrap-,npx}*"], HOMEBREW_PREFIX/"share/man/#{man}"
     end
 
     (node_modules/"npm/npmrc").atomic_write("prefix = #{HOMEBREW_PREFIX}\n")
@@ -104,6 +139,6 @@ class Node < Formula
     system "#{HOMEBREW_PREFIX}/bin/npm", *npm_args, "install", "bufferutil" unless head?
     assert_predicate HOMEBREW_PREFIX/"bin/npx", :exist?, "npx must exist"
     assert_predicate HOMEBREW_PREFIX/"bin/npx", :executable?, "npx must be executable"
-    assert_match "< hello >", shell_output("#{HOMEBREW_PREFIX}/bin/npx cowsay hello")
+    assert_match "< hello >", shell_output("#{HOMEBREW_PREFIX}/bin/npx --yes cowsay hello")
   end
 end

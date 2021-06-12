@@ -1,32 +1,39 @@
 class Babl < Formula
   desc "Dynamic, any-to-any, pixel format translation library"
-  homepage "http://www.gegl.org/babl/"
-  url "https://download.gimp.org/pub/babl/0.1/babl-0.1.68.tar.xz"
-  sha256 "412dc8356b1e200e0f3aaa41bc6c317b9e489936c17c4e92cc5db9d34ca1e94c"
+  homepage "https://www.gegl.org/babl/"
+  url "https://download.gimp.org/pub/babl/0.1/babl-0.1.86.tar.xz"
+  sha256 "0b3f595159ad1b216cd729c0504c3a5f6cf780c641f4dc63fc164f3c0382c8f0"
+  license "LGPL-3.0-or-later"
   # Use GitHub instead of GNOME's git. The latter is unreliable.
   head "https://github.com/GNOME/babl.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "e00f9ef31c286109f9f6cbbfb819876306e40c67380338c684b3c63759a94c94" => :catalina
-    sha256 "298f41a91ed4b93bbc29254f40691537ffd14bee7322d862b1b96f5996cfd865" => :mojave
-    sha256 "0d8bf0f5aea427b7d9ca8b05cdf49b0a2bce4c3f41b9d148f42103e2454de667" => :high_sierra
-    sha256 "3cd4d6d3cc86dc1bc2b8411bf4ffb911df58458d54fc938730fdede11587c624" => :sierra
-    sha256 "b69df5b48aefa985952bc253ed0e8c2228c829a6098262c4410eb14bbbecd869" => :x86_64_linux
+  livecheck do
+    url "https://download.gimp.org/pub/babl/0.1/"
+    regex(/href=.*?babl[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "pkg-config" => :build
-  if build.head? || !OS.mac?
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
+  bottle do
+    sha256                               arm64_big_sur: "e7c76f6fc2c5e6c958b925e6fde9737dfec010e3d18fb388e17ad560847fb6a8"
+    sha256                               big_sur:       "0ca92c541d6ad2932d6ee01576d2121bbbe3afb46ba7dc26aea2ed6a59750bd7"
+    sha256                               catalina:      "816dbd4f4414cd6c3831645e43475d78274568cc0d60bbb092a87027bf38d834"
+    sha256                               mojave:        "c6fcb715f5edf7532ce6cd9be976526f77ce5836360eb2a8d5454e0d6cc628fb"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "25a661b8ace2b209090cf49d0def5423aacc43d7864d7c25c2d53efbc01ce6d6"
   end
+
+  depends_on "glib" => :build # for gobject-introspection
+  depends_on "gobject-introspection" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
+  depends_on "pkg-config" => :build
+  depends_on "vala" => :build
+  depends_on "little-cms2"
 
   def install
-    system "./autogen.sh"
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, "-Dwith-docs=false", ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do

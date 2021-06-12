@@ -1,14 +1,28 @@
 class Qmmp < Formula
   desc "Qt-based Multimedia Player"
-  homepage "http://qmmp.ylsoftware.com/"
-  url "http://qmmp.ylsoftware.com/files/qmmp-1.3.4.tar.bz2"
-  sha256 "e07d9026e5d0c53bf1a057974088363929a06f4e3785447956879b204c7d3b49"
-  head "https://svn.code.sf.net/p/qmmp-dev/code/branches/qmmp-1.3/"
+  homepage "https://qmmp.ylsoftware.com/"
+  license "GPL-2.0-or-later"
+  head "https://svn.code.sf.net/p/qmmp-dev/code/branches/qmmp-1.5/"
+
+  stable do
+    url "https://downloads.sourceforge.net/project/qmmp-dev/qmmp/qmmp-1.5.0.tar.bz2"
+    sha256 "2f796bdbfeee4c1226541e746bcfea3d5b983a559081529e4c86a2c792026be7"
+
+    # Fix build without mpg123
+    # See https://sourceforge.net/p/qmmp-dev/tickets/1082/
+    # Remove in the next release
+    patch :DATA
+  end
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/qmmp[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "08ed79c3a818a9f9552c92f1413f6058dd4d9ca01aa46a66f29a5bedbaa15d87" => :mojave
-    sha256 "f38af2c80e8e6e1c68f2fb9d7765f3a0978d901e7355b1568c865885e7a36fe4" => :high_sierra
-    sha256 "ddb1cc7eeecc93daecb2982c53080836f817fb596a338927f9a13213c6b0b6c5" => :sierra
+    sha256 big_sur:  "9dee25c49a89bedc44b8a45cce9c1eee237f0d04b2765a930e2482baed663f3c"
+    sha256 catalina: "3a59c33536865917e8426e7076d6e33aa465add0f0d89a60edb1dded6ef475ab"
+    sha256 mojave:   "7ff2b3f1d2b6adb30d9a8051e1c19e822eaac3643483d16150a15116d0179879"
   end
 
   depends_on "cmake" => :build
@@ -27,7 +41,7 @@ class Qmmp < Formula
   depends_on "musepack"
   depends_on "opus"
   depends_on "opusfile"
-  depends_on "qt"
+  depends_on "qt@5"
   depends_on "taglib"
 
   def install
@@ -50,3 +64,18 @@ class Qmmp < Formula
     system bin/"qmmp", "--version"
   end
 end
+
+__END__
+--- a/src/plugins/Input/mpeg/decodermpegfactory.cpp
++++ b/src/plugins/Input/mpeg/decodermpegfactory.cpp
+@@ -204,7 +204,9 @@
+         d = new DecoderMAD(crc, input);
+     }
+ #elif defined(WITH_MAD)
+-    d = new DecoderMAD(input);
++    QSettings settings(Qmmp::configFile(), QSettings::IniFormat);
++    bool crc = settings.value("MPEG/enable_crc", false).toBool();
++    d = new DecoderMAD(crc, input);
+ #elif defined(WITH_MPG123)
+     d = new DecoderMPG123(input);
+ #endif

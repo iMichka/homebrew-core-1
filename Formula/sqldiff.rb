@@ -1,16 +1,26 @@
 class Sqldiff < Formula
   desc "Displays the differences between SQLite databases"
   homepage "https://www.sqlite.org/sqldiff.html"
-  url "https://sqlite.org/2019/sqlite-src-3300100.zip"
-  version "3.30.1"
-  sha256 "4690370737189149c9e8344414aa371f89a70e3744ba317cef1a49fb0ee81ce1"
+  url "https://www.sqlite.org/2021/sqlite-src-3350500.zip"
+  version "3.35.5"
+  sha256 "f4beeca5595c33ab5031a920d9c9fd65fe693bad2b16320c3a6a6950e66d3b11"
+  license "blessing"
+
+  livecheck do
+    url "https://sqlite.org/news.html"
+    regex(%r{v?(\d+(?:\.\d+)+)</h3>}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "7c7c1d6b079bf9f336e8ea5e51347b7b07dc0370dd6daac8c33dd6bbbd0d0f12" => :catalina
-    sha256 "0242ab486e5b376e568ce714c12911c979f276bcc4aab4e65d3a5924fa23e41e" => :mojave
-    sha256 "1ea15eaf7c608d1cf7fb562a1581acce36b81862313fa8f743167322cb4e0297" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "9839317031b372febeb9f1f48546c14e8918ea3a6cafb36b9e60dd2adc8933a6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "5ae74319dff30a9ebfa0a8b7a55ccab35f3b290044aba4d657a4f7658ff55f4f"
+    sha256 cellar: :any_skip_relocation, catalina:      "aa2b5f08da7c7462aa60215c0e6867946f1e13fe6684e85a7c7d1661f2e19f25"
+    sha256 cellar: :any_skip_relocation, mojave:        "363db854250812775c4ff18cfca92a1cd274a263268bdfcd461dd9812f1d0708"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e15a3354c18a37a8af9605e077b7a990b3e0e51865c2db6e7e7d4df6e123e669"
   end
+
+  uses_from_macos "tcl-tk" => :build
+  uses_from_macos "sqlite" => :test
 
   def install
     system "./configure", "--disable-debug", "--prefix=#{prefix}"
@@ -22,7 +32,7 @@ class Sqldiff < Formula
     dbpath = testpath/"test.sqlite"
     sqlpath = testpath/"test.sql"
     sqlpath.write "create table test (name text);"
-    system "/usr/bin/sqlite3 #{dbpath} < #{sqlpath}"
+    system "sqlite3 #{dbpath} < #{sqlpath}"
     assert_equal "test: 0 changes, 0 inserts, 0 deletes, 0 unchanged",
                  shell_output("#{bin}/sqldiff --summary #{dbpath} #{dbpath}").strip
   end

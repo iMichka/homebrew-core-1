@@ -1,19 +1,23 @@
 class Gptfdisk < Formula
   desc "Text-mode partitioning tools"
   homepage "https://www.rodsbooks.com/gdisk/"
-  url "https://downloads.sourceforge.net/project/gptfdisk/gptfdisk/1.0.4/gptfdisk-1.0.4.tar.gz"
-  sha256 "b663391a6876f19a3cd901d862423a16e2b5ceaa2f4a3b9bb681e64b9c7ba78d"
+  url "https://downloads.sourceforge.net/project/gptfdisk/gptfdisk/1.0.7/gptfdisk-1.0.7.tar.gz"
+  sha256 "754004b7f85b279287c7ac3c0469b1d7e0eae043a97a2e587b0560ca5f3828c0"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "a91c7b47e12c27c35353542ada7579b25119cdd0a2d95203e9141cca612b70be" => :catalina
-    sha256 "3f370d1a7e625f5d07e6c01ad4397ef9a736fe28558ef2f6d308521bc7b52100" => :mojave
-    sha256 "ece7354d9226677e040f8e755f16cf51f7d2fd32ef3d761ba797bc2e19ffceb9" => :high_sierra
-    sha256 "b21ce2f459eb281e2fe616c2f15908411b082d4a6c6e1952fa582768001dfa2b" => :sierra
-    sha256 "8af410758295279a4f75bf0d787d47066446b7e21f78b035a5a9e5134035706c" => :el_capitan
+    sha256 cellar: :any, arm64_big_sur: "3535bc75dd24cedf66a610a704c79ec076f310afab49144cb14c888cc2bca658"
+    sha256 cellar: :any, big_sur:       "09ca482952e2537ad9fd35f7f29fea209229e5598a9dcf76b0bae66ba0dd23c5"
+    sha256 cellar: :any, catalina:      "fd7441f59bb4ec83893e163d98c5b0ccf6a6685d6956feace396851341f02c89"
+    sha256 cellar: :any, mojave:        "ce9c53f927d62937990612de247e725bf0d72e533acae25b73d7383481ded82a"
   end
 
   depends_on "popt"
+
+  uses_from_macos "ncurses"
+
+  # update linker path for libncurses
+  patch :DATA
 
   def install
     system "make", "-f", "Makefile.mac"
@@ -24,8 +28,23 @@ class Gptfdisk < Formula
   end
 
   test do
-    system "hdiutil", "create", "-size", "128k", "test.dmg"
-    output = shell_output("#{bin}/gdisk -l test.dmg")
-    assert_match "Found valid GPT with protective MBR", output
+    system "dd", "if=/dev/zero", "of=test.dmg", "bs=1m", "count=1"
+    assert_match "completed successfully", shell_output("#{bin}/sgdisk -o test.dmg")
+    assert_match "GUID", shell_output("#{bin}/sgdisk -p test.dmg")
+    assert_match "Found valid GPT with protective MBR", shell_output("#{bin}/gdisk -l test.dmg")
   end
 end
+
+__END__
+diff --git a/Makefile.mac b/Makefile.mac
+index ea21fa6..b50bb34 100644
+--- a/Makefile.mac
++++ b/Makefile.mac
+@@ -21,7 +21,7 @@ gdisk:	$(LIB_OBJS) gpttext.o gdisk.o
+ #	$(CXX) $(LIB_OBJS) -L/usr/lib -licucore gpttext.o gdisk.o -o gdisk
+ 
+ cgdisk: $(LIB_OBJS) cgdisk.o gptcurses.o
+-	$(CXX) $(LIB_OBJS) cgdisk.o gptcurses.o /usr/local/Cellar/ncurses/6.2/lib/libncurses.dylib $(LDFLAGS) -o cgdisk
++	$(CXX) $(LIB_OBJS) cgdisk.o gptcurses.o -L/usr/lib -lncurses $(LDFLAGS) -o cgdisk
+ #	$(CXX) $(LIB_OBJS) cgdisk.o gptcurses.o /usr/lib/libncurses.dylib $(LDFLAGS) -o cgdisk
+ #	$(CXX) $(LIB_OBJS) cgdisk.o gptcurses.o $(LDFLAGS) -licucore -lncurses -o cgdisk

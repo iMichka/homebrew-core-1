@@ -3,8 +3,12 @@ class Prettyping < Formula
   homepage "https://denilsonsa.github.io/prettyping/"
   url "https://github.com/denilsonsa/prettyping/archive/v1.0.1.tar.gz"
   sha256 "48ff5dce1d18761c4ee3c860afd3360266f7079b8e85af9e231eb15c45247323"
+  license "MIT"
 
-  bottle :unneeded
+  bottle do
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "313610e9eeac388834b3425d48c2948b940fdd5ee6d73243a46c604ac8768dfb"
+  end
 
   # Fixes IPv6 handling on BSD/OSX:
   # https://github.com/denilsonsa/prettyping/issues/7

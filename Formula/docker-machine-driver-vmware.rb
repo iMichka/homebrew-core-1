@@ -2,15 +2,16 @@ class DockerMachineDriverVmware < Formula
   desc "VMware Fusion & Workstation docker-machine driver"
   homepage "https://www.vmware.com/products/personal-desktop-virtualization.html"
   url "https://github.com/machine-drivers/docker-machine-driver-vmware.git",
-    :tag      => "v0.1.1",
-    :revision => "cd992887ede19ae63e030c63dda5593f19ed569c"
+      tag:      "v0.1.3",
+      revision: "fa87f07244c4fc64cde5f921ac9d0cb60cc3302a"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d73c0be19fba7a7166c65202133b18c63367b5758d04ec19e23d3fd9406a8a7a" => :catalina
-    sha256 "df81e5c14ec3961d53f6490a165a17b8ceda29beba747ee659b57d82a9468e26" => :mojave
-    sha256 "e65553889741f8c077de12706314e9f95805d673b186d1d545617515d7ab4a03" => :high_sierra
-    sha256 "4901f8daf5bc087b0b4bb64a2798696604e618b8d11433b6fa851dd90fd1b77f" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "700ee8e5f337ec89182e4585a42929d52a9a56417dd7ee6a5a09bbbc1f38d24b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "5028fce4f23eba9047fa977e0db88861d99bcc0dc2b79b0c2920ea68569b970f"
+    sha256 cellar: :any_skip_relocation, catalina:      "d0ce7d4804d39392cfede2ecc19fbe763d39b4684306d0cb36efb19359668c53"
+    sha256 cellar: :any_skip_relocation, mojave:        "515e8951062268846b9c3ec85aa2b29c6f093cba35eed91a3503344fd5aa288a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c7a934227e716581fb2819e33b0abed0f0dbc4cb830644d779e2c6a0bd5e1ba8"
   end
 
   depends_on "go" => :build
@@ -18,6 +19,7 @@ class DockerMachineDriverVmware < Formula
 
   def install
     ENV["GOPATH"] = buildpath
+    ENV["GO111MODULE"] = "auto"
 
     dir = buildpath/"src/github.com/machine-drivers/docker-machine-driver-vmware"
     dir.install buildpath.children

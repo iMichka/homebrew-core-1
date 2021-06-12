@@ -1,17 +1,17 @@
 class JpegTurbo < Formula
   desc "JPEG image codec that aids compression and decompression"
   homepage "https://www.libjpeg-turbo.org/"
-  url "https://downloads.sourceforge.net/project/libjpeg-turbo/2.0.3/libjpeg-turbo-2.0.3.tar.gz"
-  sha256 "4246de500544d4ee408ee57048aa4aadc6f165fc17f141da87669f20ed3241b7"
+  url "https://downloads.sourceforge.net/project/libjpeg-turbo/2.1.0/libjpeg-turbo-2.1.0.tar.gz"
+  sha256 "bef89803e506f27715c5627b1e3219c95b80fc31465d4452de2a909d382e4444"
+  license "IJG"
   head "https://github.com/libjpeg-turbo/libjpeg-turbo.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "22d6d0bcf913245cea1541440dcd79519b81953057eb028113f62d416d4f0d1b" => :catalina
-    sha256 "dfc1db83aeb51510ee7fe2243d168f9a2a8898b65176f4c07282e2781cfdbbeb" => :mojave
-    sha256 "ca326419069792b324e956a325190f0ad1425fc86174e36a5315d3781be6c41c" => :high_sierra
-    sha256 "8b587585e4dd98b09ee49fbab70868d2874710506850ad7762f59c44a78c48fd" => :sierra
-    sha256 "babb6ebc6009aa504d018c14ddbbd0c41977bd33344531955f89df3f3cdc68ad" => :x86_64_linux
+    sha256                               arm64_big_sur: "88c325eabb7b63c8df6c94e2830a61262cd1d1b1578f1e7a18c8a1ec35585a0d"
+    sha256                               big_sur:       "d75de3940ae5b5d5117e50b8167aed9cf672bf490a0ef0752f2a092079d64cff"
+    sha256                               catalina:      "6896a17259ac12146111d562538ed144a25ed18c704f503294a2043ae0d1e28a"
+    sha256                               mojave:        "b917a78fb0222d9423eda3728c4c0ee63a83ef232a7a4f21036307d92a27d68f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3e986c724e369b50c4493d5ba81a71f06f3e1267d257dff7b7fb56968994de45"
   end
 
   keg_only "libjpeg-turbo is not linked to prevent conflicts with the standard libjpeg"
@@ -20,7 +20,10 @@ class JpegTurbo < Formula
   depends_on "nasm" => :build
 
   def install
-    system "cmake", ".", "-DWITH_JPEG8=1", *std_cmake_args
+    args = std_cmake_args - %w[-DCMAKE_INSTALL_LIBDIR=lib]
+    system "cmake", ".", "-DWITH_JPEG8=1",
+                         "-DCMAKE_INSTALL_LIBDIR=#{lib}",
+                         *args
     system "make"
     system "make", "test"
     system "make", "install"

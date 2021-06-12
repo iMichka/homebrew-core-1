@@ -1,18 +1,18 @@
 class Packmol < Formula
   desc "Packing optimization for molecular dynamics simulations"
   homepage "https://www.ime.unicamp.br/~martinez/packmol/"
-  url "https://github.com/leandromartinez98/packmol/archive/18.169.tar.gz"
-  sha256 "8acf2cbc742a609e763eb00cae55aecd09af2edb4cc4e931706e2f06ac380de9"
-  revision 1
-  head "https://github.com/leandromartinez98/packmol.git"
+  url "https://github.com/mcubeg/packmol/archive/20.010.tar.gz"
+  sha256 "23285f2a9e2bef0e8253250d7eae2d4026a9535ddcc2b9b383f5ad45b19e123d"
+  license "MIT"
+  revision OS.mac? ? 2 : 3
+  head "https://github.com/mcubeg/packmol.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "f2ecebd27ee7b115271c5361cbd8769dd5e8bf0fa8dc69fdd66a907bd4af6318" => :catalina
-    sha256 "cf9e09622c5693667366b71ac09c0a1dcde7a66994ec5fecaae93c4187032667" => :mojave
-    sha256 "7dbe01c4cf358d1183fcb8ca26e8289c20f8abd6ce04f078471eb34c65a0b204" => :high_sierra
-    sha256 "c4cd96908626a8f04e3f9e0858c15deec9baa1841c1239fdcb08bd582f5acad1" => :sierra
-    sha256 "827fb160722b61a3fe95bdf8d8a82fa2ceadd4f2a3aea4c624fb1d59f69867e5" => :x86_64_linux
+    sha256                               arm64_big_sur: "3d43d73153e16a136bc8c222e38b04b564d974de27030ea6bc07a854e801b837"
+    sha256                               big_sur:       "5e17a008667df7e5bc6bee6d5563dc3972c3f52b4243ab2d92507be35ce9d12b"
+    sha256                               catalina:      "3ab1f82f9882aeb3e7fe733e7c375902bb5b9ced8573fcbc90913fcf19407c9a"
+    sha256                               mojave:        "d881b332e102b00f5ebfd5f48ad10cb80087a0535d919514fe766e70e7fdf4f7"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "407dbf1eb02939bce641526ace747907a8c42a11718f0606288a90b521cb91f1"
   end
 
   depends_on "gcc" # for gfortran

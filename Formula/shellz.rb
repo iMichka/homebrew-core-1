@@ -1,31 +1,28 @@
 class Shellz < Formula
   desc "Small utility to track and control custom shellz"
   homepage "https://github.com/evilsocket/shellz"
-  url "https://github.com/evilsocket/shellz/archive/v1.5.0.tar.gz"
-  sha256 "870bcc2d6e4fd20913556f95325bc3e1876f3243ef67295c33e2bcc990126e97"
+  url "https://github.com/evilsocket/shellz/archive/v1.5.1.tar.gz"
+  sha256 "ff7d5838fd0f8385a700bd882eab9f6e5da023899458c9215e36e2244cc11bfd"
+  license "GPL-3.0-only"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1c1eabfee3228f25f75b4838f3d0a8a49e84c87eb2926e78cdf05dff094aa0e8" => :catalina
-    sha256 "aa5043471c26fba80ba9db128f5ff3e8b60051bd76a8d26c3ad114b59b24c8b3" => :mojave
-    sha256 "83b7e5e52243efe75e302853574243667a8e9cf9899d480c12c27886e77a9788" => :high_sierra
-    sha256 "b659a90bd79e516d71679e68d36a35038937f23ee9d1de1dfee313fd11b0169e" => :sierra
-    sha256 "846d5d66e131e82db999e636a7a807a2a1116a5ae947630d15a9c59cc2aed966" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "4e891a0581c95cdbe2b0736a921e97fef50b702fcd445dc9c2c26d6acd529ccd"
+    sha256 cellar: :any_skip_relocation, big_sur:       "85f5058492ebd2e7d64347418f3a66267da72800ba6ff94682fbcd23d1c1614e"
+    sha256 cellar: :any_skip_relocation, catalina:      "5f0e41d34454419df76d6a4bd7213b4c20297bf0a6732bddbebce8fbfbc2ba5a"
+    sha256 cellar: :any_skip_relocation, mojave:        "3200f4361fc2d855b7417d48bf853f16346c14d0745fc831758120a427f81cef"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "c76158efbeaedef0fde0d86617cd34373cc2c2d564245ec5ee8deb4f4be8c312"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
-  def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/evilsocket/shellz").install buildpath.children
+  # remove in next release
+  patch do
+    url "https://github.com/chenrui333/shellz/commit/10bd430.patch?full_index=1"
+    sha256 "c23d375e7ea2b20e3c2c0fec39adda384a0ce34482c7d97f8aa63c1526bf80f3"
+  end
 
-    cd "src/github.com/evilsocket/shellz" do
-      system "dep", "ensure", "-vendor-only"
-      system "make", "build"
-      bin.install "shellz"
-      prefix.install_metafiles
-    end
+  def install
+    system "go", "build", *std_go_args(ldflags: "-s -w"), "./cmd/shellz"
   end
 
   test do

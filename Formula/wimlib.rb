@@ -1,21 +1,26 @@
 class Wimlib < Formula
   desc "Library to create, extract, and modify Windows Imaging files"
   homepage "https://wimlib.net/"
-  url "https://wimlib.net/downloads/wimlib-1.13.1.tar.gz"
-  sha256 "47f4bc645c1b6ee15068d406a90bb38aec816354e140291ccb01e536f2cdaf5f"
+  url "https://wimlib.net/downloads/wimlib-1.13.4.tar.gz"
+  sha256 "4b87dd0ad9cc1a58cee5721afebb98011dab549e72f2b55533f315f08b2ede12"
+  license "GPL-3.0-or-later"
+
+  livecheck do
+    url "https://wimlib.net/downloads/"
+    regex(/href=.*?wimlib[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "ea449f8e0aeea806e5925974a0a3f8a04ac256a5a44edc858272a57c5f88814d" => :catalina
-    sha256 "7969f20ce9f26b7435b4242fb241c2527848581469be0cad09a3f5de77b11a05" => :mojave
-    sha256 "33a3397f536e339ca4177d3639b55e223040883af9d5afbbb47cc3e9b1bb87e9" => :high_sierra
-    sha256 "66a39e7eaa96a26f988a0c6eba0ad614ca449b0bb5688ebd70830f8863da5244" => :sierra
-    sha256 "61613be1a3dc76ae6eef007b1f491ad6872af83407100523b86682a1fc3548d3" => :x86_64_linux
+    sha256                               arm64_big_sur: "2acbaa6a363897c9c46fd5e058e11c1b234287367d192e31422103c4b467d323"
+    sha256 cellar: :any,                 big_sur:       "055f311cbc8a3ac7e36978a9ad0c69a6825c6ba78136492765a7c2b3ba3fc84f"
+    sha256 cellar: :any,                 catalina:      "1db7b55e58b89d67b1365788c595bd08d13c04c9f7c218d488ec3edd7bdd67a2"
+    sha256 cellar: :any,                 mojave:        "a78ad3433ec595db6568099566f9b15d4919a70a462260afc3f89560bbbb4d2f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5a16404a6e4ab8f9db2b33036ed6d2762fce75920c43c268a803a564f775c631"
   end
 
   depends_on "pkg-config" => :build
   depends_on "openssl@1.1"
+
   uses_from_macos "libxml2"
 
   def install
@@ -36,8 +41,15 @@ class Wimlib < Formula
   test do
     # make a directory containing a dummy 1M file
     mkdir("foo")
-    system "dd", "if=/dev/random", "of=foo/bar", (OS.mac? ? "bs=1m" : "bs=1M"), "count=1"
 
+    size = nil
+    on_macos do
+      size = "1m"
+    end
+    on_linux do
+      size = "1M"
+    end
+    system "dd", "if=/dev/random", "of=foo/bar", "bs=#{size}", "count=1"
     # capture an image
     ENV.append "WIMLIB_IMAGEX_USE_UTF8", "1"
     system "#{bin}/wimcapture", "foo", "bar.wim"

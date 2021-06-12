@@ -1,43 +1,35 @@
 class Sshfs < Formula
   desc "File system client based on SSH File Transfer Protocol"
-  homepage "https://osxfuse.github.io/"
-  url "https://github.com/libfuse/sshfs/releases/download/sshfs-2.10/sshfs-2.10.tar.gz"
-  sha256 "70845dde2d70606aa207db5edfe878e266f9c193f1956dd10ba1b7e9a3c8d101"
-  revision 2
+  homepage "https://github.com/libfuse/sshfs"
+  url "https://github.com/libfuse/sshfs/archive/refs/tags/sshfs-3.7.1.tar.gz"
+  sha256 "0f0f8f239555effd675d03a3cabfb35ef691a3054c98b62bc28e85620ad9e30d"
+  license any_of: ["LGPL-2.1-only", "GPL-2.0-only"]
 
   bottle do
-    cellar :any
-    sha256 "aceff3131dd0b098bdef8b5dda54d117b5dd5269ca146f7a5032ecde3c99b6d2" => :catalina
-    sha256 "5f69267c0f1f2489989e108919d66210e058423d0d1f1661812c0194b164619c" => :mojave
-    sha256 "58d222f37622b399352f16eaf823d3e564445d9e951629e965281ac31de5ef4a" => :high_sierra
-    sha256 "dc4a7f24c2cbebd7c35891200b043d737ba6586a28992708ef849ffedff7bb01" => :sierra
-    sha256 "24e776a28e635c10a7be5e1d87711c844a3b96148acf80696d3ad4b0830b1491" => :x86_64_linux
+    sha256 cellar: :any, catalina:     "aceff3131dd0b098bdef8b5dda54d117b5dd5269ca146f7a5032ecde3c99b6d2"
+    sha256 cellar: :any, mojave:       "5f69267c0f1f2489989e108919d66210e058423d0d1f1661812c0194b164619c"
+    sha256 cellar: :any, high_sierra:  "58d222f37622b399352f16eaf823d3e564445d9e951629e965281ac31de5ef4a"
+    sha256 cellar: :any, sierra:       "dc4a7f24c2cbebd7c35891200b043d737ba6586a28992708ef849ffedff7bb01"
+    sha256               x86_64_linux: "adbef91244bb2888824afce89666060acf8e833ed78f5563ba64053055d688fb"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
-  depends_on "libtool" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "glib"
-  if OS.mac?
-    depends_on :osxfuse
-  else
-    depends_on "libfuse"
-  end
+  depends_on "libfuse"
 
-  # Apply patch that clears one remaining roadblock that prevented setting
-  # a custom I/O buffer size on macOS. With this patch in place, it's
-  # recommended to use e.g. `-o iosize=1048576` (or other, reasonable value)
-  # when lauching `sshfs`, for improved performance.
-  # See also: https://github.com/libfuse/sshfs/issues/11
-  patch do
-    url "https://github.com/libfuse/sshfs/commit/667cf34622e2e873db776791df275c7a582d6295.diff?full_index=1"
-    sha256 "6a121d58a94cf0efebbfa217d62aa4d9915a8e6573ae2c086170ff9d9fc09456"
+  on_macos do
+    disable! date: "2021-04-08", because: "requires FUSE"
   end
 
   def install
-    system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", ".."
+      system "meson", "configure", "--prefix", prefix
+      system "ninja", "--verbose"
+      system "ninja", "install", "--verbose"
+    end
   end
 
   test do

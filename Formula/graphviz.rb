@@ -1,28 +1,39 @@
 class Graphviz < Formula
   desc "Graph visualization software from AT&T and Bell Labs"
   homepage "https://www.graphviz.org/"
-  url "https://gitlab.com/graphviz/graphviz/-/archive/2.42.2/graphviz-2.42.2.tar.gz"
-  sha256 "b92a92bb16755b11875be9203a6216e5b827eb1d6cf8dda6824380457cd18c55"
+  url "https://gitlab.com/graphviz/graphviz.git",
+      tag:      "2.47.2",
+      revision: "a11eb938514725493324d18db1686f9a99c8569f"
+  license "EPL-1.0"
   version_scheme 1
   head "https://gitlab.com/graphviz/graphviz.git"
 
   bottle do
-    sha256 "fd65173d4f2bf9b4412f42939acc10815ba8974f5cdac342a9afd619acc70829" => :catalina
-    sha256 "abf938b188d15e2bf1b7447635f1e13a46baaa00f0e38ea6e5122e603f6b491d" => :mojave
-    sha256 "df7bafeabe8c94cc513c394ba3fa587ae2b209a25fa42f1b507dfae67029f47d" => :high_sierra
-    sha256 "e683cf08252119dfca7332f0cf423e1e5923cb6749ea5e4ec243d6aa4520f022" => :x86_64_linux
+    sha256 arm64_big_sur: "f3db60eb9049bc17b17eb5a53cca5f2fcf64de6cfef0629641f934cea047c263"
+    sha256 big_sur:       "c3b4be8016797f935d210e12b365313d7770643e464563f05377a3209132ec13"
+    sha256 catalina:      "ca40b79d8f77230ed87fd8524ea491ffe97c922dc0c087c4a7f5d06deb19c0ae"
+    sha256 mojave:        "a53d11962ebc9f0c99e8827da3dd0a00c234661a0923d56ed0e5b6601431ea8b"
+    sha256 x86_64_linux:  "766f39e5f6b05f51dfdbf7c5c1ab4060295316feb08fc32fa4e881142ddf6118"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
-  depends_on "libtool" => :build
+  depends_on "bison" => :build
   depends_on "pkg-config" => :build
   depends_on "gd"
   depends_on "gts"
   depends_on "libpng"
+  depends_on "librsvg"
   depends_on "libtool"
-  depends_on "byacc" => :build unless OS.mac?
-  depends_on "flex" => :build unless OS.mac?
+  depends_on "pango"
+
+  uses_from_macos "flex" => :build
+  uses_from_macos "groff" => :build
+
+  on_linux do
+    depends_on "byacc" => :build
+    depends_on "ghostscript" => :build
+  end
 
   def install
     args = %W[
@@ -31,14 +42,21 @@ class Graphviz < Formula
       --prefix=#{prefix}
       --disable-php
       --disable-swig
+      --disable-tcl
       --with-quartz
       --without-freetype2
+      --without-gdk
+      --without-gdk-pixbuf
+      --without-gtk
+      --without-poppler
       --without-qt
       --without-x
       --with-gts
     ]
 
-    system "./autogen.sh", *args
+    system "./autogen.sh"
+    system "./configure", *args
+    system "make"
     system "make", "install"
 
     (bin/"gvmap.sh").unlink

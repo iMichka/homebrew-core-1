@@ -1,37 +1,29 @@
 class VirustotalCli < Formula
   desc "Command-line interface for VirusTotal"
   homepage "https://github.com/VirusTotal/vt-cli"
-  url "https://github.com/VirusTotal/vt-cli/archive/0.7.0.tar.gz"
-  sha256 "39a566be0e2ee1102c0bd9d3ddefa4a0e423c9ffe02962d4a48897a875312c95"
+  url "https://github.com/VirusTotal/vt-cli/archive/0.9.7.tar.gz"
+  sha256 "3effbc318116ddfdc41c2d8e5e885da93f43614dbf1704557bf9f347553bd5ff"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "36fcf039fa5264b8841ba3ba954816031cb1b6ac42aacd26b1e5791b643fae30" => :catalina
-    sha256 "be3fd19af1b5004ccf95ef0996fa387b88e7bfa30ca651dd69b94700fb92dcec" => :mojave
-    sha256 "118eaafec3d20e709091266c786d5121b27e0d1c8d8ded2f5c21c77046b571d5" => :high_sierra
-    sha256 "02960c7ed31733109d7650880d563b9b9b610ac6ec68d3fb5859e6ba911d32b3" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "41f0fa1b0a8744878323478f8bb5189c70d21dddc1a7e326294e31f7c44464ef"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ce8bd2abe3a1137debb26192a4bf43faf2064a54cbf4f7eabf94256317973baa"
+    sha256 cellar: :any_skip_relocation, catalina:      "bf9f0b5b6577a82a8410774087d6ef894ba68a4e465dd8a5e0c9093c5828bab6"
+    sha256 cellar: :any_skip_relocation, mojave:        "a66cbde56c35079ad8af5c80c28ae892c57f0c750fa64be992b207a645235a8a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7bcdc56afd6b8df7ac7aba0633952b3f77f17aab19410742b1e6ae9d8f172c2b"
   end
 
-  depends_on "dep" => :build
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    repo = "github.com/VirusTotal/vt-cli"
-    (buildpath/"src/#{repo}").install buildpath.children
+    system "go", "build", "-ldflags",
+            "-X cmd.Version=#{version}",
+            "-o", bin/"vt", "./vt/main.go"
 
-    cd "src/#{repo}" do
-      system "dep", "ensure", "-vendor-only"
-      system "go", "build", "-ldflags",
-             "-X #{repo}/cmd.Version=#{version}",
-             "-o", bin/"vt", "./vt/main.go"
-      prefix.install_metafiles
-    end
-
-    output = Utils.popen_read("#{bin}/vt completion bash")
+    output = Utils.safe_popen_read("#{bin}/vt", "completion", "bash")
     (bash_completion/"vt").write output
 
-    output = Utils.popen_read("#{bin}/vt completion zsh")
+    output = Utils.safe_popen_read("#{bin}/vt", "completion", "zsh")
     (zsh_completion/"_vt").write output
   end
 

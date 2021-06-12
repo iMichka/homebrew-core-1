@@ -1,30 +1,31 @@
 class Igv < Formula
   desc "Interactive Genomics Viewer"
   homepage "https://www.broadinstitute.org/software/igv"
-  url "https://data.broadinstitute.org/igv/projects/downloads/2.5/IGV_2.5.3.zip"
-  sha256 "d33f6e20aaf5158770c6154953b8b3df89ced0f9416b399502864d3ccd44f22a"
-  revision 1
+  url "https://data.broadinstitute.org/igv/projects/downloads/2.9/IGV_2.9.4.zip"
+  sha256 "05717ec6d0386a5eafe93c8b1af371c0013355eae74312b78eae5fdd99fc5fc1"
+  license "MIT"
 
-  bottle :unneeded
+  livecheck do
+    url "https://software.broadinstitute.org/software/igv/download"
+    regex(/href=.*?IGV[._-]v?(\d+(?:\.\d+)+)\.zip/i)
+  end
 
-  depends_on :java
+  depends_on "openjdk"
 
   def install
     inreplace ["igv.sh", "igvtools"], /^prefix=.*/, "prefix=#{libexec}"
-    inreplace "igvtools", "@igv.args", '@"${prefix}/igv.args"'
     bin.install "igv.sh" => "igv"
     bin.install "igvtools"
     libexec.install "igv.args", "lib"
-    bin.env_script_all_files libexec, Language::Java.java_home_env
+    bin.env_script_all_files libexec, Language::Java.overridable_java_home_env
   end
 
   test do
     assert_match "Usage:", shell_output("#{bin}/igvtools")
-    assert_match "org/broad/igv/ui/IGV.class", shell_output("jar tf #{libexec}/lib/igv.jar")
-    # Fails on Jenkins with Unhandled exception: java.awt.HeadlessException
-    unless ENV["CI"]
-      (testpath/"script").write "exit"
-      assert_match "Version", shell_output("#{bin}/igv -b script")
-    end
+    assert_match "org/broad/igv/ui/IGV.class", shell_output("#{Formula["openjdk"].bin}/jar tf #{libexec}/lib/igv.jar")
+
+    ENV.append "_JAVA_OPTIONS", "-Duser.home=#{testpath}"
+    (testpath/"script").write "exit"
+    assert_match "Version", shell_output("#{bin}/igv -b script")
   end
 end

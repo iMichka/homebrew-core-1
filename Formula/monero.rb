@@ -1,63 +1,72 @@
 class Monero < Formula
-  desc "Official monero wallet and cpu miner"
-  homepage "https://getmonero.org/"
+  desc "Official Monero wallet and CPU miner"
+  homepage "https://www.getmonero.org/"
   url "https://github.com/monero-project/monero.git",
-      :tag      => "v0.15.0.1",
-      :revision => "6def88ad405b39f632a91afa3aacbb92ecc63c1f"
+      tag:      "v0.17.2.0",
+      revision: "f6e63ef260e795aacd408c28008398785b84103a"
+  license "BSD-3-Clause"
+  revision 1
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "a576ff3d3106ae6ee6b94e1156a3afa44bb3fb44d6f1b4694fc3df44dd4b96a4" => :catalina
-    sha256 "d63070938737aee203b744397100480464b5c59cff8b7ab95bc8700e9d0d9255" => :mojave
-    sha256 "4a8b4c93004a16a089e7f7faf723877573b6ad9518d55a911231bf88bc387dde" => :high_sierra
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "21d82b457eb630d78444ca29db2cf335f47a449e217730f84a8934faf5252e94"
+    sha256 cellar: :any,                 big_sur:       "f552779fb0f41d5ce12ee4cebe58d58859237fdece35c25f9a71268f87920d22"
+    sha256 cellar: :any,                 catalina:      "fe9009da078f04dd65f204298fb58c6c4ba6e195307cc64bf0443f6184fbd5b9"
+    sha256 cellar: :any,                 mojave:        "9efd453269f2dea7bff2061320e2f0db8a4f45ba804187439b77c1eb4098323f"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "25e4f4303f4fed8476d26ee63ab2c30ae8131eafabbfeee4f49fd006f2a4da35"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "boost"
+  depends_on "hidapi"
   depends_on "libsodium"
   depends_on "openssl@1.1"
+  depends_on "protobuf"
   depends_on "readline"
   depends_on "unbound"
   depends_on "zeromq"
 
-  resource "cppzmq" do
-    url "https://github.com/zeromq/cppzmq/archive/v4.3.0.tar.gz"
-    sha256 "27d1f56406ba94ee779e639203218820975cf68174f92fbeae0f645df0fcada4"
-  end
+  conflicts_with "wownero", because: "both install a wallet2_api.h header"
+
+  # Boost 1.76 compatibility
+  # https://github.com/loqs/monero/commit/5e902e5e32c672661dfe5677c4a950c4dd409198
+  patch :DATA
 
   def install
-    (buildpath/"cppzmq").install resource("cppzmq")
-    system "cmake", ".", "-DZMQ_INCLUDE_PATH=#{buildpath}/cppzmq",
-                         "-DReadline_ROOT_DIR=#{Formula["readline"].opt_prefix}",
-                         *std_cmake_args
+    system "cmake", ".", *std_cmake_args
     system "make", "install"
 
-    # Avoid conflicting with miniupnpc
-    # Reported upstream 25 May 2018 https://github.com/monero-project/monero/issues/3862
+    # Fix conflict with miniupnpc.
+    # This has been reported at https://github.com/monero-project/monero/issues/3862
     rm lib/"libminiupnpc.a"
-    rm_rf include/"miniupnpc"
   end
 
-  plist_options :manual => "monerod"
+  plist_options manual: "monerod"
 
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/monerod</string>
-        <string>--non-interactive</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
+  def plist
+    <<~EOS
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+      <plist version="1.0">
+      <dict>
+        <key>Label</key>
+        <string>#{plist_name}</string>
+        <key>ProgramArguments</key>
+        <array>
+          <string>#{opt_bin}/monerod</string>
+          <string>--non-interactive</string>
+        </array>
+        <key>RunAtLoad</key>
+        <true/>
+      </dict>
+      </plist>
+    EOS
   end
 
   test do
@@ -71,3 +80,18 @@ class Monero < Formula
     assert_equal address, shell_output(cmd).lines.last.split[1]
   end
 end
+
+__END__
+diff --git a/contrib/epee/include/storages/portable_storage.h b/contrib/epee/include/storages/portable_storage.h
+index 1e68605ab..801bb2c34 100644
+--- a/contrib/epee/include/storages/portable_storage.h
++++ b/contrib/epee/include/storages/portable_storage.h
+@@ -40,6 +40,8 @@
+ #include "span.h"
+ #include "int-util.h"
+
++#include <boost/mpl/contains.hpp>
++
+ namespace epee
+ {
+   namespace serialization

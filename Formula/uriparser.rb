@@ -1,34 +1,29 @@
 class Uriparser < Formula
   desc "URI parsing library (strictly RFC 3986 compliant)"
   homepage "https://uriparser.github.io/"
+  url "https://github.com/uriparser/uriparser/releases/download/uriparser-0.9.5/uriparser-0.9.5.tar.bz2"
+  sha256 "dd8061eba7f2e66c151722e6db0b27c972baa6215cf16f135dbe0f0a4bc6606c"
+  license "BSD-3-Clause"
   head "https://github.com/uriparser/uriparser.git"
 
-  stable do
-    url "https://github.com/uriparser/uriparser/releases/download/uriparser-0.9.3/uriparser-0.9.3.tar.bz2"
-    sha256 "28af4adb05e811192ab5f04566bebc5ebf1c30d9ec19138f944963d52419e28f"
-
-    # Upstream fix, will be integrated in next release
-    # https://github.com/uriparser/uriparser/issues/67
-    patch do
-      url "https://github.com/uriparser/uriparser/commit/f870e6c68696a6018702caa5c8a2feba9b0f99fa.diff?full_index=1"
-      sha256 "c609224fc996b6231781e1beba4424c2237fc5e49e2de049b344d926db0630f7"
-    end
-  end
-
   bottle do
-    cellar :any
-    sha256 "421b45811861a0ce226e7f4c9647a8b7753d9e7f84b5c84ed6b637f8839d461d" => :catalina
-    sha256 "e54bac5e1cf6a1ed3f87e42f56f0ff2f4602e22cf6113bc03d82a6ae12b13f76" => :mojave
-    sha256 "27649c5b2c692596c9811ab872b1b82e09ccb67dbff0a048de7137134aff81e8" => :high_sierra
-    sha256 "a3ee937d18ead7330f7cf6dfbf5a63ac41dbb5e9d7e68450e3b07ff54c75d80f" => :sierra
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "3506704f47f1a78c9bb09c8b95fb5a0d3a99f6d0b55d8d9537ed1d3ce1d2dd0a"
+    sha256 cellar: :any,                 big_sur:       "850d83c937b7bef0e5008f58ecee310a788cd0e3a450e8d2f86eae406c2c82d4"
+    sha256 cellar: :any,                 catalina:      "aa27111b6106992b4324389e45bef8fc4da6bcba0ceaa94d867eeb320680e71c"
+    sha256 cellar: :any,                 mojave:        "b5c0c029eaf64eb39cd4b67be8fff8fff2ccb4dac09cda0bf42bbabd0ab39b3b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b9bbdf8356d6eacc483b962e3dfa19e1a933ae0f1db681d5675e6c6ba1f81c72"
   end
 
   depends_on "cmake" => :build
 
-  conflicts_with "libkml", :because => "both install `liburiparser.dylib`"
+  conflicts_with "libkml", because: "both install `liburiparser.dylib`"
 
   def install
-    system "cmake", ".", "-DURIPARSER_BUILD_TESTS=OFF", "-DURIPARSER_BUILD_DOCS=OFF", *std_cmake_args
+    system "cmake", ".", "-DURIPARSER_BUILD_TESTS=OFF",
+                         "-DURIPARSER_BUILD_DOCS=OFF",
+                         "-DCMAKE_INSTALL_RPATH=#{rpath}",
+                         *std_cmake_args
     system "make"
     system "make", "install"
   end

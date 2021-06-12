@@ -1,22 +1,26 @@
 class PcscLite < Formula
   desc "Middleware to access a smart card using SCard API"
   homepage "https://pcsclite.apdu.fr/"
-  url "https://pcsclite.apdu.fr/files/pcsc-lite-1.8.25.tar.bz2"
-  sha256 "d76d79edc31cf76e782b9f697420d3defbcc91778c3c650658086a1b748e8792"
+  url "https://pcsclite.apdu.fr/files/pcsc-lite-1.9.1.tar.bz2"
+  sha256 "73c4789b7876a833a70f493cda21655dfe85689d9b7e29701c243276e55e683a"
+  license all_of: ["BSD-3-Clause", "GPL-3.0-or-later", "ISC"]
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "d4fdefb11d6fcfb20ffb8aac8be408d4c1041fd981caabc42a6d482fd980ca62" => :catalina
-    sha256 "29ebb59b42af0959efe85ca374d03cd51984b9966c3be2ed51c8ae30098e0ea2" => :mojave
-    sha256 "832957657fec785b6d157a6a670da607675bdef8655d82c3a16fc39e305e5e57" => :high_sierra
-    sha256 "92fb7438f0467c2f749218cb8b23fa1bf66425fb8f49b20888530fb97094598f" => :sierra
-    sha256 "227d87e21775e920816ddf628baaddeaab849107caca94b31cfa80e9d46aedfe" => :x86_64_linux
+  livecheck do
+    url "https://pcsclite.apdu.fr/files/"
+    regex(/href=.*?pcsc-lite[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  keg_only :provided_by_macos,
-    "pcsc-lite interferes with detection of macOS's PCSC.framework"
+  bottle do
+    sha256 cellar: :any,                 arm64_big_sur: "41493aaf4724a8d9dcdc0d201adfb0ff106f0fda64cd0c61cb2a7a6cadfda542"
+    sha256 cellar: :any,                 big_sur:       "738ed819f64c346f2761678b8ca2e39eb9043d92d6d4fd365f6b0650097e225a"
+    sha256 cellar: :any,                 catalina:      "a4da98096949c1944ed1754fb4d34eb65573c88b86c0d24401f783459e1240e9"
+    sha256 cellar: :any,                 mojave:        "46aee062069037df86dc1064a2cdced328a21dce899bc15429ffe2b6151dacf3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f2d64fed550f84079a9c30bc90bf57b5d2540f24aa4778dbfb7a9a441a8f1e84"
+  end
 
-  unless OS.mac?
+  keg_only :shadowed_by_macos, "macOS provides PCSC.framework"
+
+  on_linux do
     depends_on "pkg-config" => :build
     depends_on "libusb"
   end
@@ -27,7 +31,10 @@ class PcscLite < Formula
               --prefix=#{prefix}
               --sysconfdir=#{etc}
               --disable-libsystemd]
-    args << "--disable-libudev" unless OS.mac?
+
+    on_linux do
+      args << "--disable-udev"
+    end
 
     system "./configure", *args
     system "make", "install"

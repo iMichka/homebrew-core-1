@@ -1,22 +1,30 @@
 class Yaws < Formula
   desc "Webserver for dynamic content (written in Erlang)"
   homepage "http://yaws.hyber.org"
-  url "https://github.com/klacke/yaws/archive/yaws-2.0.7.tar.gz"
-  sha256 "083b1b6be581fdfb66d77a151bbb2fc3897b1b0497352ff6c93c2256ef2b08f6"
-  head "https://github.com/klacke/yaws.git"
+  url "https://github.com/erlyaws/yaws/archive/yaws-2.0.9.tar.gz"
+  sha256 "a2bbfe10c780ef2c3b238eaf76d902f4921c63b49d135bb9878b163ef1870a6d"
+  license "BSD-3-Clause"
+  head "https://github.com/erlyaws/yaws.git"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(%r{href=.*?/tag/yaws[._-]v?(\d+(?:\.\d+)+)["' >]}i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "19204b2fa23e47ec817e447331111a8f64750e44ec04f2ee61a514fe43fac495" => :catalina
-    sha256 "251c2a89b97ccc6429991e24e2b3cefda0edb5a06fa33728f3a8e3e86870c02c" => :mojave
-    sha256 "5320541b42c2d241771b92e721cb8296b04e6c71f71551cfcd41be17742067c3" => :high_sierra
-    sha256 "9e93be437c866a3a674374443d4898fc94b7cd5be5d522843924f92294493c51" => :sierra
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "05a4889aabbc463927e6e86f7ce5ab6fdf4e041ff61b1ae063622482c022abc5"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
-  depends_on "erlang@20"
+  depends_on "erlang"
+
+  on_linux do
+    depends_on "linux-pam"
+  end
 
   # the default config expects these folders to exist
   skip_clean "var/log/yaws"
@@ -24,11 +32,18 @@ class Yaws < Formula
   skip_clean "lib/yaws/examples/include"
 
   def install
+    # Ensure pam headers are found on Xcode-only installs
+    extra_args = %W[
+      --with-extrainclude=#{MacOS.sdk_path}/usr/include/security
+    ]
+    on_linux do
+      extra_args = %W[
+        --with-extrainclude=#{Formula["linux-pam"].opt_include}/security
+      ]
+    end
     system "autoreconf", "-fvi"
-    system "./configure", "--prefix=#{prefix}",
-                          # Ensure pam headers are found on Xcode-only installs
-                          "--with-extrainclude=#{MacOS.sdk_path}/usr/include/security"
-    system "make", "install"
+    system "./configure", "--prefix=#{prefix}", *extra_args
+    system "make", "install", "WARNINGS_AS_ERRORS="
 
     cd "applications/yapp" do
       system "make"
@@ -38,6 +53,12 @@ class Yaws < Formula
     # the default config expects these folders to exist
     (lib/"yaws/examples/ebin").mkpath
     (lib/"yaws/examples/include").mkpath
+
+    # Remove Homebrew shims references on Linux
+    on_linux do
+      inreplace Dir["#{prefix}/var/yaws/www/*/Makefile"], HOMEBREW_LIBRARY/"Homebrew/shims/linux/super/",
+        "/usr/bin/"
+    end
   end
 
   def post_install
@@ -46,6 +67,39 @@ class Yaws < Formula
   end
 
   test do
-    system bin/"yaws", "--version"
+    user = "user"
+    password = "password"
+    port = free_port
+
+    (testpath/"www/example.txt").write <<~EOS
+      Hello World!
+    EOS
+
+    (testpath/"yaws.conf").write <<~EOS
+      logdir = #{mkdir(testpath/"log").first}
+      ebin_dir = #{mkdir(testpath/"ebin").first}
+      include_dir = #{mkdir(testpath/"include").first}
+
+      <server localhost>
+        port = #{port}
+        listen = 127.0.0.1
+        docroot = #{testpath}/www
+        <auth>
+                realm = foobar
+                dir = /
+                user = #{user}:#{password}
+        </auth>
+      </server>
+    EOS
+    fork do
+      exec bin/"yaws", "-c", testpath/"yaws.conf", "--erlarg", "-noshell"
+    end
+    sleep 3
+
+    output = shell_output("curl --silent localhost:#{port}/example.txt")
+    assert_match "401 authentication needed", output
+
+    output = shell_output("curl --user #{user}:#{password} --silent localhost:#{port}/example.txt")
+    assert_equal "Hello World!\n", output
   end
 end

@@ -1,46 +1,47 @@
 class Nim < Formula
   desc "Statically typed compiled systems programming language"
   homepage "https://nim-lang.org/"
-  url "https://nim-lang.org/download/nim-1.0.4.tar.xz"
-  sha256 "89841545a14475911bb84616bcd5a1b93a3268e1a6a0089f54642e405eeaaee0"
+  url "https://nim-lang.org/download/nim-1.4.8.tar.xz"
+  sha256 "b798c577411d7d95b8631261dbb3676e9d1afd9e36740d044966a0555b41441a"
+  license "MIT"
+  head "https://github.com/nim-lang/Nim.git", branch: "devel"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "57e5c77f086a481fdd4419b35772c87ba26d7f49771ff684cd15ff59060944cd" => :catalina
-    sha256 "16195369dfc2300edd6e58fb50b97964eff155bf139e8fd1ab09c58222488eeb" => :mojave
-    sha256 "788b92daa9614b0a5a60b8cae441651a691774fa3a08b804d1bcc7b07a2d4384" => :high_sierra
-    sha256 "c5af778c4dff647d21ac981452e361bb6952ffaf097712ed3610b100cdc747f9" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6da9b8800dc0ed04a52c42b45e9571b023c1775f34ac6e6d432d80ef974cec42"
+    sha256 cellar: :any_skip_relocation, big_sur:       "82ddb5ffb529f4754ccbda1cfd39fdffa145f08e7824dd5139f9a4e25912f4a2"
+    sha256 cellar: :any_skip_relocation, catalina:      "431720cc75e0b4203982bb27481cee9d2ed16924a56fcc5b1ba56e834f6c4843"
+    sha256 cellar: :any_skip_relocation, mojave:        "c491410e36acd9723e4c3827e9bbbded66fcb4bb97c383d34dc82c49d2db9d95"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "39045f3531c93e2e41d5a56d0f6a9286a1fb17ef126b07c46e3f5346d21e7b04"
   end
 
-  head do
-    url "https://github.com/nim-lang/Nim.git", :branch => "devel"
-    resource "csources" do
-      url "https://github.com/nim-lang/csources.git"
-    end
-  end
+  depends_on "help2man" => :build
 
   def install
     if build.head?
-      resource("csources").stage do
-        system "/bin/sh", "build.sh"
-        (buildpath/"bin").install "bin/nim"
-      end
+      # this will clone https://github.com/nim-lang/csources_v1
+      # at some hardcoded revision
+      system "/bin/sh", "build_all.sh"
+      # Build a new version of the compiler with readline bindings
+      system "./koch", "boot", "-d:release", "-d:useLinenoise"
     else
       system "/bin/sh", "build.sh"
+      system "bin/nim", "c", "-d:release", "koch"
+      system "./koch", "boot", "-d:release", "-d:useLinenoise"
+      system "./koch", "tools"
     end
-    # Compile the koch management tool
-    system "bin/nim", "c", "-d:release", "koch"
-    # Build a new version of the compiler with readline bindings
-    system "./koch", "boot", "-d:release", "-d:useLinenoise"
-    # Build nimble/nimgrep/nimpretty/nimsuggest
-    system "./koch", "tools"
+
     system "./koch", "geninstall"
     system "/bin/sh", "install.sh", prefix
+
+    system "help2man", "bin/nim", "-o", "nim.1", "-N"
+    man1.install "nim.1"
 
     target = prefix/"nim/bin"
     bin.install_symlink target/"nim"
     tools = %w[nimble nimgrep nimpretty nimsuggest]
     tools.each do |t|
+      system "help2man", buildpath/"bin"/t, "-o", "#{t}.1", "-N"
+      man1.install "#{t}.1"
       target.install buildpath/"bin"/t
       bin.install_symlink target/t
     end

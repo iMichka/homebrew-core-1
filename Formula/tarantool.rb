@@ -1,16 +1,17 @@
 class Tarantool < Formula
   desc "In-memory database and Lua application server"
   homepage "https://tarantool.org/"
-  url "https://download.tarantool.org/tarantool/2.2/src/tarantool-2.2.1.1.tar.gz"
-  sha256 "42c6c61b7d9a2444afd96e4f5e1828da18ea2637d1e9d61dc543436ae48dd87f"
+  url "https://download.tarantool.org/tarantool/2.7/src/tarantool-2.7.2.0.tar.gz"
+  sha256 "9dfbd67d7c46404507a13dfeac4169b53aaa4e4237a6b84e4bbe9435a4a30080"
+  license "BSD-2-Clause"
   revision 1
-  head "https://github.com/tarantool/tarantool.git", :branch => "2.1", :shallow => false
+  version_scheme 1
+  head "https://github.com/tarantool/tarantool.git"
 
   bottle do
-    cellar :any
-    sha256 "37cd09c82cb575c366ceb620d3faa91b0a2892a8bd57b172e56d6f2d4de2a8e1" => :mojave
-    sha256 "4708c57aa9b553f5186fd35ab880971f01d6a36ba77cddbc94b7cd8860b03218" => :high_sierra
-    sha256 "1acbde9f75d34721117bf08960b9975f88f73da9b6865008c9987a7521191ff7" => :sierra
+    sha256 big_sur:  "5e98389b6a0239a8aeea044669945e4d80ec14dd8dfe6c58f4d1ebd91a28b366"
+    sha256 catalina: "61934bd99237595810bf56a9546f99f20531afd38ef498ab9a7a82e4dfb45fad"
+    sha256 mojave:   "b4c338aeeeadebd49bafc500f8e866a32b6a8f89fc288b005b5a691dfe285529"
   end
 
   depends_on "cmake" => :build
@@ -18,11 +19,25 @@ class Tarantool < Formula
   depends_on "openssl@1.1"
   depends_on "readline"
 
+  uses_from_macos "curl"
+  uses_from_macos "ncurses"
+
   def install
-    sdk = MacOS::CLT.installed? ? "" : MacOS.sdk_path
+    if MacOS.version >= :big_sur
+      sdk = MacOS.sdk_path_if_needed
+      lib_suffix = "tbd"
+    else
+      sdk = ""
+      lib_suffix = "dylib"
+    end
 
     # Necessary for luajit to build on macOS Mojave (see luajit formula)
     ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version
+
+    # Avoid keeping references to Homebrew's clang/clang++ shims
+    inreplace "src/trivia/config.h.cmake",
+              "#define COMPILER_INFO \"@CMAKE_C_COMPILER@ @CMAKE_CXX_COMPILER@\"",
+              "#define COMPILER_INFO \"/usr/bin/clang /usr/bin/clang++\""
 
     args = std_cmake_args
     args << "-DCMAKE_INSTALL_MANDIR=#{doc}"
@@ -31,8 +46,13 @@ class Tarantool < Formula
     args << "-DENABLE_DIST=ON"
     args << "-DOPENSSL_ROOT_DIR=#{Formula["openssl@1.1"].opt_prefix}"
     args << "-DREADLINE_ROOT=#{Formula["readline"].opt_prefix}"
+    args << "-DENABLE_BUNDLED_LIBCURL=OFF"
     args << "-DCURL_INCLUDE_DIR=#{sdk}/usr/include"
-    args << "-DCURL_LIBRARY=/usr/lib/libcurl.dylib"
+    args << "-DCURL_LIBRARY=#{sdk}/usr/lib/libcurl.#{lib_suffix}"
+    args << "-DCURSES_NEED_NCURSES=TRUE"
+    args << "-DCURSES_NCURSES_INCLUDE_PATH=#{sdk}/usr/include"
+    args << "-DCURSES_NCURSES_LIBRARY=#{sdk}/usr/lib/libncurses.#{lib_suffix}"
+    args << "-DICONV_INCLUDE_DIR=#{sdk}/usr/include"
 
     system "cmake", ".", *args
     system "make"

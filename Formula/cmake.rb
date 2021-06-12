@@ -1,22 +1,31 @@
 class Cmake < Formula
   desc "Cross-platform make"
-  homepage "https://www.cmake.org/"
-  url "https://github.com/Kitware/CMake/releases/download/v3.16.1/cmake-3.16.1.tar.gz"
-  sha256 "a275b3168fa8626eca4465da7bb159ff07c8c6cb0fb7179be59e12cbdfa725fd"
+  homepage "https://github.com/Kitware/"
+  url "https://github.com/Kitware/CMake/releases/download/v3.20.3/cmake-3.20.3.tar.gz"
+  sha256 "4d008ac3461e271fcfac26a05936f77fc7ab64402156fb371d41284851a651b8"
+  license "BSD-3-Clause"
   head "https://gitlab.kitware.com/cmake/cmake.git"
-  revision 1 unless OS.mac?
+
+  # The "latest" release on GitHub has been an unstable version before, so we
+  # check the Git tags instead.
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "75a5155277f4a99a4bcd12ca56700abc2054e0dbeb9609c033d090f891a906e6" => :catalina
-    sha256 "68e76688af2ffcaa76e59287d7b40ed6970dc57b3268d5886387a77deaf5fcde" => :mojave
-    sha256 "f92bf13e0fe260a833b9b1b8fe19f1025a70f6ed43c1f5c07badd70ceb7106b5" => :high_sierra
-    sha256 "f9b418eda03e2a34fa80d8c1c38b096547016c4a14e1010cbc58e92802d54064" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "64f8e3f962dc5b74a6471b2b5b0b611d70113c917cebc12f2572fe134d168f9a"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e806457c3ff9a57e939ee86cbb2616c968a2b000cb0f320dc9de67d699b86041"
+    sha256 cellar: :any_skip_relocation, catalina:      "646e7799e343ca9e16c26b618be048ab5b818705ceb60bf2a4267e22bd7435b7"
+    sha256 cellar: :any_skip_relocation, mojave:        "963722b43200f18bf94d34c786d6de06ee94190b4704bf5d95fac6dd49fd9221"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "05a653203c58155d8fe51bb1684dc42b2d89129cc2eda04fdbc321d620286ef6"
   end
 
   depends_on "sphinx-doc" => :build
-  unless OS.mac?
-    depends_on "ncurses"
+
+  uses_from_macos "ncurses"
+
+  on_linux do
     depends_on "openssl@1.1"
   end
 
@@ -24,10 +33,12 @@ class Cmake < Formula
 
   # The `with-qt` GUI option was removed due to circular dependencies if
   # CMake is built with Qt support and Qt is built with MySQL support as MySQL uses CMake.
-  # For the GUI application please instead use `brew cask install cmake`.
+  # For the GUI application please instead use `brew install --cask cmake`.
 
   def install
-    ENV.cxx11 unless OS.mac?
+    on_linux do
+      ENV.cxx11
+    end
 
     args = %W[
       --prefix=#{prefix}
@@ -39,21 +50,19 @@ class Cmake < Formula
       --sphinx-build=#{Formula["sphinx-doc"].opt_bin}/sphinx-build
       --sphinx-html
       --sphinx-man
-      --system-zlib
-      --system-bzip2
-      --system-curl
     ]
-    args -= ["--system-zlib", "--system-bzip2", "--system-curl"] unless OS.mac?
+    on_macos do
+      args += %w[
+        --system-zlib
+        --system-bzip2
+        --system-curl
+      ]
+    end
 
-    # There is an existing issue around macOS & Python locale setting
-    # See https://bugs.python.org/issue18378#msg215215 for explanation
-    ENV["LC_ALL"] = "en_US.UTF-8"
-
-    system "./bootstrap", *args, "--", "-DCMAKE_BUILD_TYPE=Release"
+    system "./bootstrap", *args, "--", *std_cmake_args,
+                                       "-DCMake_INSTALL_EMACS_DIR=#{elisp}"
     system "make"
     system "make", "install"
-
-    elisp.install "Auxiliary/cmake-mode.el"
   end
 
   test do

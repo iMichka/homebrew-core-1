@@ -1,21 +1,33 @@
 class RxvtUnicode < Formula
   desc "Rxvt fork with Unicode support"
   homepage "http://software.schmorp.de/pkg/rxvt-unicode.html"
-  url "http://dist.schmorp.de/rxvt-unicode/rxvt-unicode-9.22.tar.bz2"
-  sha256 "e94628e9bcfa0adb1115d83649f898d6edb4baced44f5d5b769c2eeb8b95addd"
-  revision 3
+  url "http://dist.schmorp.de/rxvt-unicode/rxvt-unicode-9.26.tar.bz2"
+  sha256 "643116b9a25d29ad29f4890131796d42e6d2d21312282a613ef66c80c5b8c98b"
+  license "GPL-3.0-only"
+
+  livecheck do
+    url "http://dist.schmorp.de/rxvt-unicode/"
+    regex(/href=.*?rxvt-unicode[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "d17b7410c97c5f95f1abbf7de7e49249995b23303696b8f7a2eed7c0924fe818" => :catalina
-    sha256 "126bda5982eb1d785cdaf84ab108024d85c3904cc3039514f13e12ebb80652a9" => :mojave
-    sha256 "01a97a5842a1507ae1e9c99d973811e300d0aac95b3fb744e8181918b6ac11eb" => :high_sierra
-    sha256 "2946f3abe2481ad6e4f52be7a9e51259bcd0846f38602e74384343946479eb4a" => :sierra
-    sha256 "5d6060cc30061763809d7255b8654309be0a709fccdcda1b799f0fac16fd085d" => :el_capitan
-    sha256 "9b674dd3738ab25fa6145680f92ca036df470ced089448abcb6647439320e075" => :yosemite
+    sha256 arm64_big_sur: "2ad5cfb39d86aff0d7f3b785aee5058ce2b0bf113b13b24f963c1b8d60679ff3"
+    sha256 big_sur:       "5e3a94dc348d57ada5dcb55eafee51b1ffa8bf78e10a8a2b0af9ac56b2d2ff02"
+    sha256 catalina:      "b97c65d257344a16accd34497c77ec3638674c7c596b7f05c190d606975de9af"
+    sha256 mojave:        "ecec482ad2b840b1cdb3945a42bcc31656d61a83ae3d08af2d2dafb1a4002d9d"
+    sha256 x86_64_linux:  "e2972b3820386c6672c377b63f665495261957667aaa580ea5a26597f43a44fd"
   end
 
   depends_on "pkg-config" => :build
-  depends_on :x11
+  depends_on "fontconfig"
+  depends_on "freetype"
+  depends_on "libx11"
+  depends_on "libxft"
+  depends_on "libxmu"
+  depends_on "libxrender"
+  depends_on "libxt"
+
+  uses_from_macos "perl"
 
   # Patches 1 and 2 remove -arch flags for compiling perl support
   # Patch 3 fixes `make install` target on case-insensitive filesystems

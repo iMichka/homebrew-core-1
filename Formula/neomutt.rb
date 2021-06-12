@@ -1,14 +1,17 @@
 class Neomutt < Formula
   desc "E-mail reader with support for Notmuch, NNTP and much more"
   homepage "https://neomutt.org/"
-  url "https://github.com/neomutt/neomutt/archive/20191207.tar.gz"
-  sha256 "1618873bd43915d437c5957f19ec2c4ecef6954a5aa647009b98f574ec63410e"
+  url "https://github.com/neomutt/neomutt/archive/20210205.tar.gz"
+  sha256 "77e177780fc2d8abb475d9cac4342c7e61d53c243f6ce2f9bc86d819fc962cdb"
+  license "GPL-2.0-or-later"
+  revision 1
   head "https://github.com/neomutt/neomutt.git"
 
   bottle do
-    sha256 "7ed9b6666e46a059d9d92fcc52437bf870ce901e4771ca94b231a09abc4011f0" => :catalina
-    sha256 "80ae35db309e042e9673e6ca57667672a8e5ec887d7fe1476c698179c5da8a22" => :mojave
-    sha256 "6938e79bb2a74799c87bc30b3b84f223ce6134df07b796f49eea374a333b4504" => :high_sierra
+    sha256 arm64_big_sur: "54f1a6052e8e08f98680c8daad63835220a228db45e9009d67b99c3476f7f19c"
+    sha256 big_sur:       "197b3a28aab58386b0b63b3228f55abf9627556cf442a2f780702f56baa9361c"
+    sha256 catalina:      "42e30c8b2f846f0e99864dad93adf4e7b697b1364263bc71cd60b32f023efaac"
+    sha256 mojave:        "8677ab0e377d6bc4526b8d93d71629f84b52e14b4cdb4620753eef5cac0bc6cd"
   end
 
   depends_on "docbook-xsl" => :build
@@ -16,13 +19,12 @@ class Neomutt < Formula
   depends_on "gpgme"
   depends_on "libidn"
   depends_on "lmdb"
+  depends_on "lua"
   depends_on "notmuch"
   depends_on "openssl@1.1"
   depends_on "tokyo-cabinet"
-  unless OS.mac?
-    depends_on "krb5"
-    depends_on "libsasl2"
-  end
+
+  uses_from_macos "zlib"
 
   def install
     ENV["XML_CATALOG_FILES"] = "#{etc}/xml/catalog"
@@ -35,7 +37,9 @@ class Neomutt < Formula
                           "--sasl",
                           "--tokyocabinet",
                           "--with-ssl=#{Formula["openssl@1.1"].opt_prefix}",
-                          "--with-ui=ncurses"
+                          "--with-ui=ncurses",
+                          "--lua",
+                          "--with-lua=#{Formula["lua"].prefix}"
     system "make", "install"
   end
 

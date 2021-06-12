@@ -1,32 +1,70 @@
 class X264 < Formula
   desc "H.264/AVC encoder"
   homepage "https://www.videolan.org/developers/x264.html"
-  revision 1
-  head "https://git.videolan.org/git/x264.git"
+  license "GPL-2.0-only"
+  head "https://code.videolan.org/videolan/x264.git"
 
   stable do
     # the latest commit on the stable branch
-    url "https://git.videolan.org/git/x264.git",
-        :revision => "0a84d986e7020f8344f00752e3600b9769cc1e85"
-    version "r2917"
+    url "https://code.videolan.org/videolan/x264.git",
+        revision: "55d517bc4569272a2c9a367a4106c234aba2ffbc"
+    version "r3049"
+  end
+
+  # Cross-check the abbreviated commit hashes from the release filenames with
+  # the latest commits in the `stable` Git branch:
+  # https://code.videolan.org/videolan/x264/-/commits/stable
+  livecheck do
+    url "https://artifacts.videolan.org/x264/release-macos/"
+    regex(%r{href=.*?x264[._-](r\d+)[._-]([\da-z]+)/?["' >]}i)
+    strategy :page_match do |page, regex|
+      # Match the version and abbreviated commit hash in filenames
+      matches = page.scan(regex)
+
+      # Fetch the `stable` Git branch Atom feed
+      stable_page_data = Homebrew::Livecheck::Strategy.page_content("https://code.videolan.org/videolan/x264/-/commits/stable?format=atom")
+      return [] if stable_page_data[:content] && stable_page_data[:content].empty?
+
+      # Extract commit hashes from the feed content
+      commit_hashes = stable_page_data[:content].scan(%r{/commit/([\da-z]+)}i).flatten
+      return [] if commit_hashes.empty?
+
+      # Only keep versions with a matching commit hash in the `stable` branch
+      matches.map do |match|
+        next nil unless match.length >= 2
+
+        release_hash = match[1]
+        commit_in_stable = false
+        commit_hashes.each do |commit_hash|
+          next unless commit_hash.start_with?(release_hash)
+
+          commit_in_stable = true
+          break
+        end
+
+        commit_in_stable ? match[0] : nil
+      end.compact
+    end
   end
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "9e49fa8cc8e0bd02bdb85f8b2def682a8c6aab5d3f7bfe6bb51e2e78da1b2eb9" => :catalina
-    sha256 "07d6a4de866c38296a3cb788c3370857bd745e88cd7e1723fc0261c4e44a1081" => :mojave
-    sha256 "80b6d49faed147546c8639bdc09143968587d7fed7c45dcd9c4e0f56cdb932ff" => :high_sierra
-    sha256 "749ed57861f80c753f35380898e4d82a67de5471254a0a18a30752d22a1d9917" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "277e4c3771be77c6cc8629194b1af90144e118a70f30f9b388ed8fcc3b0bad3e"
+    sha256 cellar: :any,                 big_sur:       "6d74cd3f80239d92ce03b3ebccd7fdd3033552ed5ac637214d2c7e13e2aac7cd"
+    sha256 cellar: :any,                 catalina:      "e27bf38f83a8b23d3c73d85f3ccb0b5397dbb540a39b40634200c3077b0895f0"
+    sha256 cellar: :any,                 mojave:        "ecb12ab474f372bb0c0c137d4623f31f6daa70011489631f507b914ed38296d3"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "a5cd09a96f65ad98cbb501bc489a21e680461877e00e876b568f2194818f2acb"
   end
 
   depends_on "nasm" => :build
 
-  def install
-    # Work around Xcode 11 clang bug
-    # https://bitbucket.org/multicoreware/x265/issues/514/wrong-code-generated-on-macos-1015
-    ENV.append_to_cflags "-fno-stack-check" if DevelopmentTools.clang_build_version >= 1010
+  if MacOS.version <= :high_sierra
+    # Stack realignment requires newer Clang
+    # https://code.videolan.org/videolan/x264/-/commit/b5bc5d69c580429ff716bafcd43655e855c31b02
+    depends_on "gcc"
+    fails_with :clang
+  end
 
+  def install
     args = %W[
       --prefix=#{prefix}
       --disable-lsmash
@@ -42,6 +80,7 @@ class X264 < Formula
   end
 
   test do
+    assert_match version.to_s.delete("r"), shell_output("#{bin}/x264 --version").lines.first
     (testpath/"test.c").write <<~EOS
       #include <stdint.h>
       #include <x264.h>
@@ -55,7 +94,7 @@ class X264 < Formula
           return 0;
       }
     EOS
-    system ENV.cc, "-L{lib}", "test.c", "-lx264", "-o", "test"
+    system ENV.cc, "-L#{lib}", "test.c", "-lx264", "-o", "test"
     system "./test"
   end
 end

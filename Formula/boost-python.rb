@@ -1,21 +1,15 @@
 class BoostPython < Formula
   desc "C++ library for C++/Python2 interoperability"
   homepage "https://www.boost.org/"
-  url "https://dl.bintray.com/boostorg/release/1.71.0/source/boost_1_71_0.tar.bz2"
-  sha256 "d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee"
-  revision 1
+  url "https://downloads.sourceforge.net/project/boost/boost/1.74.0/boost_1_74_0.tar.bz2"
+  sha256 "83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1"
+  license "BSL-1.0"
   head "https://github.com/boostorg/boost.git"
 
-  bottle do
-    cellar :any
-    sha256 "b24f1fe5df7656855e939a546c4232849ecb766a5e18a717e46d05a5c2de23a7" => :catalina
-    sha256 "59e9bbab32ea0f35503e2add7d99873c53cc406331b7e488e39d84f1270b8bc2" => :mojave
-    sha256 "c158a1f9bf5fbd14c726f3b6e7440353d2aeab11876e095969e9d429ecc844a2" => :high_sierra
-    sha256 "191dcdc42328387d3ec9a26893ac7061f81c7806e70fd2b6e7d2037996560f70" => :x86_64_linux
-  end
+  disable! date: "2021-04-08", because: :does_not_build
 
   depends_on "boost"
-  uses_from_macos "python@2"
+  depends_on :macos # Due to Python 2
 
   def install
     # "layout" should be synchronized with boost
@@ -31,9 +25,7 @@ class BoostPython < Formula
     # Boost is using "clang++ -x c" to select C compiler which breaks C++14
     # handling using ENV.cxx14. Using "cxxflags" and "linkflags" still works.
     args << "cxxflags=-std=c++14"
-    if ENV.compiler == :clang
-      args << "cxxflags=-stdlib=libc++" << "linkflags=-stdlib=libc++"
-    end
+    args << "cxxflags=-stdlib=libc++" << "linkflags=-stdlib=libc++" if ENV.compiler == :clang
 
     pyver = Language::Python.major_minor_version "python"
 
@@ -52,12 +44,13 @@ class BoostPython < Formula
     doc.install Dir["libs/python/doc/*"]
   end
 
-  def caveats; <<~EOS
-    This formula provides Boost.Python for Python 2. Due to a
-    collision with boost-python3, the CMake Config files are not
-    available. Please use -DBoost_NO_BOOST_CMAKE=ON when building
-    with CMake or switch to Python 3.
-  EOS
+  def caveats
+    <<~EOS
+      This formula provides Boost.Python for Python 2. Due to a
+      collision with boost-python3, the CMake Config files are not
+      available. Please use -DBoost_NO_BOOST_CMAKE=ON when building
+      with CMake or switch to Python 3.
+    EOS
   end
 
   test do
@@ -73,12 +66,11 @@ class BoostPython < Formula
     EOS
 
     pyprefix = `python-config --prefix`.chomp
-    pyincludes = Utils.popen_read("python-config --includes").chomp.split(" ")
-    pylib = Utils.popen_read("python-config --ldflags").chomp.split(" ")
+    pyincludes = Utils.popen_read("python-config", "--includes").chomp.split
+    pylib = Utils.popen_read("python-config", "--ldflags").chomp.split
 
     system ENV.cxx, "-shared", "hello.cpp", "-L#{lib}", "-lboost_python27",
                     "-o", "hello.so", "-I#{pyprefix}/include/python2.7",
-                    ("-fPIC" unless OS.mac?),
                     *pyincludes, *pylib
 
     output = <<~EOS

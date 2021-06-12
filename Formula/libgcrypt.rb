@@ -1,29 +1,27 @@
 class Libgcrypt < Formula
   desc "Cryptographic library based on the code from GnuPG"
   homepage "https://gnupg.org/related_software/libgcrypt/"
-  url "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.5.tar.bz2"
-  sha256 "3b4a2a94cb637eff5bdebbcaf46f4d95c4f25206f459809339cdada0eb577ac3"
+  url "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.9.3.tar.bz2"
+  sha256 "97ebe4f94e2f7e35b752194ce15a0f3c66324e0ff6af26659bbfb5ff2ec328fd"
+  license "GPL-2.0-only"
+
+  livecheck do
+    url "https://gnupg.org/ftp/gcrypt/libgcrypt/"
+    regex(/href=.*?libgcrypt[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "7e81e6735f8eb849e26ae30a01ca6aa42c32ab53cace7a2a1867d7148abbb5fd" => :catalina
-    sha256 "d983dca1f56d0177d4ecd6ea2752457caaa5e21cdbe147e354ba1debb1ed34dd" => :mojave
-    sha256 "2188074c35a5a552ce5adad2ebd36a376bbd7309907c96fdbec2dff13c7d1863" => :high_sierra
-    sha256 "3e074f8bd2787fc5878ea8bfc31e50e596222c019054d83465b74e93328f71f3" => :sierra
-    sha256 "ab82419c7e9e9d05af9f21fff0bb22258d0a75cc464d8ab6ae9e638b89111cad" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "6ff63025955ee85e6ff10b955f32b1c583439860ad72da5d88acc60b1c9ecc73"
+    sha256 cellar: :any,                 big_sur:       "1848ca1e79f8c4315ba761eb4ad1022d237d6701d47a207130b09093d99f24ef"
+    sha256 cellar: :any,                 catalina:      "91ec702c7907c1ddd20998ff35299a63ac6108cb4f9a76df1c368a4c49da4a90"
+    sha256 cellar: :any,                 mojave:        "6a8fa532b2c12d89f2becc1a84e9b5d07fef25a080a607f2d7b341eea5e6081b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "b0efd84f7dd4cc83c016a6c1f21c3d840265e3b545d7248e3e2936b27e33d1d5"
   end
 
   depends_on "libgpg-error"
-  uses_from_macos "libxslt"
 
   def install
-    # Temporary hack to get libgcrypt building on macOS 10.12 and 10.11 with XCode 8.
-    # Seems to be a Clang issue rather than an upstream one, so
-    # keep checking whether or not this is necessary.
-    # Should be reported to GnuPG if still an issue when near stable.
-    # https://github.com/Homebrew/homebrew-core/issues/1957
-    ENV.O1 if DevelopmentTools.clang_build_version == 800
-
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--enable-static",
@@ -34,14 +32,8 @@ class Libgcrypt < Formula
 
     # Parallel builds work, but only when run as separate steps
     system "make"
-    # Slightly hideous hack to help `make check` work in
-    # normal place on >10.10 where SIP is enabled.
-    # https://github.com/Homebrew/homebrew-core/pull/3004
-    # https://bugs.gnupg.org/gnupg/issue2056
-    if OS.mac?
-      MachO::Tools.change_install_name("#{buildpath}/tests/.libs/random",
-                                       "#{lib}/libgcrypt.20.dylib",
-                                       "#{buildpath}/src/.libs/libgcrypt.20.dylib")
+    on_macos do
+      MachO.codesign!("#{buildpath}/tests/.libs/random") if Hardware::CPU.arm?
     end
 
     system "make", "check"

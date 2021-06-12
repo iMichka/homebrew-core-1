@@ -3,31 +3,34 @@ class Awscli < Formula
 
   desc "Official Amazon AWS command-line interface"
   homepage "https://aws.amazon.com/cli/"
-  # awscli should only be updated every 10 releases on multiples of 10
-  url "https://github.com/aws/aws-cli/archive/1.16.300.tar.gz"
-  sha256 "c6a24a744677be6b5eafe5245a6efc5b9aae4aa1c47df4889debe8208a7d61f0"
-  head "https://github.com/aws/aws-cli.git", :branch => "develop"
+  url "https://github.com/aws/aws-cli/archive/2.2.11.tar.gz"
+  sha256 "90ff39ab91f86f4d159d1ef7bfad89053524eb9a8f753e7bfa87b473d21bad37"
+  license "Apache-2.0"
+  head "https://github.com/aws/aws-cli.git", branch: "v2"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1bdb37360ead0f8dd3a9d4982cf4cf95a9f9bee6faf161a91ef3ec1d0496b342" => :catalina
-    sha256 "c5f6c1522d49507173fd2d7c883e9fb828438ef04f1cd837d5decd12bd0592ac" => :mojave
-    sha256 "96a315b11b9e3c4acdf5d5a74be281e9d66a6262bbb51b5c8d6b06741375ce7e" => :high_sierra
-    sha256 "3670f1fcb13da44a238bb885179c9bad4cc81b47db9cdde17128cb62f52baf50" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "8afff866a3c8feb3453e778efa54406c77c1d68f665bbb1b312825f8ecc2f365"
+    sha256               big_sur:       "4f6ff0a7d696a2cc743c8949bebf74661a08e005b5078153f77721d49536fb77"
+    sha256               catalina:      "bffde0a0ca87a13ffcd8e0d6c717493ec323d2c439a7172ff4b924579727ee17"
+    sha256               mojave:        "90c0e2190b0d238b8b1dc4432fd665acedebefd3da76844a2ab44589ee6aee30"
   end
 
-  # Some AWS APIs require TLS1.2, which system Python doesn't have before High
-  # Sierra
-  depends_on "python"
+  depends_on "cmake" => :build
+  depends_on "python@3.9"
 
-  uses_from_macos "libyaml"
+  uses_from_macos "groff"
+
+  on_linux do
+    depends_on "libyaml"
+  end
 
   def install
     venv = virtualenv_create(libexec, "python3")
-    system libexec/"bin/pip", "install", "-v", "--no-binary", ":all:",
+    system libexec/"bin/pip", "install", "-v", "-r", "requirements.txt",
                               "--ignore-installed", buildpath
     system libexec/"bin/pip", "uninstall", "-y", "awscli"
     venv.pip_install_and_link buildpath
+    system libexec/"bin/pip", "uninstall", "-y", "pyinstaller"
     pkgshare.install "awscli/examples"
 
     rm Dir["#{bin}/{aws.cmd,aws_bash_completer,aws_zsh_completer.sh}"]
@@ -41,21 +44,20 @@ class Awscli < Formula
         if [[ -f $e ]]; then source $e; fi
       }
     EOS
+
+    system libexec/"bin/python3", "scripts/gen-ac-index", "--include-builtin-index"
   end
 
-  def caveats; <<~EOS
-    The "examples" directory has been installed to:
-      #{HOMEBREW_PREFIX}/share/awscli/examples
-  EOS
+  def caveats
+    <<~EOS
+      The "examples" directory has been installed to:
+        #{HOMEBREW_PREFIX}/share/awscli/examples
+    EOS
   end
 
   test do
-    if OS.mac?
-      assert_match "topics", shell_output("#{bin}/aws help")
-    else
-      # aws-cli needs groff as dependency, which we do not want to install
-      # just to display the help.
-      system "#{bin}/aws", "--version"
-    end
+    assert_match "topics", shell_output("#{bin}/aws help")
+    assert_includes Dir["#{libexec}/lib/python3.9/site-packages/awscli/data/*"],
+                    "#{libexec}/lib/python3.9/site-packages/awscli/data/ac.index"
   end
 end

@@ -1,40 +1,41 @@
 class Bitcoin < Formula
   desc "Decentralized, peer to peer payment network"
   homepage "https://bitcoin.org/"
-  url "https://bitcoin.org/bin/bitcoin-core-0.19.0.1/bitcoin-0.19.0.1.tar.gz"
-  sha256 "7ac9f972249a0a16ed01352ca2a199a5448fe87a4ea74923404a40b4086de284"
+  url "https://bitcoin.org/bin/bitcoin-core-0.21.1/bitcoin-0.21.1.tar.gz"
+  sha256 "caff23449220cf45753f312cefede53a9eac64000bb300797916526236b6a1e0"
+  license "MIT"
+  head "https://github.com/bitcoin/bitcoin.git"
+
+  livecheck do
+    url "https://bitcoin.org/en/download"
+    regex(/latest version.*?v?(\d+(?:\.\d+)+)/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "8234b114c86d6a439cc345a5f9c210109577a935193d713005e6a3f150492fb7" => :catalina
-    sha256 "9e0c7ffed8c7b2356f57cfa87c35f918f6d6d62f8c786f82390404bee42a14d9" => :mojave
-    sha256 "82fcf61607136da004c9b26d0eb7b7ffeb2cc5d39750c6899cfe2eaacad83ccf" => :high_sierra
-    sha256 "f6bbacb9634f840be9e5e1bcee833b96f4228154a3a507454debd4dcb0845b07" => :x86_64_linux
+    sha256 cellar: :any,                 big_sur:      "c0fc6169ebc38c3ac88562ee05f4e47f8496b4fd132e1f0c2e5f58388b3cbda3"
+    sha256 cellar: :any,                 catalina:     "cece0dd423980991501b1ab1a8d11ea1056df766ccd30dbb1ee09c1e1444a92d"
+    sha256 cellar: :any,                 mojave:       "0ee27408b8cc28d13cb707c376287716369c6ca59d2215f0effb0a8813f3e647"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "68310555c4370001b492f46b55121bf15bff2a0428092e0dff4602796ff15750"
   end
 
-  head do
-    url "https://github.com/bitcoin/bitcoin.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-  end
-
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
   depends_on "pkg-config" => :build
   depends_on "berkeley-db@4"
   depends_on "boost"
   depends_on "libevent"
   depends_on "miniupnpc"
-  depends_on "openssl@1.1"
-  depends_on "bsdmainutils" => :build unless OS.mac? # `hexdump` from bsdmainutils required to compile tests
   depends_on "zeromq"
 
-  def install
-    if MacOS.version == :el_capitan && MacOS::Xcode.version >= "8.0"
-      ENV.delete("SDKROOT")
-    end
+  on_linux do
+    depends_on "util-linux" => :build # for `hexdump`
+  end
 
-    system "./autogen.sh" if build.head?
+  def install
+    ENV.delete("SDKROOT") if MacOS.version == :el_capitan && MacOS::Xcode.version >= "8.0"
+
+    system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--with-boost-libdir=#{Formula["boost"].opt_lib}",
@@ -43,24 +44,8 @@ class Bitcoin < Formula
     pkgshare.install "share/rpcauth"
   end
 
-  plist_options :manual => "bitcoind"
-
-  def plist; <<~EOS
-    <?xml version="1.0" encoding="UTF-8"?>
-    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-    <plist version="1.0">
-    <dict>
-      <key>Label</key>
-      <string>#{plist_name}</string>
-      <key>ProgramArguments</key>
-      <array>
-        <string>#{opt_bin}/bitcoind</string>
-      </array>
-      <key>RunAtLoad</key>
-      <true/>
-    </dict>
-    </plist>
-  EOS
+  service do
+    run opt_bin/"bitcoind"
   end
 
   test do

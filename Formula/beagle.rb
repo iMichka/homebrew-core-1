@@ -3,20 +3,27 @@ class Beagle < Formula
   homepage "https://github.com/beagle-dev/beagle-lib"
   url "https://github.com/beagle-dev/beagle-lib/archive/v3.1.2.tar.gz"
   sha256 "dd872b484a3a9f0bce369465e60ccf4e4c0cd7bd5ce41499415366019f236275"
+  license "LGPL-3.0"
+  revision 1
+
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "032c922981ee1707934cceb53318a26dab4a0ca6c392db63115f626a9f56b412" => :mojave
-    sha256 "d7834048b8aabdedcc824daf474cefe0436fdd8515da4df3f6c52a87d01395ef" => :high_sierra
-    sha256 "87e49bf8faeff280ba1211a7c0a0b1626750652b0498eef2ff01dfcff4290056" => :sierra
-    sha256 "c9293709ca982b3b4e93eefc8d6abe39f025c95f7c48bada1e71a311a886fa2c" => :x86_64_linux
+    sha256 cellar: :any, big_sur:      "1ad3ce2956827daace31c7d2606c8149afdcf305f8e3688c8cfe5b0da429d3ad"
+    sha256 cellar: :any, catalina:     "de8fe667e01d1e204c669980753cf9ef84b4d2406ab52c0882d6d9108d2dc7eb"
+    sha256 cellar: :any, mojave:       "fe9ae7aaa01df98d34b5cbd7dce8abd9ac840f2bb54797851b42a056ee258e01"
+    sha256 cellar: :any, high_sierra:  "d2a42acc06fa4bf26c25b4d63a96c0d6bf46f7b1a21bacf91ef70fbff58e77b4"
+    sha256 cellar: :any, x86_64_linux: "63900f8765697b102f54bd6065c79eaaaec3a9ab861bdf617f6c3225a1cd55fc"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "doxygen" => :build
-  depends_on :java => [:build, :test]
   depends_on "libtool" => :build
+  depends_on "openjdk" => [:build, :test]
 
   def install
     system "./autogen.sh"
@@ -42,7 +49,7 @@ class Beagle < Formula
     system ENV.cxx, "-I#{include}/libhmsbeagle-1",
            testpath/"test.cpp", "-o", "test"
     system "./test"
-    system "javac", "T.java"
-    system "java", "-Djava.library.path=#{lib}", "T"
+    system "#{Formula["openjdk"].bin}/javac", "T.java"
+    system "#{Formula["openjdk"].bin}/java", "-Djava.library.path=#{lib}", "T"
   end
 end

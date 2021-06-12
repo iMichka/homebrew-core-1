@@ -1,15 +1,22 @@
 class Libmaa < Formula
   desc "Low-level data structures including hash tables, sets, lists"
   homepage "http://www.dict.org/"
-  url "https://downloads.sourceforge.net/project/dict/libmaa/libmaa-1.4.4/libmaa-1.4.4.tar.gz"
-  sha256 "fbd739e8467c4b7213594b172cfe3059443127313f8365224aa9c269498869e2"
+  url "https://downloads.sourceforge.net/project/dict/libmaa/libmaa-1.4.7/libmaa-1.4.7.tar.gz"
+  sha256 "4e01a9ebc5d96bc9284b6706aa82bddc2a11047fa9bd02e94cf8753ec7dcb98e"
+  license "MIT"
+  head "https://github.com/cheusov/libmaa.git"
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/libmaa[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "a56c7ab86ee8c313db35d4e79afae1b3692861342d38285131df70b45c6de7bb" => :mojave
-    sha256 "38ce8dcaa6938bc3395b1d77a6024b72ddea32f1cbeea4cb5f3cfabc432149ee" => :high_sierra
-    sha256 "c224bcb3cbf442e4f6f01bae2ec3487877b81af0e93b6bb8cb16ad2f6012a1b6" => :sierra
-    sha256 "a9e52b9b7a3f429f72197c6e3a90aa998342343af2d96d86ff5a6bd37c1ea539" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any, arm64_big_sur: "39eb7101638dba1cd91aad7b7f33c281cb8b9709ed0bf3709b61a2315cf9f786"
+    sha256 cellar: :any, big_sur:       "65222587a532a2412f342564d09e0dc134c84501803c75b450fa591f1c6fc029"
+    sha256 cellar: :any, catalina:      "b8d4137855afaa273b7decbfaf8e49657e83a0ec647b97592d803f816038a5bd"
+    sha256 cellar: :any, mojave:        "1ec304723997a8aabf2848900aa5293c560abbebfe2bc293eb40ace2176c148e"
   end
 
   depends_on "bmake" => :build
@@ -48,6 +55,7 @@ class Libmaa < Formula
        */
 
       #include <maa.h>
+      #include <stdlib.h>
 
       int main( int argc, char **argv )
       {

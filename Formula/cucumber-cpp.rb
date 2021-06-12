@@ -3,19 +3,19 @@ class CucumberCpp < Formula
   homepage "https://cucumber.io"
   url "https://github.com/cucumber/cucumber-cpp/archive/v0.5.tar.gz"
   sha256 "9e1b5546187290b265e43f47f67d4ce7bf817ae86ee2bc5fb338115b533f8438"
-  revision 4
+  license "MIT"
+  revision 9
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "bdb03c9be8588d3f06468697f160a7f79deba63bdc8557e57904c4d73064678f" => :catalina
-    sha256 "1aa6806faca85d2b63ce287fe4e5f2d61653b845bb1bae9761646464a4d8220e" => :mojave
-    sha256 "1d0058ed4d37fdf0ae44ab2205e202b603edd295c9d20b32d3c253d816300d29" => :high_sierra
-    sha256 "2b814fa6e547f4ade5a867b4ba935a87afc08cc28366b3dd5a6d087629195d04" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "15ddb1214407ec67e52c157bee09c87582e6b990da1d887ea9209d9fb84f15cb"
+    sha256 cellar: :any_skip_relocation, big_sur:       "d4190f94dc9bf646da7651b40e74f169665d8d24e5b9eefa21b8665f4df00317"
+    sha256 cellar: :any_skip_relocation, catalina:      "e6ae6448b0ba7195587da376f2ed1385112601c40b8dbcc3fc4bbd9dcafe7576"
+    sha256 cellar: :any_skip_relocation, mojave:        "2590c06bdaf51baa254dc3982d853e7d0fb247fd13182db1a8f4ba1f7c07f4db"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "8f5fb64963eb741e323475d8720c3ae0ebd98e932b5a82371277e0e82a05c4e3"
   end
 
   depends_on "cmake" => :build
-  depends_on "ruby" => :test if MacOS.version <= :sierra
+  depends_on "ruby" => :test
   depends_on "boost"
 
   def install
@@ -24,6 +24,7 @@ class CucumberCpp < Formula
       -DCUKE_DISABLE_CPPSPEC=on
       -DCUKE_DISABLE_FUNCTIONAL=on
       -DCUKE_DISABLE_BOOST_TEST=on
+      -DCMAKE_CXX_STANDARD=11
     ]
 
     system "cmake", ".", *args
@@ -32,16 +33,12 @@ class CucumberCpp < Formula
   end
 
   test do
+    boost = Formula["boost"]
+    ENV.prepend_path "PATH", Formula["ruby"].opt_bin
     ENV["GEM_HOME"] = testpath
     ENV["BUNDLE_PATH"] = testpath
-    if MacOS.version >= :mojave && MacOS::CLT.installed?
-      ENV.delete("CPATH")
-      ENV["SDKROOT"] = MacOS::CLT.sdk_path(MacOS.version)
-    elsif MacOS.version == :high_sierra
-      ENV.delete("CPATH")
-      ENV.delete("SDKROOT")
-    end
-    system "gem", "install", "cucumber", "-v", "3.0.0"
+
+    system "gem", "install", "cucumber", "-v", "5.2.0"
 
     (testpath/"features/test.feature").write <<~EOS
       Feature: Test
@@ -64,10 +61,10 @@ class CucumberCpp < Formula
       }
     EOS
     system ENV.cxx, "test.cpp", "-o", "test", "-I#{include}", "-L#{lib}",
-           "-lcucumber-cpp", "-I#{Formula["boost"].opt_include}",
-           "-L#{Formula["boost"].opt_lib}", "-lboost_regex", "-lboost_system",
+           "-lcucumber-cpp", "-I#{boost.opt_include}",
+           "-L#{boost.opt_lib}", "-lboost_regex", "-lboost_system",
            "-lboost_program_options", "-lboost_filesystem", "-lboost_chrono",
-           *("-pthread" unless OS.mac?)
+           "-pthread"
     begin
       pid = fork { exec "./test" }
       expected = <<~EOS
@@ -81,7 +78,7 @@ class CucumberCpp < Formula
         1 scenario \(1 passed\)
         3 steps \(3 passed\)
       EOS
-      assert_match expected, shell_output(testpath/"bin/cucumber")
+      assert_match expected, shell_output("#{testpath}/bin/cucumber --publish-quiet")
     ensure
       Process.kill("SIGINT", pid)
       Process.wait(pid)

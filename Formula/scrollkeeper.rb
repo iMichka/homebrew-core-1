@@ -6,23 +6,28 @@ class Scrollkeeper < Formula
   revision 2
 
   bottle do
-    sha256 "9bd348638b9e3492db3549c7ac0756975ca2c57303ec58685bb3e6694fff1dd1" => :catalina
-    sha256 "0d7cbee6e25a46848d7c387ba07c4ee110ae2256953d2e5addd26f68e21c645d" => :mojave
-    sha256 "efa4637b9d1b3942192dca6fb4602ef72ec6b285ba424c087d290c8feb5e2c5b" => :high_sierra
-    sha256 "1a3a135d005b278f52c8586e2c79ea7fc02faa8ccd4100dbb66ebaf32bb14581" => :x86_64_linux
+    sha256 arm64_big_sur: "88e96878a9f7cef658edaf418c55f7c9e6904aead82bd3102384cbdfb342a400"
+    sha256 big_sur:       "0cdfc1e87fe8d2281867eb923dfce700906894f6593a763fe79f4afc936f2ad2"
+    sha256 catalina:      "9bd348638b9e3492db3549c7ac0756975ca2c57303ec58685bb3e6694fff1dd1"
+    sha256 mojave:        "0d7cbee6e25a46848d7c387ba07c4ee110ae2256953d2e5addd26f68e21c645d"
+    sha256 high_sierra:   "efa4637b9d1b3942192dca6fb4602ef72ec6b285ba424c087d290c8feb5e2c5b"
+    sha256 x86_64_linux:  "1a3a135d005b278f52c8586e2c79ea7fc02faa8ccd4100dbb66ebaf32bb14581"
   end
 
   depends_on "docbook"
   depends_on "gettext"
+
   uses_from_macos "libxslt"
-  depends_on "perl" unless OS.mac?
+  uses_from_macos "perl"
 
   conflicts_with "rarian",
-    :because => "scrollkeeper and rarian install the same binaries."
+    because: "scrollkeeper and rarian install the same binaries"
 
-  resource "XML::Parser" do
-    url "https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.44.tar.gz"
-    sha256 "1ae9d07ee9c35326b3d9aad56eae71a6730a73a116b9fe9e8a4758b7cc033216"
+  unless OS.mac?
+    resource "XML::Parser" do
+      url "https://cpan.metacpan.org/authors/id/T/TO/TODDR/XML-Parser-2.44.tar.gz"
+      sha256 "1ae9d07ee9c35326b3d9aad56eae71a6730a73a116b9fe9e8a4758b7cc033216"
+    end
   end
 
   def install

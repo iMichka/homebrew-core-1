@@ -1,15 +1,22 @@
 class Mapnik < Formula
   desc "Toolkit for developing mapping applications"
   homepage "https://mapnik.org/"
-  url "https://github.com/mapnik/mapnik/releases/download/v3.0.22/mapnik-v3.0.22.tar.bz2"
-  sha256 "930612ad9e604b6a29b9cea1bc1de85cf7cf2b2b8211f57ec8b6b94463128ab9"
-  revision 1
+  url "https://github.com/mapnik/mapnik/releases/download/v3.1.0/mapnik-v3.1.0.tar.bz2"
+  sha256 "43d76182d2a975212b4ad11524c74e577576c11039fdab5286b828397d8e6261"
+  license "LGPL-2.1-or-later"
+  revision 4
   head "https://github.com/mapnik/mapnik.git"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   bottle do
-    cellar :any
-    sha256 "5b2b7057f5f2028f3b824f9d1c3b6339c424f859c58a11dda275095b96fa17fa" => :mojave
-    sha256 "170678415472ba2586eae111ca11bac9c25a3166c1056e7d437c460287d84037" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "3ef717b40002e1bb09aa23fa69324a024a9af7322bd5bfa5fd2fe88f107d9d85"
+    sha256 cellar: :any, big_sur:       "9cf5f1873889a50fa8f661954cf3723dd80de77a97394097f47907c5a7ea27fc"
+    sha256 cellar: :any, catalina:      "f05ea69e03c726dde0d4b9711cd4fc94ce35e2e1f2a3abe75dc66949d34c563f"
+    sha256 cellar: :any, mojave:        "6416e7fa9760c9faed77382cce3e2209a28283e1174bde8bf394168d2cdc9947"
   end
 
   depends_on "pkg-config" => :build
@@ -23,7 +30,7 @@ class Mapnik < Formula
   depends_on "libpng"
   depends_on "libtiff"
   depends_on "postgresql"
-  depends_on "proj"
+  depends_on "proj@7"
   depends_on "webp"
 
   def install

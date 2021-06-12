@@ -1,15 +1,15 @@
 class Cmusfm < Formula
   desc "Last.fm standalone scrobbler for the cmus music player"
   homepage "https://github.com/Arkq/cmusfm"
-  url "https://github.com/Arkq/cmusfm/archive/v0.3.3.tar.gz"
-  sha256 "9d9fa7df01c3dd7eecd72656e61494acc3b0111c07ddb18be0ad233110833b63"
+  url "https://github.com/Arkq/cmusfm/archive/v0.4.0.tar.gz"
+  sha256 "d72e04df69c1f3e95f1b7779f583a790660856fadb5cfd8a2717c085b1b12111"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "c27aa49951efe2e485aba1eaf9527387e2fa92472bd2c1f56b5097a021dc5a64" => :catalina
-    sha256 "9e3320b2be61e18a10e6fef43c2c233b03670425108085c7aafa1218588cb2c9" => :mojave
-    sha256 "8fc5c21846193c1187440c297d0cebdd86a83452e5c648eb9e6e813cb2385f4e" => :high_sierra
-    sha256 "f399ae3146fe9e2214e24c96ecfbd3c77866a68c692d9d60d3363ac27d39da26" => :sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8469d430a7f80f217b6c3fc18a94dd621031a99e1ad0c0a4625b2c6e897b2fd0"
+    sha256 cellar: :any_skip_relocation, big_sur:       "bf89db2bf4bc6d4beb35f909c7b6f5d555618b0bd64f29970d16a935c233c651"
+    sha256 cellar: :any_skip_relocation, catalina:      "ee559b020876516d44248b576176bf06fca2119ce0522cc373297f7425455037"
+    sha256 cellar: :any_skip_relocation, mojave:        "354392dce04c448c932b74c983a832d8f21faf21ec4309cbe33dee4fdfbd5930"
   end
 
   depends_on "autoconf" => :build
@@ -69,7 +69,7 @@ class Cmusfm < Formula
 
     assert_predicate cmusfm_cache, :exist?
     strings = shell_output "strings #{cmusfm_cache}"
-    assert_match /^#{test_artist}$/, strings
-    assert_match /^#{test_title}$/, strings
+    assert_match(/^#{test_artist}$/, strings)
+    assert_match(/^#{test_title}$/, strings)
   end
 end

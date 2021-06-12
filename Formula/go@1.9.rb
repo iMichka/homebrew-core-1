@@ -4,33 +4,39 @@ class GoAT19 < Formula
   url "https://dl.google.com/go/go1.9.7.src.tar.gz"
   mirror "https://fossies.org/linux/misc/go1.9.7.src.tar.gz"
   sha256 "582814fa45e8ecb0859a208e517b48aa0ad951e3b36c7fff203d834e0ef27722"
+  license "BSD-3-Clause"
 
   bottle do
-    rebuild 1
-    sha256 "6820e19509cbcdd77f30cb8c16a4ca9e67aa3e9eb6e4c2da33c9f9a7dc223840" => :catalina
-    sha256 "74df95ba98388a1617c604e3a439b61c785ac74dc653d2d06da8be2b88e77084" => :mojave
-    sha256 "02584ef8cae5f91f3c4fda26a946c09de1635854782e1c1f1201f35b680df61b" => :high_sierra
-    sha256 "2f837e2b6745a970e4d3bd9b3f5ea0ed1ebb827ade2cfa38793f0b9a5232ed9e" => :sierra
-    sha256 "073e733ede43f788a18f675299510fb9f3d85d1c76a8262d6a1ca4a3c80428ce" => :x86_64_linux
+    rebuild 2
+    sha256 big_sur:      "f62ef79df0624c9329edb96c40e65a3dbae0519885a7a6069059234e46999a2c"
+    sha256 catalina:     "c34c669ba94287eb0485513ad03416d531f0d4fb58908df4984ed85fd2c41b1e"
+    sha256 mojave:       "358e06f98931f9f9f2238e59c9ec40a4cc8526e518b8828c8b72543f6d40d9b0"
+    sha256 high_sierra:  "be1bd13af09e6bf2ee698f98d80fbd99ac86858337d90fce6e2e86ecfd67b19f"
+    sha256 x86_64_linux: "455f710d0d7476169aba974c0d097394b6e95b2bd1abeb11d8a47b98f61295d2"
   end
 
   keg_only :versioned_formula
 
+  disable! date: "2021-02-16", because: :unsupported
+
+  depends_on arch: :x86_64
+
   resource "gotools" do
     url "https://go.googlesource.com/tools.git",
-        :branch => "release-branch.go1.9"
+        branch: "release-branch.go1.9"
   end
 
   # Don't update this unless this version cannot bootstrap the new version.
   resource "gobootstrap" do
-    if OS.mac?
+    on_macos do
       url "https://storage.googleapis.com/golang/go1.7.darwin-amd64.tar.gz"
       sha256 "51d905e0b43b3d0ed41aaf23e19001ab4bc3f96c3ca134b48f7892485fc52961"
-    elsif OS.linux?
+    end
+
+    on_linux do
       url "https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz"
       sha256 "702ad90f705365227e902b42d91dd1a40e48ca7f67a2f4b2fd052aaa4295cd95"
     end
-    version "1.7"
   end
 
   # Backports the following commit from 1.10/1.11:
@@ -49,18 +55,11 @@ class GoAT19 < Formula
   end
 
   def install
-    # Fixes: Error: Failure while executing: ../bin/ldd ../line-clang.elf: Permission denied
-    unless OS.mac?
-      chmod "+x", Dir.glob("src/debug/dwarf/testdata/*.elf")
-      chmod "+x", Dir.glob("src/debug/elf/testdata/*-exec")
-    end
-
     (buildpath/"gobootstrap").install resource("gobootstrap")
     ENV["GOROOT_BOOTSTRAP"] = buildpath/"gobootstrap"
 
     cd "src" do
       ENV["GOROOT_FINAL"] = libexec
-      ENV["GOOS"] = OS.mac? ? "darwin" : "linux"
       system "./make.bash", "--no-clean"
     end
 

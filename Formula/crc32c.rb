@@ -1,26 +1,32 @@
 class Crc32c < Formula
-  desc "CRC32C implementation with CPU-specific acceleration"
+  desc "Implementation of CRC32C with CPU-specific acceleration"
   homepage "https://github.com/google/crc32c"
-  url "https://github.com/google/crc32c/archive/1.1.0.tar.gz"
-  sha256 "49de137bf1c2eb6268d5122674f7dd1524b9148ba65c7b85c5ae4b9be104a25a"
+  url "https://github.com/google/crc32c/archive/1.1.1.tar.gz"
+  sha256 "a6533f45b1670b5d59b38a514d82b09c6fb70cc1050467220216335e873074e8"
+  license "BSD-3-Clause"
   head "https://github.com/google/crc32c.git"
 
   bottle do
-    cellar :any
-    sha256 "e2b5e57945365a1b21afdaf7e17e2ec43e1e5bf07b88486cf4df34a950c446cf" => :catalina
-    sha256 "af325a8d3249cd237a34492d33c6c84cc7c058b9baede77e1499beb09789ee3d" => :mojave
-    sha256 "bf99febb71f1928b3fddc01c509a53ad1e10d0f5ee64fb561b54729e8482465e" => :high_sierra
-    sha256 "8f3c05aba98d9142e5fc1e38b1c0467f50dd6c51f03d53b0aa41566a8a7723f5" => :sierra
-    sha256 "df462c6afcc8e2352fde8c6393c2f28c041a3d6454be8c0db7b1f85bbe74b52f" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "82e70741895a3e29dc0f8e48b0dd10e13e8cd380012457c1bf984ace3fd6dd03"
+    sha256 cellar: :any, big_sur:       "a37c7daabc55476ee3828211b32a63f052af9feeff1430fe53be9cef2038a069"
+    sha256 cellar: :any, catalina:      "8ac4299583c3155c0410e246277214110bbbe453df5cc6b67694c67ba722bfbc"
+    sha256 cellar: :any, mojave:        "f5e232ed8a57eea6b226f4596f94281ea4ea5467c626e83a1576e74aee32711e"
+    sha256 cellar: :any, high_sierra:   "a8f21980c0fee7ffb9911b1eaa1bf7641940b4bb798a7dbd508ae60a6c1a46a8"
+    sha256 cellar: :any, x86_64_linux:  "fade39ba2de89b5f331d458f132ae09f52049648b6c5567ab3eac727142d8f53"
   end
 
   depends_on "cmake" => :build
 
   def install
-    system "cmake", ".", "-DCRC32C_BUILD_TESTS=0", "-DCRC32C_BUILD_BENCHMARKS=0", "-DCRC32C_USE_GLOG=0", *std_cmake_args
+    ENV.cxx11 unless OS.mac?
+    system "cmake", ".", "-DCRC32C_BUILD_TESTS=0",
+                          "-DCRC32C_BUILD_BENCHMARKS=0", "-DCRC32C_USE_GLOG=0",
+                         *std_cmake_args
     system "make", "install"
     system "make", "clean"
-    system "cmake", ".", "-DBUILD_SHARED_LIBS=ON", "-DCRC32C_BUILD_TESTS=0", "-DCRC32C_BUILD_BENCHMARKS=0", "-DCRC32C_USE_GLOG=0", *std_cmake_args
+    system "cmake", ".", "-DBUILD_SHARED_LIBS=ON", "-DCRC32C_BUILD_TESTS=0",
+                         "-DCRC32C_BUILD_BENCHMARKS=0", "-DCRC32C_USE_GLOG=0",
+                         *std_cmake_args
     system "make", "install"
   end
 
@@ -40,7 +46,7 @@ class Crc32c < Formula
       }
     EOS
 
-    system ENV.cxx, "test.cpp", "-I#{include}", "-L#{lib}", "-lcrc32c", "-o", "test"
+    system ENV.cxx, "test.cpp", "-I#{include}", "-L#{lib}", "-lcrc32c", "-std=c++11", "-o", "test"
     system "./test"
   end
 end

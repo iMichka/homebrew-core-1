@@ -1,30 +1,47 @@
 class FluentBit < Formula
   desc "Data Collector for IoT"
   homepage "https://github.com/fluent/fluent-bit"
-  url "https://github.com/fluent/fluent-bit/archive/v0.14.9.tar.gz"
-  sha256 "dad69d3b1ecb9577880b65ffc40fcaed44ab4875bd2d179641098e2778744a04"
+  url "https://github.com/fluent/fluent-bit/archive/v1.7.8.tar.gz"
+  sha256 "e31541570757d70510194ea2cbe6a34bdea88791fd93f04c9800b9bf8188eaf4"
+  license "Apache-2.0"
   head "https://github.com/fluent/fluent-bit.git"
 
-  bottle do
-    cellar :any
-    sha256 "2507e5a3b0f30eaf44f6acf6ab659d3003ff5822d0e279fc1712830af77e8cb4" => :mojave
-    sha256 "45f89286b8aa1d5946bec8f5d6ddc9ddfd44cf1be795816f6c7b6e3d018a6055" => :high_sierra
-    sha256 "d0136990b48d1fe3f5ac0e7e55b41ac0925404349730605d1f1b38f551cd5b03" => :sierra
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
-  depends_on "cmake" => :build
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "4ee1823841ea4039f3850502c17b2b1cc0f1aa8ee7e49b0ec81250985dd1664b"
+    sha256 cellar: :any, big_sur:       "c9fa51a3d352cfac250c8deefbd0917ac7d4f295a0490d86759e4138a85a5a40"
+    sha256 cellar: :any, catalina:      "924f6a517016a879fdd4ce77d9ac80fea0d3a0589f1e9f39e2aeb6b68ad22a57"
+    sha256 cellar: :any, mojave:        "3a13904044dd24b0fb49fd834597d88ff250ce795be7c337495d2c791271064a"
+  end
 
-  conflicts_with "mbedtls", :because => "fluent-bit includes mbedtls libraries."
-  conflicts_with "msgpack", :because => "fluent-bit includes msgpack libraries."
+  depends_on "bison" => :build
+  depends_on "cmake" => :build
+  depends_on "flex" => :build
+
+  on_linux do
+    depends_on "openssl@1.1"
+  end
+
+  # Apply https://github.com/fluent/fluent-bit/pull/3564 to build on M1
+  patch do
+    url "https://github.com/fluent/fluent-bit/commit/fcdf304e5abc3e3b66b1acac76dbaf23b2d22579.patch?full_index=1"
+    sha256 "80d1b0b6916ff1e0c157e6824afa769f08e28e764f65bfd28df0900d6f9bda1e"
+  end
 
   def install
-    # Per https://luajit.org/install.html: If MACOSX_DEPLOYMENT_TARGET
-    # is not set then it's forced to 10.4, which breaks compile on Mojave.
-    # fluent-bit builds against a vendored Luajit.
-    ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version
+    chdir "build" do
+      # Per https://luajit.org/install.html: If MACOSX_DEPLOYMENT_TARGET
+      # is not set then it's forced to 10.4, which breaks compile on Mojave.
+      # fluent-bit builds against a vendored Luajit.
+      ENV["MACOSX_DEPLOYMENT_TARGET"] = MacOS.version
 
-    system "cmake", ".", "-DWITH_IN_MEM=OFF", *std_cmake_args
-    system "make", "install"
+      system "cmake", "..", "-DWITH_IN_MEM=OFF", *std_cmake_args
+      system "make", "install"
+    end
   end
 
   test do

@@ -1,18 +1,21 @@
 class Fontforge < Formula
   desc "Command-line outline and bitmap font editor/converter"
   homepage "https://fontforge.github.io"
-  url "https://github.com/fontforge/fontforge/releases/download/20190801/fontforge-20190801.tar.gz"
-  sha256 "d92075ca783c97dc68433b1ed629b9054a4b4c74ac64c54ced7f691540f70852"
-  revision 1
+  url "https://github.com/fontforge/fontforge/releases/download/20201107/fontforge-20201107.tar.xz"
+  sha256 "68bcba8f602819eddc29cd356ee13fafbad7a80d19b652d354c6791343476c78"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "5491094eb17337498a90804ce72fd154cdf643272467312a9dc1cfc1f5e56a82" => :catalina
-    sha256 "ceade22a6cbbecff190fedd4be117cfce9c6036c20a51de701f82a69cd0343a5" => :mojave
-    sha256 "0e91f1858662fa08537287af6e1884ef94377a46a5eb24cec61f3f9f41c48e8a" => :high_sierra
-    sha256 "914c3506ceabddcfc70305a71fcea720bde80a8f1323c096f8cd4013fda0a8d6" => :x86_64_linux
+    rebuild 1
+    sha256 arm64_big_sur: "240744fcd44612d9208c1f47e81d8f01b9d94108b50afe54170be14329a95a5a"
+    sha256 big_sur:       "20f92c9d7e6405ca51bdf9f9a2f0216b527bd78e38c2c3bedecbfab3eeb12747"
+    sha256 catalina:      "de48bd3b27ae91d21b8f7d8724cf2b9100683bf02db99794bcd9d9c4ca3483de"
+    sha256 mojave:        "fc6b9c92f02f1e01d8850bfb595dad4f18faf2c3ba079d7bf8084699ec006d53"
+    sha256 x86_64_linux:  "0e697156dcb81374aa34a80b1cd3d5b7723e034830219831ac6e4ad97e81124c"
   end
 
+  depends_on "cmake" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "cairo"
   depends_on "fontconfig"
@@ -27,51 +30,56 @@ class Fontforge < Formula
   depends_on "libtool"
   depends_on "libuninameslist"
   depends_on "pango"
-  depends_on "python"
+  depends_on "python@3.9"
   depends_on "readline"
+
   uses_from_macos "libxml2"
 
+  # Fix for rpath on ARM
+  # https://github.com/fontforge/fontforge/issues/4658
+  patch :DATA
+
   def install
-    ENV["PYTHON_CFLAGS"] = `python3-config --cflags`.chomp
-    ENV["PYTHON_LIBS"] = `python3-config --ldflags`.chomp
-
-    system "./configure", "--prefix=#{prefix}",
-                          "--enable-python-scripting=3",
-                          "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--without-x"
-    system "make", "install"
-
-    # The app here is not functional.
-    # If you want GUI/App support, check the caveats to see how to get it.
-    (pkgshare/"osx/FontForge.app").rmtree if OS.mac?
-
-    # Build extra tools
-    cd "contrib/fonttools" do
-      system "make"
-      bin.install Dir["*"].select { |f| File.executable? f }
+    mkdir "build" do
+      system "cmake", "..",
+                      "-GNinja",
+                      "-DENABLE_GUI=OFF",
+                      "-DENABLE_FONTFORGE_EXTRAS=ON",
+                      *std_cmake_args
+      system "ninja"
+      system "ninja", "install"
     end
   end
 
   def caveats
-    return unless OS.mac?
+    on_macos do
+      <<~EOS
+        This formula only installs the command line utilities.
 
-    <<~EOS
-      This formula only installs the command line utilities.
+        FontForge.app can be downloaded directly from the website:
+          https://fontforge.github.io
 
-      FontForge.app can be downloaded directly from the website:
-        https://fontforge.github.io
-
-      Alternatively, install with Homebrew Cask:
-        brew cask install fontforge
-    EOS
+        Alternatively, install with Homebrew Cask:
+          brew install --cask fontforge
+      EOS
+    end
   end
 
   test do
     system bin/"fontforge", "-version"
     system bin/"fontforge", "-lang=py", "-c", "import fontforge; fontforge.font()"
-    xy = Language::Python.major_minor_version "python3"
-    ENV.append_path "PYTHONPATH", lib/"python#{xy}/site-packages"
-    system "python3", "-c", "import fontforge; fontforge.font()"
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import fontforge; fontforge.font()"
   end
 end
+
+__END__
+diff --git a/contrib/fonttools/CMakeLists.txt b/contrib/fonttools/CMakeLists.txt
+index 0d3f464bc..b9f210cde 100644
+--- a/contrib/fonttools/CMakeLists.txt
++++ b/contrib/fonttools/CMakeLists.txt
+@@ -18,3 +18,5 @@ target_link_libraries(dewoff PRIVATE ZLIB::ZLIB)
+ target_link_libraries(pcl2ttf PRIVATE MathLib::MathLib)
+ target_link_libraries(ttf2eps PRIVATE fontforge)
+ target_link_libraries(woff PRIVATE ZLIB::ZLIB)
++
++install(TARGETS acorn2sfd dewoff findtable pcl2ttf pfadecrypt rmligamarks showttf stripttc ttf2eps woff RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

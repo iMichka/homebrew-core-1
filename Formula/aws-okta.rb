@@ -1,33 +1,31 @@
 class AwsOkta < Formula
   desc "Authenticate with AWS using your Okta credentials"
   homepage "https://github.com/segmentio/aws-okta"
-  url "https://github.com/segmentio/aws-okta/archive/v0.27.0.tar.gz"
-  sha256 "e78813870d970dd3710d42d0993f8c437dedc6d888c3e72606e745abecdb6308"
+  url "https://github.com/segmentio/aws-okta/archive/v1.0.11.tar.gz"
+  sha256 "444a84cd9c81097a7c462f806605193c5676879133255cfa0f610b7d14756b65"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0f07504d628e8177e9e154fe4c5294398b7bb7b8368bae5541c8c1e5a9285702" => :catalina
-    sha256 "542fd3979354bcc485f8ea2303a207c2bcaca43a3aa9680ac2fd3ec5b96bf04d" => :mojave
-    sha256 "84c81b158267fd5dba50f34f72d203973afe6fc4355f78aefb2a1eb5d1d162d5" => :high_sierra
-    sha256 "1b8d480652289b87fa0ca84e8a1758572ee864cc12196c90e304ffa2e3ad7cb0" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "6de4fd8fa42cddba3a914ed99123469230646bc2ac2598ff40fd0d0c9bf51efe"
+    sha256 cellar: :any_skip_relocation, big_sur:       "178f359eaabc71c8a677f89e1acb35fe73ae35ba4010a06876bdb630b66878b2"
+    sha256 cellar: :any_skip_relocation, catalina:      "2edc4ebb817ff4f0a3188a0c0eea6416ce2a83a6d9b5cc5b3969034ee65e27ca"
+    sha256 cellar: :any_skip_relocation, mojave:        "910418c2dd89b78a7d665cdd8082d9941de433c6c8db800ce0515dfb6c1eb25b"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "58c9a49a4f7a27c1ef8b4a60999ce66bbff62817571db92ac14bb88a6725dda9"
   end
+
+  # See https://github.com/segmentio/aws-okta/issues/278
+  deprecate! date: "2020-01-20", because: :deprecated_upstream
 
   depends_on "go" => :build
   depends_on "govendor" => :build
-  unless OS.mac?
+
+  on_linux do
     depends_on "pkg-config" => :build
     depends_on "libusb"
   end
 
   def install
-    ENV["GOPATH"] = buildpath
-    (buildpath/"src/github.com/segmentio/aws-okta").install buildpath.children
-    cd "src/github.com/segmentio/aws-okta" do
-      system "govendor", "sync"
-      system "go", "build", "-ldflags", "-X main.Version=#{version}"
-      bin.install "aws-okta"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-s -w -X main.Version=#{version}"
   end
 
   test do

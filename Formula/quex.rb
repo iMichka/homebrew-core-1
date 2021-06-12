@@ -1,19 +1,21 @@
 class Quex < Formula
   desc "Generate lexical analyzers"
   homepage "https://quex.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/quex/quex-0.70.0.tar.gz"
-  sha256 "761b68d68255862001d1fe8bf8876ba3d35586fd1927a46a667aea11511452cd"
+  url "https://downloads.sourceforge.net/project/quex/quex-0.71.2.zip"
+  sha256 "0453227304a37497e247e11b41a1a8eb04bcd0af06a3f9d627d706b175a8a965"
+  license "MIT"
   head "https://svn.code.sf.net/p/quex/code/trunk"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "f3d39a7468e8c529ce1c0d6ab5b2d028f50771304993e9f2e996490f846c4b6c" => :catalina
-    sha256 "f3d39a7468e8c529ce1c0d6ab5b2d028f50771304993e9f2e996490f846c4b6c" => :mojave
-    sha256 "f3d39a7468e8c529ce1c0d6ab5b2d028f50771304993e9f2e996490f846c4b6c" => :high_sierra
-    sha256 "ef42df0a4413a021056ceb695796065a083651c29f89f9a2f78e707ae3a1b823" => :x86_64_linux
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/quex[._-]v?(\d+(?:\.\d+)+)\.[tz]}i)
   end
 
-  uses_from_macos "python@2"
+  bottle do
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "0846e378796efe8d17ffb22efb697e35f4d2c3e540e7b390e3e63ac73ac9d620"
+  end
+
+  depends_on "python@3.9"
 
   def install
     libexec.install "quex", "quex-exe.py"
@@ -22,7 +24,7 @@ class Quex < Formula
     # Use a shim script to set QUEX_PATH on the user's behalf
     (bin/"quex").write <<~EOS
       #!/bin/bash
-      QUEX_PATH="#{libexec}" "#{libexec}/quex-exe.py" "$@"
+      QUEX_PATH="#{libexec}" "#{Formula["python@3.9"].opt_bin}/python3" "#{libexec}/quex-exe.py" "$@"
     EOS
 
     if build.head?

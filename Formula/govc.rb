@@ -1,15 +1,16 @@
 class Govc < Formula
   desc "Command-line tool for VMware vSphere"
   homepage "https://github.com/vmware/govmomi/tree/master/govc"
-  url "https://github.com/vmware/govmomi/archive/v0.21.0.tar.gz"
-  sha256 "3690bc16e6193ee0d142e8abc1941ad38f841494dd460277722ba3873e0793dc"
+  url "https://github.com/vmware/govmomi/archive/v0.26.0.tar.gz"
+  sha256 "3b1b0aa46d7ce3d13be403d846bd50f366e91f6cadc42f64f11880fcb656dce4"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "1e074718e72510da869e1de0e0765b2b4b53f62e4476f83ac08be9ac4deb6280" => :catalina
-    sha256 "5a15ab51411921620747ad949f689754db9199376c4be2f50a74f8827e602f39" => :mojave
-    sha256 "380c582a43e9f75915dae9591eecc82144fb9418d1e52ed9cd079572db70f082" => :high_sierra
-    sha256 "d49942f74a3b080118f02af8d1d5772420dc7bd987d976737666e5b4da11c4d7" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "84c22738ef74e2d745d4ece493547074c2f3e6c5a32c3a0597c6ed89733a5e8c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "e227227b12c907f8c78d4682682db77779c2bfb198a0c30304ad07345701d058"
+    sha256 cellar: :any_skip_relocation, catalina:      "30da7b9a4d22bab292dceb81a6d2fce17cfe8e0f398857da42eea150670d6b59"
+    sha256 cellar: :any_skip_relocation, mojave:        "9fc6675cd73b3f08eefc0d6432b01be3035d2cf132352b3c4f9b4982318278e0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e325d3d372edf6673af935a554419d8e34ecd0cda7a9ad6cfae8b253494d78c4"
   end
 
   depends_on "go" => :build

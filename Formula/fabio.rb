@@ -1,17 +1,17 @@
 class Fabio < Formula
   desc "Zero-conf load balancing HTTP(S) router"
   homepage "https://github.com/fabiolb/fabio"
-  url "https://github.com/fabiolb/fabio/archive/v1.5.13.tar.gz"
-  sha256 "66af6e8dbd0e7cbd171a868fa42a611d445701fadd9782bb077cf9101ac08cdf"
+  url "https://github.com/fabiolb/fabio/archive/v1.5.15.tar.gz"
+  sha256 "19dcd4d8c6e4fe16e63e4208564d08ed442a0c724661ef4d91e9dbc85a9afbe1"
+  license "MIT"
   head "https://github.com/fabiolb/fabio.git"
 
   bottle do
-    cellar :any_skip_relocation
     rebuild 1
-    sha256 "9ed48161ee4b2c5bcf0ce9ce520c2506bec689b2d21735d1eb4f3a3cb470fb57" => :catalina
-    sha256 "3fe400520ea3af9c28baef9b376f14d8a96c88d6c79bc057f0949e15ea9c0efe" => :mojave
-    sha256 "41ae1110be9335004d77846ab554cb5ecf45f6c48f83942b95bd752c243dcc14" => :high_sierra
-    sha256 "9522496b8878a1a2e9a21174334b436e0de4290ee834f29713110cc8fca2084b" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, big_sur:      "64a7ae7497bc62f44ad203a43b4e0c9bbcb1bad020cb876422bd0d746f6d8bcc"
+    sha256 cellar: :any_skip_relocation, catalina:     "ffbae8584c9186bb63a761cc52aafd82fb90fd3ec35bce7b9fe81ffa0baf5b0d"
+    sha256 cellar: :any_skip_relocation, mojave:       "813e3edb76153f73dbd94b5291213a7584632f43a6bc9d4a8ef4deab6e3f96d8"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "998f8522bb3d77e135fdb1412e2093ef7c3a1bbe99f83e01fd9cca6cde0da1e9"
   end
 
   depends_on "go" => :build
@@ -26,9 +26,9 @@ class Fabio < Formula
     require "socket"
     require "timeout"
 
-    CONSUL_DEFAULT_PORT = 8500
-    FABIO_DEFAULT_PORT = 9999
-    LOCALHOST_IP = "127.0.0.1".freeze
+    consul_default_port = 8500
+    fabio_default_port = 9999
+    localhost_ip = "127.0.0.1".freeze
 
     def port_open?(ip_address, port, seconds = 1)
       Timeout.timeout(seconds) do
@@ -39,32 +39,24 @@ class Fabio < Formula
       false
     end
 
-    if !port_open?(LOCALHOST_IP, FABIO_DEFAULT_PORT)
-      if !port_open?(LOCALHOST_IP, CONSUL_DEFAULT_PORT)
-        fork do
-          exec "consul agent -dev -bind 127.0.0.1"
-          puts "consul started"
-        end
-        sleep 30
-      else
-        puts "Consul already running"
-      end
-      fork do
-        exec "#{bin}/fabio &>fabio-start.out&"
-        puts "fabio started"
-      end
-      sleep 10
-      assert_equal true, port_open?(LOCALHOST_IP, FABIO_DEFAULT_PORT)
-      if OS.mac?
-        system "killall", "fabio" # fabio forks off from the fork...
-      else
-        # killall may not be installed on Linux
-        system "kill -9 $(pgrep fabio)"
-      end
-      system "consul", "leave"
-    else
+    if port_open?(localhost_ip, fabio_default_port)
       puts "Fabio already running or Consul not available or starting fabio failed."
       false
+    else
+      if port_open?(localhost_ip, consul_default_port)
+        puts "Consul already running"
+      else
+        fork do
+          exec "consul agent -dev -bind 127.0.0.1"
+        end
+        sleep 30
+      end
+      fork do
+        exec "#{bin}/fabio"
+      end
+      sleep 10
+      assert_equal true, port_open?(localhost_ip, fabio_default_port)
+      system "consul", "leave"
     end
   end
 end

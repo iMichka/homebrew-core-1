@@ -1,41 +1,46 @@
 class Libfuse < Formula
   desc "Reference implementation of the Linux FUSE interface"
   homepage "https://github.com/libfuse/libfuse"
-  url "https://github.com/libfuse/libfuse/releases/download/fuse-2.9.8/fuse-2.9.8.tar.gz"
-  sha256 "5e84f81d8dd527ea74f39b6bc001c874c02bad6871d7a9b0c14efb57430eafe3"
+  url "https://github.com/libfuse/libfuse/releases/download/fuse-3.10.3/fuse-3.10.3.tar.xz"
+  sha256 "eb8373f208b05a39702f9f437f6e49caf4b1ace26a9acb68110b49912078560f"
+  license any_of: ["LGPL-2.1-only", "GPL-2.0-only"]
   head "https://github.com/libfuse/libfuse.git"
-  # tag "linux"
 
   bottle do
-    sha256 "1c29503e1008d72d58bc2d6efc4ac38500116b3f5794f4aaf16b81afb25827d9" => :x86_64_linux # glibc 2.19
-    sha256 "66e21f1df0e11d0aa6f810f821e8981247e9285d39e6579bd7376ebfc6482a58" => :x86_64_linux
+    sha256 x86_64_linux: "9969ed56fd264e7c9095d48e8bc85b46fb0945e9532f7b56a7cde03e921b8ffd"
   end
 
   depends_on "autoconf" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
+  depends_on :linux
+
+  # prevent libfuse from installing into /etc
+  patch :p0 do
+    url "https://raw.githubusercontent.com/conda-forge/libfuse-feedstock/fb966bfef17fa050eb0d2b819f7c6c06575962b9/recipe/0001-Install-fusermount-init-script-into-sysconfdir.patch"
+    sha256 "ce2a512bbb1e7432c12e7c1c8fa97f07d9b6c1060bea90af8cb6ba5010b38a3c"
+  end
 
   def install
-    ENV["MOUNT_FUSE_PATH"] = sbin
-    ENV["UDEV_RULES_PATH"] = etc/"udev/rules.d"
-    ENV["INIT_D_PATH"] = etc/"init.d"
-    system "./configure",
-      "--prefix=#{prefix}",
-      "--disable-silent-rules",
-      "--enable-lib",
-      "--enable-util",
-      "--enable-example",
-      "--disable-rpath"
-
-    system "make"
-    system "make", "install"
-    (pkgshare/"doc").install Dir["./doc/how-fuse-works", "./doc/kernel.txt"]
-    (pkgshare/"example").install Dir["./example/Makefile", "./example/*.{c,h}"]
+    args = std_meson_args + %W[
+      --sysconfdir=#{etc}
+      -Dudevrulesdir=#{etc}/udev/rules.d
+      -Duseroot=false
+    ]
+    mkdir "build" do
+      system "meson", *args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
+    (pkgshare/"doc").install "doc/kernel.txt"
   end
 
   test do
     (testpath/"fuse-test.c").write <<~EOS
-      #include <fuse.h>
+      #define FUSE_USE_VERSION 31
+      #include <fuse3/fuse.h>
       #include <stdio.h>
       int main() {
         printf("%d%d\\n", FUSE_MAJOR_VERSION, FUSE_MINOR_VERSION);
@@ -43,7 +48,7 @@ class Libfuse < Formula
         return 0;
       }
     EOS
-    system ENV.cc, "fuse-test.c", "-L#{lib}", "-I#{include}", "-D_FILE_OFFSET_BITS=64", "-lfuse", "-o", "fuse-test"
+    system ENV.cc, "fuse-test.c", "-L#{lib}", "-I#{include}", "-D_FILE_OFFSET_BITS=64", "-lfuse3", "-o", "fuse-test"
     system "./fuse-test"
   end
 end

@@ -1,37 +1,35 @@
 class XercesC < Formula
   desc "Validating XML parser"
   homepage "https://xerces.apache.org/xerces-c/"
-  url "https://www.apache.org/dyn/closer.cgi?path=xerces/c/3/sources/xerces-c-3.2.2.tar.gz"
-  sha256 "dd6191f8aa256d3b4686b64b0544eea2b450d98b4254996ffdfe630e0c610413"
+  url "https://www.apache.org/dyn/closer.lua?path=xerces/c/3/sources/xerces-c-3.2.3.tar.gz"
+  mirror "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.3.tar.gz"
+  sha256 "fb96fc49b1fb892d1e64e53a6ada8accf6f0e6d30ce0937956ec68d39bd72c7e"
+  revision 1 unless OS.mac?
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "8bcc9b20b0b3df89ec53900e0b3b09ea1bbc3159b4cffc4b8ef4f62413621924" => :catalina
-    sha256 "fab62b22422c24b0218cae42f7f81ad736db316d9bde4218272cdf7b174c313f" => :mojave
-    sha256 "e62fba2c06fd03edf0491b54f753d10c4ca9e73e97c24389b749e655f9199b50" => :high_sierra
-    sha256 "8390cdf10fcc8b65a1f295eacf8b3fec34776d18219b8a8ce565592ee3b03372" => :sierra
-    sha256 "2171289b41e780789f1c93c784cb7243045ef836eb6ce36af8e84f219f0c1616" => :x86_64_linux
-  end
-
-  pour_bottle? do
-    reason "The bottle needs to be installed into #{Homebrew::DEFAULT_PREFIX}."
-    satisfy { OS.mac? || HOMEBREW_PREFIX.to_s == Homebrew::DEFAULT_PREFIX }
+    rebuild 2
+    sha256 cellar: :any,                 arm64_big_sur: "ad9251257543aee28e08fbc5f433a5ad72c0065511c09d19c888bf28b5bbf21f"
+    sha256 cellar: :any,                 big_sur:       "6a561a0f4175e7da6790b2beaedf185516a118116402a674a6b936d5c3236575"
+    sha256 cellar: :any,                 catalina:      "743af0adcd563f604bf3f057d1144b9e11bc1b5a9e842f82d430301d2b5fc185"
+    sha256 cellar: :any,                 mojave:        "cf22a3e57f6e6e279e9eb476bb80c08d18979938f54d19347fd103ccdc7cf78e"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cc8041c06f4aea15a1c3c519c71e3663dd53753e781eb8e552ef2127136abe31"
   end
 
   depends_on "cmake" => :build
+
   uses_from_macos "curl"
 
   def install
     ENV.cxx11
 
     mkdir "build" do
-      system "cmake", "..", *std_cmake_args
+      system "cmake", "..", *std_cmake_args, "-DCMAKE_INSTALL_RPATH=#{rpath}"
       system "make"
       system "ctest", "-V"
       system "make", "install"
       system "make", "clean"
-      system "cmake", "..", "-DBUILD_SHARED_LIBS=OFF", *std_cmake_args
+      system "cmake", "..", "-DBUILD_SHARED_LIBS=OFF", *std_cmake_args, "-DCMAKE_INSTALL_RPATH=#{rpath}"
       system "make"
       lib.install Dir["src/*.a"]
     end

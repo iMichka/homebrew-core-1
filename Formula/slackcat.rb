@@ -1,29 +1,22 @@
 class Slackcat < Formula
   desc "Command-line utility for posting snippets to Slack"
   homepage "https://github.com/vektorlab/slackcat"
-  url "https://github.com/vektorlab/slackcat/archive/v1.6.tar.gz"
-  sha256 "e5c8f98f3048cccc3f8e49c0449435a839a18c7f12426643ac80731b63b829a9"
+  url "https://github.com/bcicen/slackcat/archive/refs/tags/1.7.2.tar.gz"
+  sha256 "562858968aeb67aedb32a6048512d6433bcc41fd3c17ae5d657f2f2d2e415cf7"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "31ab32e1c07a54dd6e06900a990f2e4b82295273155f25332596c17671d33b9f" => :catalina
-    sha256 "b8fb7acbcb922af01da7e97b7c3ef303dcda92762996d2ad9a12ffec1bfea608" => :mojave
-    sha256 "4a5566659aedb0453c68c468c65521b53d0602113a940b50afab759488b4997c" => :high_sierra
-    sha256 "80ed662db0f0e057a2346e25244b52fd3019fdb6f1af1e809b03392a82d0dcd9" => :sierra
-    sha256 "ad0787bb5f746b0a52f7d3bee890c49394d144d57bb332b667afd858f9d531e1" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d4afbc9b42ef6eff3b63598a4c241d16ab5673912139b39e259b521d8ff40fd6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ffd89b1f8ec05ad9258fbed8b8e1a2f11345414de7d160cbf11250887a4b037b"
+    sha256 cellar: :any_skip_relocation, catalina:      "ca236771d46645d91e47f6b907fd2171822f6f7d0ca79e5c086366c73b5e57c7"
+    sha256 cellar: :any_skip_relocation, mojave:        "874dfe7ec201371aa7f8b5e011db03cf573c63c893ecb7f851eabd839c144a98"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9fc50639a616d08ae3d2958d9dfef12c24f97db2da29d917976da745ac3414f7"
   end
 
   depends_on "go" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-
-    src = buildpath/"src/github.com/vektorlab/slackcat"
-    src.install buildpath.children
-    src.cd do
-      system "go", "build", "-o", bin/"slackcat", "-ldflags", "-X main.version=#{version}"
-      prefix.install_metafiles
-    end
+    system "go", "build", *std_go_args, "-ldflags", "-s -w -X main.version=#{version}"
   end
 
   test do

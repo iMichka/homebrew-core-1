@@ -1,66 +1,51 @@
 class Urh < Formula
   desc "Universal Radio Hacker"
   homepage "https://github.com/jopohl/urh"
-  url "https://files.pythonhosted.org/packages/2e/5f/5acc316e0c9dc2d985f36db198ea3814dbeebc6068c56d3efe1420b17714/urh-2.8.1.tar.gz"
-  sha256 "31b807fd083424b0d846eca6e734f563f565f971d76f2ab637b3322e6d09404f"
+  url "https://files.pythonhosted.org/packages/06/d8/f140e9c0f592134580819b959121b47bce042694168032bf8b219d39c977/urh-2.9.2.tar.gz"
+  sha256 "e4fac51af73a69eeca25d9a12b777677b3b983de8537a2025ba698e20e6a56af"
+  license "GPL-3.0-only"
   head "https://github.com/jopohl/urh.git"
 
   bottle do
-    sha256 "769d1f022478baee7108ca329b85e1fe10af079ab733814496066945e25095c8" => :catalina
-    sha256 "be24c76870ba68d6136347b664a90de98696aab03ae1244f546cd3ee981696bc" => :mojave
-    sha256 "fd254495475291d91078797e274eb9d3899aae2f902a11004f538e189dac5a0a" => :high_sierra
-    sha256 "1f8f71828d39357478a798865d24c78b64009dd6b6984516ae911d3ffe215f51" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "09dc76c4ab1a6fade85309ced90029fadec5e323768c4bf373f016b25c5aef73"
+    sha256 cellar: :any, big_sur:       "9e250394aeddc6784c732b991f583ad6cdac03888c3f3e7ff477c8cfda2a7856"
+    sha256 cellar: :any, catalina:      "6a0dd1e02d615789893fbf96ef3d1bc127dd927033fbfc0d6a42945c55d22070"
+    sha256 cellar: :any, mojave:        "8c61a1fb6e05c52a17c4bd2d5b22fe2b3de41e4fb8cf4199de4eceef2bd661dc"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "cython"
   depends_on "hackrf"
   depends_on "numpy"
-  depends_on "pyqt"
-  depends_on "python"
-  depends_on "zeromq"
-
-  resource "Cython" do
-    url "https://files.pythonhosted.org/packages/9c/9b/706dac7338c2860cd063a28cdbf5e9670995eaea408abbf2e88ba070d90d/Cython-0.29.14.tar.gz"
-    sha256 "e4d6bb8703d0319eb04b7319b12ea41580df44fd84d83ccda13ea463c6801414"
-  end
+  depends_on "pyqt@5"
+  depends_on "python@3.9"
 
   resource "psutil" do
-    url "https://files.pythonhosted.org/packages/5f/dc/edf6758183afc7591a16bd4b8a44d8eea80aca1327ea60161dd3bad9ad22/psutil-5.6.6.tar.gz"
-    sha256 "ad21281f7bd6c57578dd53913d2d44218e9e29fd25128d10ff7819ef16fa46e7"
-  end
-
-  resource "pyzmq" do
-    url "https://files.pythonhosted.org/packages/3c/83/7ecbe9b762829f589fa9734026e0ccb63cb128fe5615ae1698f65df72bfe/pyzmq-18.1.1.tar.gz"
-    sha256 "8c69a6cbfa94da29a34f6b16193e7c15f5d3220cb772d6d17425ff3faa063a6d"
+    url "https://files.pythonhosted.org/packages/e1/b0/7276de53321c12981717490516b7e612364f2cb372ee8901bd4a66a000d7/psutil-5.8.0.tar.gz"
+    sha256 "0c9ccb99ab76025f2f0bbecf341d4656e9c1351db8cc8a03ccd62e318ab4b5c6"
   end
 
   def install
-    xy = Language::Python.major_minor_version "python3"
+    xy = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
     ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{xy}/site-packages"
     resources.each do |r|
-      next if r.name == "Cython"
-
       r.stage do
-        system "python3", *Language::Python.setup_install_args(libexec/"vendor")
+        system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(libexec/"vendor")
       end
     end
 
+    ENV.prepend_create_path "PYTHONPATH", Formula["cython"].opt_libexec/"lib/python#{xy}/site-packages"
     ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{xy}/site-packages"
-    saved_python_path = ENV["PYTHONPATH"]
-    ENV.prepend_create_path "PYTHONPATH", buildpath/"cython/lib/python#{xy}/site-packages"
 
-    resource("Cython").stage do
-      system "python3", *Language::Python.setup_install_args(buildpath/"cython")
-    end
-
-    system "python3", *Language::Python.setup_install_args(libexec)
+    system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(libexec)
 
     bin.install Dir[libexec/"bin/*"]
-    bin.env_script_all_files(libexec/"bin", :PYTHONPATH => saved_python_path)
+    bin.env_script_all_files(libexec/"bin", PYTHONPATH: ENV["PYTHONPATH"])
   end
 
   test do
-    xy = Language::Python.major_minor_version "python3"
+    xy = Language::Python.major_minor_version Formula["python@3.9"].opt_bin/"python3"
+    ENV.prepend_create_path "PYTHONPATH", libexec/"vendor/lib/python#{xy}/site-packages"
     ENV.prepend_create_path "PYTHONPATH", libexec/"lib/python#{xy}/site-packages"
     (testpath/"test.py").write <<~EOS
       from urh.util.GenericCRC import GenericCRC;
@@ -68,6 +53,13 @@ class Urh < Formula
       expected = [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0, 0]
       assert(expected == c.crc([0, 1, 0, 1, 1, 0, 1, 0]).tolist())
     EOS
-    system "python3", "test.py"
+    system Formula["python@3.9"].opt_bin/"python3", "test.py"
+
+    # test command-line functionality
+    output = shell_output("#{bin}/urh_cli -pm 0 0 -pm 1 100 -mo ASK -sps 100 -s 2e3 " \
+                          "-m 1010111100001 -f 868.3e6 -d RTL-TCP -tx 2>/dev/null", 1)
+
+    assert_match(/Modulating/, output)
+    assert_match(/Successfully modulated 1 messages/, output)
   end
 end

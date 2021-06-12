@@ -1,29 +1,29 @@
 class Mpv < Formula
   desc "Media player based on MPlayer and mplayer2"
   homepage "https://mpv.io"
-  url "https://github.com/mpv-player/mpv/archive/v0.30.0.tar.gz"
-  sha256 "33a1bcb7e74ff17f070e754c15c52228cf44f2cefbfd8f34886ae81df214ca35"
+  url "https://github.com/mpv-player/mpv/archive/v0.33.1.tar.gz"
+  sha256 "100a116b9f23bdcda3a596e9f26be3a69f166a4f1d00910d1789b6571c46f3a9"
+  license :cannot_represent
   head "https://github.com/mpv-player/mpv.git"
 
   bottle do
-    rebuild 1
-    sha256 "2b74c106f611b2019ddafd39d8e4d1f2a921c0bf70b2c88ef6f75d8ac74fc4ef" => :catalina
-    sha256 "008065b20d49d3b6b758c5343406ff3e81a7fb3eb4bf584e3cccce278f34d428" => :mojave
-    sha256 "2065404c51b4f50edc3f6f8859410920d015501c1d74969239b549c1e7e83f4b" => :high_sierra
-    sha256 "a01290846b07550d41927472f71ddb0124d5906c1da49f697968bf1aba011e8d" => :x86_64_linux
+    sha256 arm64_big_sur: "dd487a80e5586c93ccde6942170d026e9eba5b403d95e409ad55282cea818790"
+    sha256 big_sur:       "76b0fc9d207aee16f65b8b1782bc35dec5a870952ebba6ae7a74e6ede9bdd34a"
+    sha256 catalina:      "8ab98fffc330dea03f2732fa17c7f53753601c49c3f9dec2a7d727bdc901c484"
+    sha256 mojave:        "87df95e8f4f723a5b6fe163d5ac740fef9f5ffa9c318c82c9a6b0844aa7203b9"
+    sha256 x86_64_linux:  "ffdf616cf1b6ee6ac93d3c38ea555d613967cc56778ac58503d975efc2060ca8"
   end
 
   depends_on "docutils" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
-
+  depends_on "python@3.9" => :build
+  depends_on xcode: :build
   depends_on "ffmpeg"
   depends_on "jpeg"
   depends_on "libarchive"
   depends_on "libass"
   depends_on "little-cms2"
-  depends_on "lua@5.1"
-
+  depends_on "luajit-openresty"
   depends_on "mujs"
   depends_on "uchardet"
   depends_on "vapoursynth"
@@ -34,6 +34,11 @@ class Mpv < Formula
     # or getdefaultlocale in docutils. Force the default c/posix locale since
     # that's good enough for building the manpage.
     ENV["LC_ALL"] = "C"
+
+    # libarchive is keg-only
+    ENV.prepend_path "PKG_CONFIG_PATH", Formula["libarchive"].opt_lib/"pkgconfig"
+    # luajit-openresty is keg-only
+    ENV.prepend_path "PKG_CONFIG_PATH", Formula["luajit-openresty"].opt_lib/"pkgconfig"
 
     args = %W[
       --prefix=#{prefix}
@@ -48,14 +53,16 @@ class Mpv < Formula
       --mandir=#{man}
       --docdir=#{doc}
       --zshdir=#{zsh_completion}
+      --lua=luajit
     ]
 
-    system "python3", "bootstrap.py"
-    system "python3", "waf", "configure", *args
-    system "python3", "waf", "install"
+    system Formula["python@3.9"].opt_bin/"python3", "bootstrap.py"
+    system Formula["python@3.9"].opt_bin/"python3", "waf", "configure", *args
+    system Formula["python@3.9"].opt_bin/"python3", "waf", "install"
   end
 
   test do
     system bin/"mpv", "--ao=null", test_fixtures("test.wav")
+    assert_match "vapoursynth", shell_output(bin/"mpv --vf=help")
   end
 end

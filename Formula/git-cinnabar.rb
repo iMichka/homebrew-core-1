@@ -1,29 +1,30 @@
 class GitCinnabar < Formula
   desc "Git remote helper to interact with mercurial repositories"
   homepage "https://github.com/glandium/git-cinnabar"
-  url "https://github.com/glandium/git-cinnabar/archive/0.5.2.tar.gz"
-  sha256 "e88ef4e55a06a7cb770c26f679c6f7c182f7986611cbfede1215c42e34f7031c"
+  url "https://github.com/glandium/git-cinnabar/archive/0.5.7.tar.gz"
+  sha256 "1f30b79b89b421ba33e47f00a8301da5b7533e10cc6314c4febd23ad6ed4b17b"
+  license "GPL-2.0-only"
   head "https://github.com/glandium/git-cinnabar.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "7bacf519a34a5a7da1af722a9c97f98d8882ac526aebdfed6c8c1d493befb9e0" => :catalina
-    sha256 "ba3b5616b5f41698df07035ca4fa9ad8cf67b12b7af7cdf2e21383b5ec1a828e" => :mojave
-    sha256 "19bfb6524dec8aa39e88fa97a3c8c31a963a223eb8371fab954b41748929e018" => :high_sierra
-    sha256 "523598608a6fd6b46682089f6c7c56513ae8933c3a619fa2e59dcc90822e97c1" => :sierra
-    sha256 "11658e9882fa256fb4da0ca237c38c8341c16f9e11731dbe6b7dcd82d85cc8f1" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "8b626b0efd0fa40519709c9611ac32134adbe6bbe83ca9ac4068a2f8ce5babc6"
+    sha256 cellar: :any_skip_relocation, big_sur:       "68a335fc1ed34f8207dc50a1772424d25c3f670e8a6ee643d6ac31e95dd7df61"
+    sha256 cellar: :any_skip_relocation, catalina:      "d9b9bdf7c8c135a469842f62b8d95ab68d7135cd3bab11bf350eacc70b9ccd51"
+    sha256 cellar: :any_skip_relocation, mojave:        "c137a58d44bcdc96eac89581334411fe95e5eb98824b558ee4249c30bef9aa67"
   end
 
+  depends_on :macos # Due to Python 2
   depends_on "mercurial"
+
   uses_from_macos "curl"
 
-  conflicts_with "git-remote-hg", :because => "both install `git-remote-hg` binaries"
+  conflicts_with "git-remote-hg", because: "both install `git-remote-hg` binaries"
 
   def install
     system "make", "helper"
     prefix.install "cinnabar"
     bin.install "git-cinnabar", "git-cinnabar-helper", "git-remote-hg"
-    bin.env_script_all_files(libexec, :PYTHONPATH => prefix)
+    bin.env_script_all_files(libexec, PYTHONPATH: prefix)
   end
 
   test do

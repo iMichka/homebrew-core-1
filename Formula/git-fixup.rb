@@ -1,17 +1,13 @@
 class GitFixup < Formula
   desc "Alias for git commit --fixup <ref>"
   homepage "https://github.com/keis/git-fixup"
-  url "https://github.com/keis/git-fixup/archive/v1.2.0.tar.gz"
-  sha256 "894989bd31b52fcfbfe226bc86bd1baea06820aa86938561b14772929f261337"
-  head "https://github.com/keis/git-fixup.git", :branch => "master"
+  url "https://github.com/keis/git-fixup/archive/v1.3.0.tar.gz"
+  sha256 "29665151f82cac5f5807b8241392150e7c8ee8024ce37f23752c23c134516d57"
+  license "ISC"
+  head "https://github.com/keis/git-fixup.git", branch: "master"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "72ff69fa75efeb1f6a5c5384d8084e65b67c1bd0cdf9668d402ab4271ce235f5" => :catalina
-    sha256 "0fc85e047798c8602c8ad69796c6b6ac4d9759852bdba1b189aa0e999dfb53a2" => :mojave
-    sha256 "0fc85e047798c8602c8ad69796c6b6ac4d9759852bdba1b189aa0e999dfb53a2" => :high_sierra
-    sha256 "30b0473a2e18df5f4d91f61d74babf21fd5e8eccf9499d402f61790643400af7" => :sierra
-    sha256 "7952ae72aa226808c24aae17d97e5a4c60dbc48bc8d86176a26f2d892ee83aa5" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "55457be986a571f82ee55e3695f9dcbfa12bee89d89b409253abe88036af8183"
   end
 
   def install

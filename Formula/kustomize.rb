@@ -2,34 +2,51 @@ class Kustomize < Formula
   desc "Template-free customization of Kubernetes YAML manifests"
   homepage "https://github.com/kubernetes-sigs/kustomize"
   url "https://github.com/kubernetes-sigs/kustomize.git",
-      :tag      => "kustomize/v3.5.1",
-      :revision => "2c9635967a2b1469d605a91a1d040bd27c73ca7d"
+      tag:      "kustomize/v4.1.3",
+      revision: "0f614e92f72f1b938a9171b964d90b197ca8fb68"
+  license "Apache-2.0"
   head "https://github.com/kubernetes-sigs/kustomize.git"
 
+  livecheck do
+    url :stable
+    regex(%r{^kustomize/v?(\d+(?:\.\d+)+)$}i)
+  end
+
   bottle do
-    cellar :any_skip_relocation
-    sha256 "c96d401ee6dd4aeeccfe1556e36628d0658579a6356564098106d10209f085a2" => :mojave
-    sha256 "33e40b1c9baddae54e108cf2c5e3e9707dcc45b9abd3e137ac7c3daa7d16ffc2" => :high_sierra
-    sha256 "fca75d59f4c86df2e190d552b591e9ffeb1bd4a650f55fda0e0d6b6d8707a2e8" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "c2bc5bcc4b395ba3b3e512a2a9815ae81a5411416380c0520d726db2b8668407"
+    sha256 cellar: :any_skip_relocation, big_sur:       "a5876e31685b13273f268264860af816b4348e8a178d99aea8cf3de01a8d5558"
+    sha256 cellar: :any_skip_relocation, catalina:      "529377a3a884549413e67ff95c159e71d7f62b516009e5c0e8320b3d8a3723ad"
+    sha256 cellar: :any_skip_relocation, mojave:        "1ff7509083a9fefb1d931592318ca1649eb8ed17b28eeec5287a259302a024ec"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3b8025d04b3d0a7b9059906b6b024b01e546598bc2fd83c9303856f269cde78d"
   end
 
   depends_on "go" => :build
 
   def install
-    revision = Utils.popen_read("git", "rev-parse", "HEAD").strip
+    commit = Utils.git_head
 
     cd "kustomize" do
       ldflags = %W[
-        -s -X sigs.k8s.io/kustomize/api/provenance.version=#{version}
-        -X sigs.k8s.io/kustomize/api/provenance.gitCommit=#{revision}
+        -s
+        -X sigs.k8s.io/kustomize/api/provenance.version=#{name}/v#{version}
+        -X sigs.k8s.io/kustomize/api/provenance.gitCommit=#{commit}
         -X sigs.k8s.io/kustomize/api/provenance.buildDate=#{Time.now.iso8601}
       ]
       system "go", "build", "-ldflags", ldflags.join(" "), "-o", bin/"kustomize"
     end
+
+    output = Utils.safe_popen_read("#{bin}/kustomize", "completion", "bash")
+    (bash_completion/"kustomize").write output
+
+    output = Utils.safe_popen_read("#{bin}/kustomize", "completion", "zsh")
+    (zsh_completion/"_kustomize").write output
+
+    output = Utils.safe_popen_read("#{bin}/kustomize", "completion", "fish")
+    (fish_completion/"kustomize.fish").write output
   end
 
   test do
-    assert_match version.to_s, shell_output("#{bin}/kustomize version")
+    assert_match "kustomize/v#{version}", shell_output("#{bin}/kustomize version")
 
     (testpath/"kustomization.yaml").write <<~EOS
       resources:
@@ -55,6 +72,6 @@ class Kustomize < Formula
         type: LoadBalancer
     EOS
     output = shell_output("#{bin}/kustomize build #{testpath}")
-    assert_match /type:\s+"?LoadBalancer"?/, output
+    assert_match(/type:\s+"?LoadBalancer"?/, output)
   end
 end

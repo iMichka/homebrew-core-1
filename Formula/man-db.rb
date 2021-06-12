@@ -1,68 +1,51 @@
 class ManDb < Formula
   desc "Unix documentation system"
-  homepage "http://man-db.nongnu.org/"
-  url "https://download.savannah.gnu.org/releases/man-db/man-db-2.8.5.tar.xz"
-  sha256 "b64d52747534f1fe873b2876eb7f01319985309d5d7da319d2bc52ba1e73f6c1"
-  revision 1
+  homepage "https://www.nongnu.org/man-db/"
+  url "https://download.savannah.gnu.org/releases/man-db/man-db-2.9.4.tar.xz"
+  mirror "https://download-mirror.savannah.gnu.org/releases/man-db/man-db-2.9.4.tar.xz"
+  sha256 "b66c99edfad16ad928c889f87cf76380263c1609323c280b3a9e6963fdb16756"
+  license "GPL-2.0-or-later"
+  revision 2
+
+  livecheck do
+    url "https://download.savannah.gnu.org/releases/man-db/"
+    regex(/href=.*?man-db[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    sha256 "7020922156beba59a49ce7d858f370d6fb1884ed2debaf8c57a09b4c37096a14" => :catalina
-    sha256 "d068d781ba8482dd4e00b14d514e8bbaa30600ed286f0c422e09524e3e8a4247" => :mojave
-    sha256 "4ee0fb987e13ced600fdbc6159e75f5303510e937d94ed78ccd0610eb8eac601" => :high_sierra
-    sha256 "6054a6367980207aad35a40f0147e389e8f4db1691f42056111448389c61f23b" => :sierra
-    sha256 "d9cb46053ac0c75057720cf69550037cf0ed4090e50555d2de0119fc4945c464" => :x86_64_linux
+    sha256 arm64_big_sur: "6a96017a3bbef997608f6f6fd6e03e5106ae99c5058566be8e7115e4966f6641"
+    sha256 big_sur:       "4529e4902e85caf37876458918ce7eac6513f28d4893834da88b1b772b3f22a9"
+    sha256 catalina:      "297439323c747e9fcfc6f27aca5c465affe33a614685cd4d90b32901d4a9a61f"
+    sha256 mojave:        "727b00709a5bde708f039abd8bcad7f861b4815301a5773d1fabc79fbeac2645"
+    sha256 x86_64_linux:  "7491ca56d978110228e6d0cdcb925b803190b965b12b640b44b6d9af60e83d77"
   end
 
   depends_on "pkg-config" => :build
-  uses_from_macos "groff"
-  uses_from_macos "gdbm"
+  depends_on "groff"
+  depends_on "libpipeline"
+
   uses_from_macos "zlib"
 
-  resource "libpipeline" do
-    url "https://download.savannah.gnu.org/releases/libpipeline/libpipeline-1.5.1.tar.gz"
-    sha256 "d633706b7d845f08b42bc66ddbe845d57e726bf89298e2cee29f09577e2f902f"
+  on_linux do
+    depends_on "gdbm"
   end
 
   def install
-    resource("libpipeline").stage do
-      ENV.append_to_cflags "-fPIC" unless OS.mac?
-      system "./configure",
-        "--disable-dependency-tracking",
-        "--disable-silent-rules",
-        "--prefix=#{buildpath}/libpipeline",
-        "--enable-static",
-        "--disable-shared"
-      system "make"
-      system "make", "install"
-      ENV.remove_from_cflags "-fPIC" unless OS.mac?
-    end
-
-    ENV["libpipeline_CFLAGS"] = "-I#{buildpath}/libpipeline/include"
-    ENV["libpipeline_LIBS"] = "-L#{buildpath}/libpipeline/lib -lpipeline"
-
     args = %W[
       --disable-dependency-tracking
       --disable-silent-rules
       --prefix=#{prefix}
       --disable-cache-owner
       --disable-setuid
+      --disable-nls
       --program-prefix=g
-    ]
-
-    # NB: Remove once man-db 2.8.6 is released
-    # https://git.savannah.gnu.org/cgit/man-db.git/commit/?id=b74c839eaa5000a18d1c396e995eca85b0e9464b
-    args += %w[
-      --without-systemdtmpfilesdir
-      --without-systemdsystemunitdir
+      --with-config-file=#{etc}/man_db.conf
+      --with-systemdtmpfilesdir=#{etc}/tmpfiles.d
+      --with-systemdsystemunitdir=#{etc}/systemd/system
     ]
 
     system "./configure", *args
 
-    # NB: Remove once man-db 2.8.6 is released
-    # https://git.savannah.gnu.org/cgit/man-db.git/commit/?id=056e8c7c012b00261133259d6438ff8303a8c36c
-    ENV.append_to_cflags "-Wl,-flat_namespace,-undefined,suppress" if OS.mac?
-
-    system "make", "CFLAGS=#{ENV.cflags}"
     system "make", "install"
 
     # Symlink commands without 'g' prefix into libexec/bin and
@@ -91,12 +74,13 @@ class ManDb < Formula
     man1.install_symlink "glexgrog.1" => "lexgrog.1"
   end
 
-  def caveats; <<~EOS
-    Commands also provided by macOS have been installed with the prefix "g".
-    If you need to use these commands with their normal names, you
-    can add a "bin" directory to your PATH from your bashrc like:
-      PATH="#{opt_libexec}/bin:$PATH"
-  EOS
+  def caveats
+    <<~EOS
+      Commands also provided by macOS have been installed with the prefix "g".
+      If you need to use these commands with their normal names, you
+      can add a "bin" directory to your PATH from your bashrc like:
+        PATH="#{opt_libexec}/bin:$PATH"
+    EOS
   end
 
   test do

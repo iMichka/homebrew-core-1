@@ -1,29 +1,59 @@
 class Ilmbase < Formula
   desc "OpenEXR ILM Base libraries (high dynamic-range image file format)"
   homepage "https://www.openexr.com/"
-  url "https://github.com/openexr/openexr/releases/download/v2.3.0/ilmbase-2.3.0.tar.gz"
-  sha256 "456978d1a978a5f823c7c675f3f36b0ae14dba36638aeaa3c4b0e784f12a3862"
+  # NOTE: Please keep these values in sync with openexr.rb when updating.
+  url "https://github.com/openexr/openexr/archive/v2.5.5.tar.gz"
+  sha256 "59e98361cb31456a9634378d0f653a2b9554b8900f233450f2396ff495ea76b3"
+  license "BSD-3-Clause"
+  revision 1
 
   bottle do
-    cellar :any
-    sha256 "d08e79f3a1e2875adba8c7affb929ac6fcdff93a66646a7f8c094263152912e4" => :catalina
-    sha256 "436dbe30d0bc520c5c056dac23a3558dd2595e5f5b68c6c17e18566716c71e56" => :mojave
-    sha256 "4ef6417909dee0313b9d493b5689d04382907beb650abc669fc5a6346e4c4d5b" => :high_sierra
-    sha256 "f81d4a8993861dbde4c91b0783b03a943c710c060b938095511f3cf26beee589" => :sierra
-    sha256 "401c030b5721fa3774f998342f06798c1bc45803a2defcaf938fa42d14f137d8" => :x86_64_linux
+    sha256                               arm64_big_sur: "5a95c1ea57a08dde47723507b0406a408664e4170026a5a5771681f42ac3c6df"
+    sha256                               big_sur:       "846c944f66f265e002af5f3ba3f2a989fbbc8a175e394d5e597d56b50b480f74"
+    sha256                               catalina:      "bdb6dad0ee508d3bd86f50ced1eb15c0d0d25a1ffe1133659493f9cfccc41b52"
+    sha256                               mojave:        "7ab7edd363f935a6411b038adea08d1aaf0e8eba1168cdd58fda21182346fc4a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "0b8eb227d7a0deae831b8a545246bbe127bd7b9ffd6f065c895797a289286a41"
   end
 
+  keg_only "ilmbase conflicts with `openexr` and `imath`"
+
+  # https://github.com/AcademySoftwareFoundation/openexr/pull/929
+  deprecate! date: "2021-04-05", because: :unsupported
+
+  depends_on "cmake" => :build
+
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
-    system "make", "install"
-    pkgshare.install %w[Half HalfTest Iex IexMath IexTest IlmThread Imath ImathTest]
+    cd "IlmBase" do
+      system "cmake", ".", *std_cmake_args, "-DBUILD_TESTING=OFF"
+      system "make", "install"
+    end
+  end
+
+  def caveats
+    <<~EOS
+      `ilmbase` has been replaced by `imath`. You may want to `brew uninstall ilmbase`
+      or `brew unlink ilmbase` to prevent conflicts.
+    EOS
   end
 
   test do
-    cd pkgshare/"IexTest" do
-      system ENV.cxx, "-I#{include}/OpenEXR", "-I./", "-c",
-             "testBaseExc.cpp", "-o", testpath/"test"
-    end
+    (testpath/"test.cpp").write <<~'EOS'
+      #include <ImathRoots.h>
+      #include <algorithm>
+      #include <iostream>
+
+      int main(int argc, char *argv[])
+      {
+        double x[2] = {0.0, 0.0};
+        int n = IMATH_NAMESPACE::solveQuadratic(1.0, 3.0, 2.0, x);
+
+        if (x[0] > x[1])
+          std::swap(x[0], x[1]);
+
+        std::cout << n << ", " << x[0] << ", " << x[1] << "\n";
+      }
+    EOS
+    system ENV.cxx, "-I#{include}/OpenEXR", "-o", testpath/"test", "test.cpp"
+    assert_equal "2, -2, -1\n", shell_output("./test")
   end
 end

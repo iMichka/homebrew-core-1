@@ -1,30 +1,31 @@
-require "language/haskell"
-
 class Dhall < Formula
-  include Language::Haskell::Cabal
-
   desc "Interpreter for the Dhall language"
   homepage "https://dhall-lang.org/"
-  url "https://hackage.haskell.org/package/dhall-1.28.0/dhall-1.28.0.tar.gz"
-  sha256 "41b089d480f45548d612d07577361a1086bb41da17204dc090c89c1a93423c4e"
+  url "https://hackage.haskell.org/package/dhall-1.39.0/dhall-1.39.0.tar.gz"
+  sha256 "4b117a1db8fa86ecd12b11bc55f3b50627e4b4bb96d0d63ebb7ab2e5086ac2af"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b9d643e1fe24f03c105280c5b57e50db38fa41479de9a2774354ca6c4a9bd789" => :catalina
-    sha256 "a9f4ac6ca8032dafa6bc3e7acd9c158f340b59925363842b6695a18b3db72c2e" => :mojave
-    sha256 "9cf97414490d19ecbf757a3b77e178c64fc73c59d1bb66a5d4c52dce90324e2f" => :high_sierra
+    sha256 cellar: :any_skip_relocation, big_sur:      "3033cf19e4ae915221dbe28210be943c3f4dc29e0b06d6835ad1385ddb74e0be"
+    sha256 cellar: :any_skip_relocation, catalina:     "1d5b510e3ae69e57f7b4579d568a11c5074fc6ff12ebb7f7bd406180a0f13bc6"
+    sha256 cellar: :any_skip_relocation, mojave:       "0b7b23cff6a700ecbf39d33fa2d1f1217f94c05123c18106e6acb22ba4024025"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "d495d1499a4be57fb4d58c87ffe8c2e545edd8a78ceaee91fe292ccc7bc9c0e9"
   end
 
   depends_on "cabal-install" => :build
-  depends_on "ghc@8.6" => :build
+  depends_on "ghc" => :build
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
   def install
-    install_cabal_package
+    system "cabal", "v2-update"
+    system "cabal", "v2-install", *std_cabal_v2_args
   end
 
   test do
     assert_match "{=}", pipe_output("#{bin}/dhall format", "{ = }", 0)
     assert_match "8", pipe_output("#{bin}/dhall normalize", "(\\(x : Natural) -> x + 3) 5", 0)
-    assert_match "∀(x : Natural) → Natural", pipe_output("#{bin}/dhall type", "\\(x: Natural) -> x + 3", 0)
+    assert_match "(x : Natural) -> Natural", pipe_output("#{bin}/dhall type", "\\(x: Natural) -> x + 3", 0)
   end
 end

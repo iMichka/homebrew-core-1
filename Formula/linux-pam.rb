@@ -1,26 +1,29 @@
 class LinuxPam < Formula
   desc "Pluggable Authentication Modules for Linux"
   homepage "http://www.linux-pam.org"
-  url "https://github.com/linux-pam/linux-pam/releases/download/v1.3.1/Linux-PAM-1.3.1.tar.xz"
-  sha256 "eff47a4ecd833fbf18de9686632a70ee8d0794b79aecb217ebd0ce11db4cd0db"
+  url "https://github.com/linux-pam/linux-pam/releases/download/v1.5.1/Linux-PAM-1.5.1.tar.xz"
+  sha256 "201d40730b1135b1b3cdea09f2c28ac634d73181ccd0172ceddee3649c5792fc"
+  license any_of: ["BSD-3-Clause", "GPL-1.0-only"]
   head "https://github.com/linux-pam/linux-pam.git"
-  # tag "linux"
 
   bottle do
-    sha256 "4afeecba2eb7b7cac467cd648b3329edba7d3703c2f07e3df99ae698966f84cd" => :x86_64_linux
+    sha256 x86_64_linux: "465098b7da72f978dfece7fa8a12168b4730be8427d3cd9e6f55beafd66fa1dc"
   end
 
   depends_on "pkg-config" => :build
   depends_on "berkeley-db"
   depends_on "libprelude"
+  depends_on "libtirpc"
+  depends_on :linux
 
-  skip_clean :la, "etc"
+  skip_clean :la
 
   def install
     args = %W[
       --disable-debug
       --disable-dependency-tracking
       --disable-silent-rules
+      --disable-selinux
       --prefix=#{prefix}
       --includedir=#{include}/security
       --oldincludedir=#{include}
@@ -32,16 +35,11 @@ class LinuxPam < Formula
 
     system "./configure", *args
     system "make"
-    system "make", "check"
     system "make", "install"
   end
 
-  def post_install
-    chmod "u=rwxs,g=rx,o=rx", "#{sbin}/unix_chkpwd"
-  end
-
   test do
-    File.exist? "#{sbin}/unix_chkpwd"
-    assert_match "Usage", shell_output("#{sbin}/mkhomedir_helper 2>&1", 14)
+    assert_match "Usage: #{sbin}/mkhomedir_helper <username>",
+                 shell_output("#{sbin}/mkhomedir_helper 2>&1", 14)
   end
 end

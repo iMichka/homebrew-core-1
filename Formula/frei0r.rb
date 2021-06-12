@@ -1,25 +1,52 @@
 class Frei0r < Formula
   desc "Minimalistic plugin API for video effects"
   homepage "https://frei0r.dyne.org/"
-  url "https://files.dyne.org/frei0r/releases/frei0r-plugins-1.6.1.tar.gz"
-  sha256 "e0c24630961195d9bd65aa8d43732469e8248e8918faa942cfb881769d11515e"
+  url "https://files.dyne.org/frei0r/releases/frei0r-plugins-1.7.0.tar.gz"
+  sha256 "1b1ff8f0f9bc23eed724e94e9a7c1d8f0244bfe33424bb4fe68e6460c088523a"
+  license "GPL-2.0-or-later"
 
-  bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "b1cd892e6e980a0bc6547d62d6be821fe16dd8910876ef3b415b909b41a5ab66" => :catalina
-    sha256 "a509ee11dc4a3cd431a888c708d32c53d81e5ca67250520f91284d4370d946d4" => :mojave
-    sha256 "7bef9c45d808de6bf3f7026ff0c96e4ddadd2ca3a5f8737ce9041f7aa828e6a1" => :high_sierra
-    sha256 "28d07c64bce38e3fa9c76437ce86b86ae34ac317070f1e167dbbc1f825f68b46" => :sierra
-    sha256 "934aba8c03f3c2d780e4748e50baa173ebfb628370fe9d269c6794f68b687541" => :x86_64_linux
+  livecheck do
+    url "https://files.dyne.org/frei0r/releases/"
+    regex(/href=.*?frei0r-plugins[._-]v?(\d+(?:\.\d+)+)\.t/i)
   end
 
-  depends_on "autoconf" => :build
-  depends_on "pkg-config" => :build
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "284401af98f9f86f7f4aa8dd2a2cd7ccd22841decc2065d730b9811cc683cd3d"
+    sha256 cellar: :any_skip_relocation, big_sur:       "cafe9dbba970e60d275480465cf7f87b7847063fb2113e7fd862947de0735865"
+    sha256 cellar: :any_skip_relocation, catalina:      "5076041b5f3d76b94866ab2b97ad34523ee40cfa314e6f7d2bf460ce304de872"
+    sha256 cellar: :any_skip_relocation, mojave:        "5e23b93a7ff4a2ee64c5a969b17bf6a52329e6da17c0612b46aa2ceec3fb5b39"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "a6a4648e1ff6263616f532a4648e1eb56e68d510d04e768becb2caf5ca961e3a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f25f9922cf4e3f24143c87ab31a967485d0a1cf762144610102e2d44c3026554"
+  end
+
+  depends_on "cmake" => :build
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
+    # Disable opportunistic linking against Cairo
+    inreplace "CMakeLists.txt", "find_package (Cairo)", ""
+    cmake_args = std_cmake_args + %w[
+      -DWITHOUT_OPENCV=ON
+      -DWITHOUT_GAVL=ON
+    ]
+    system "cmake", ".", *cmake_args
     system "make", "install"
+  end
+
+  test do
+    (testpath/"test.c").write <<~EOS
+      #include <frei0r.h>
+
+      int main()
+      {
+        int mver = FREI0R_MAJOR_VERSION;
+        if (mver != 0) {
+          return 0;
+        } else {
+          return 1;
+        }
+      }
+    EOS
+    system ENV.cc, "-L#{lib}", "test.c", "-o", "test"
+    system "./test"
   end
 end

@@ -1,28 +1,31 @@
 class Sqliteodbc < Formula
-  desc "SQLite ODBC driver"
+  desc "ODBC driver for SQLite"
   homepage "https://ch-werner.homepage.t-online.de/sqliteodbc/"
-  url "https://ch-werner.homepage.t-online.de/sqliteodbc/sqliteodbc-0.9996.tar.gz"
-  sha256 "8afbc9e0826d4ff07257d7881108206ce31b5f719762cbdb4f68201b60b0cb4e"
-  revision 1 unless OS.mac?
+  url "https://ch-werner.homepage.t-online.de/sqliteodbc/sqliteodbc-0.9998.tar.gz"
+  sha256 "fabcbec73f98d1a34911636c02c29fc64147d27516b142e8e132c68c05a6065b"
+
+  livecheck do
+    url :homepage
+    regex(/href=.*?sqliteodbc[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    rebuild 1
-    sha256 "d39f27293fed805c898f3967de7f02b7a77a4fa5a0c88546b91ab42eb03c63f4" => :catalina
-    sha256 "a49afbd00eb6230ecf0a0a4573c961fe697ab6326998f2a894348d8509dc1c0d" => :mojave
-    sha256 "6afd81a210f7a0f7b70e70d4d5b89a659c4cf2c9916d85ff65d89ef042bdba52" => :high_sierra
-    sha256 "73755a497df2713b8f3cc9cd0f19df24aaab01f33bf001be3718c5f8318c784c" => :sierra
-    sha256 "1b34e2dc2a7fb806b0102f34e0128285f8f5842159b9ecb99dee8efa13ef1155" => :x86_64_linux
+    sha256 cellar: :any,                 big_sur:      "5f98876aef9733997e750451ee0e3db30cc2bd1f371aa690f08d7e4038f11958"
+    sha256 cellar: :any,                 catalina:     "d0105cc73d44561e636923adb520710cdd7e0db835c6b31f151fe8a66a1b4fcc"
+    sha256 cellar: :any,                 mojave:       "6499af774d13212bf19dfdbd14c18feadf516a5d6afbd2ebe7718d99db1723eb"
+    sha256 cellar: :any,                 high_sierra:  "6220e24f32b5b26c5c983c9f9fb1aaa6aba7c13cad44a7500ecb72c7d7723a80"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "80fb4127ce50b43d98d4145585ff66471b4a9cc9de9191c2f5a52450b8dadac6"
   end
 
   depends_on "sqlite"
   depends_on "unixodbc"
-  unless OS.mac?
-    depends_on "libxml2"
-    depends_on "zlib"
-  end
+
+  uses_from_macos "libxml2"
+  uses_from_macos "zlib"
 
   def install
+    ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version == :sierra
+
     unless OS.mac?
       # sqliteodbc ships its own version of libtool, which breaks superenv.
       # Therefore, we set the following enviroment to help it find superenv.
@@ -36,9 +39,7 @@ class Sqliteodbc < Formula
                "--with-libxml2=#{Formula["libxml2"].opt_prefix}"]
     end
 
-    if OS.mac?
-      ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version == :sierra
-    end
+    ENV["SDKROOT"] = MacOS.sdk_path if MacOS.version == :sierra
     system "./configure", *args
 
     system "make"

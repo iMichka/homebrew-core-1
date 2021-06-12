@@ -1,13 +1,17 @@
 class TigerVnc < Formula
   desc "High-performance, platform-neutral implementation of VNC"
   homepage "https://tigervnc.org/"
-  url "https://github.com/TigerVNC/tigervnc/archive/v1.10.0.tar.gz"
-  sha256 "a1e54d980eef8db06f5f696aa1fb6b98be049dac5205fda8b54f211a88dd182c"
+  url "https://github.com/TigerVNC/tigervnc/archive/v1.11.0.tar.gz"
+  sha256 "3648eca472a92a4e8fe55b27cd397b1bf16bad0b24a3a1988661f44553f5e2c3"
+  license "GPL-2.0-or-later"
 
   bottle do
-    sha256 "666603d27a9ed626467b787dcee3b5f541176ef13a3ec8e8e16fc8d314a3f1b4" => :catalina
-    sha256 "197e51f10b6373b45b4fa6c39821f24984ee9c5c3dd803dc255b1d030f7f97d2" => :mojave
-    sha256 "6b29f38cac25323031ec657628a20fe8732583c5c1b4c5930ae7b52e8cf1d256" => :high_sierra
+    sha256 arm64_big_sur: "d4e19469518f0167a6abf40625c3c21df88bff1b2ca19bb6feac1c4a5a077cd2"
+    sha256 big_sur:       "ae46d4c867f0f761368e22c80daa9e0805c15f7fc5855bf32d37575c36168367"
+    sha256 catalina:      "b9a09483c45610c81dd29fc20a41b4fa8120e1353f736bb637732d4788e4bb28"
+    sha256 mojave:        "c90bdf1ac012129c5d4caecd3e5acf2d110ca8cd68a8bcff6de07373149424db"
+    sha256 high_sierra:   "2370d829c67ca1df886e47aca162c68034e138a10a93b846c31f1c927d84c435"
+    sha256 x86_64_linux:  "67db0f47bd15bc93d07689db2a89358f95332278c6a344997b01cb19a865f476"
   end
 
   depends_on "cmake" => :build
@@ -15,13 +19,28 @@ class TigerVnc < Formula
   depends_on "gettext"
   depends_on "gnutls"
   depends_on "jpeg-turbo"
-  depends_on :x11
+  depends_on "pixman"
+
+  on_linux do
+    depends_on "linux-pam"
+    depends_on "libx11"
+    depends_on "libxcursor"
+    depends_on "libxdamage"
+    depends_on "libxext"
+    depends_on "libxfixes"
+    depends_on "libxft"
+    depends_on "libxi"
+    depends_on "libxinerama"
+    depends_on "libxrandr"
+    depends_on "libxrender"
+    depends_on "libxtst"
+  end
 
   def install
     turbo = Formula["jpeg-turbo"]
     args = std_cmake_args + %W[
       -DJPEG_INCLUDE_DIR=#{turbo.include}
-      -DJPEG_LIBRARY=#{turbo.lib}/libjpeg.dylib
+      -DJPEG_LIBRARY=#{turbo.lib}/#{shared_library("libjpeg")}
       .
     ]
     system "cmake", *args

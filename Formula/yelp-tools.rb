@@ -1,47 +1,62 @@
 class YelpTools < Formula
+  include Language::Python::Virtualenv
+
   desc "Tools that help create and edit Mallard or DocBook documentation"
   homepage "https://github.com/GNOME/yelp-tools"
-  url "https://download.gnome.org/sources/yelp-tools/3.32/yelp-tools-3.32.2.tar.xz"
-  sha256 "183856b5ed0b0bb2c05dd1204af023946ed436943e35e789afb0295e5e71e8f9"
-  revision 2
+  url "https://download.gnome.org/sources/yelp-tools/40/yelp-tools-40.0.tar.xz"
+  sha256 "664bacf2f3dd65ef00a43f79487351ab64a6c4c629c56ac0ceb1723c2eb66aae"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "fd04fbc43832ca6a6e75ffcd928794c866153c7cf04d4f366e79d15a14a317b6" => :catalina
-    sha256 "fd04fbc43832ca6a6e75ffcd928794c866153c7cf04d4f366e79d15a14a317b6" => :mojave
-    sha256 "fd04fbc43832ca6a6e75ffcd928794c866153c7cf04d4f366e79d15a14a317b6" => :high_sierra
+    sha256 cellar: :any,                 arm64_big_sur: "08a72b2e030951fa5100ac9da0bb00cd5b9da79ab32eec4c6ee755a3790faabd"
+    sha256 cellar: :any,                 big_sur:       "4cbc2bd14f9fd508715bba8e1d92a624e75bb044a624c1722f56dca10962439d"
+    sha256 cellar: :any,                 catalina:      "a5ddc4d177f70d6e6f3eefc2562efd1be935bf541bd625c28d934b21d0b95a15"
+    sha256 cellar: :any,                 mojave:        "016bb96482e49cdbb5431dc0dccc66b7b8a0277b32e4c335fd8fe39cd770d660"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "955eceaea6479af480aa0acd2f0b1d6f01d12796c4beb4c63194e6572922cf71"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
   depends_on "gettext" => :build
-  depends_on "intltool" => :build
   depends_on "itstool" => :build
-  depends_on "libtool" => :build
-  depends_on "libxml2" => :build
-  depends_on "libxslt" => :build
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "gtk+3"
+  depends_on "libxml2"
+  depends_on "python@3.9"
+
+  uses_from_macos "libxslt"
+
+  resource "lxml" do
+    url "https://files.pythonhosted.org/packages/e5/21/a2e4517e3d216f0051687eea3d3317557bde68736f038a3b105ac3809247/lxml-4.6.3.tar.gz"
+    sha256 "39b78571b3b30645ac77b95f7c69d1bffc4cf8c3b157c435a34da72e78c82468"
+  end
 
   resource "yelp-xsl" do
-    url "https://download.gnome.org/sources/yelp-xsl/3.34/yelp-xsl-3.34.2.tar.xz"
-    sha256 "0c3fe6146113df26fb1295901b1c7baed9f0fe67a87f4345e11543aefe7cb7ad"
+    url "https://download.gnome.org/sources/yelp-xsl/40/yelp-xsl-40.0.tar.xz"
+    sha256 "361ecd4d33fccdb3bb08a687f60e5c3e909d2e9e3b022d844e049820d0cf62b0"
   end
 
   def install
+    venv = virtualenv_create(libexec, "python3")
+    venv.pip_install resource("lxml")
+    ENV.prepend_path "PATH", libexec/"bin"
+
     resource("yelp-xsl").stage do
-      system "autoreconf", "-fi"
-      system "./configure", "--disable-debug",
-                            "--disable-dependency-tracking",
+      system "./configure", "--disable-dependency-tracking",
                             "--disable-silent-rules",
                             "--prefix=#{prefix}"
       system "make", "install"
       ENV.append_path "PKG_CONFIG_PATH", "#{share}/pkgconfig"
     end
 
-    system "autoreconf", "-fi"
-    system "./configure", "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
+
+    # Replace shebang with virtualenv python
+    inreplace Dir[bin/"*"], "#!/usr/bin/python3", "#!#{libexec}/bin/python"
   end
 
   def post_install

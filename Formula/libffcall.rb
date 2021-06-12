@@ -1,15 +1,16 @@
 class Libffcall < Formula
   desc "GNU Foreign Function Interface library"
   homepage "https://www.gnu.org/software/libffcall/"
-  url "https://ftp.gnu.org/gnu/libffcall/libffcall-2.2.tar.gz"
-  mirror "https://ftpmirror.gnu.org/gnu/libffcall/libffcall-2.2.tar.gz"
-  sha256 "ebfa37f97b6c94fac24ecf3193f9fc829517cf81aee9ac2d191af993d73cb747"
+  url "https://ftp.gnu.org/gnu/libffcall/libffcall-2.3.tar.gz"
+  mirror "https://ftpmirror.gnu.org/gnu/libffcall/libffcall-2.3.tar.gz"
+  sha256 "81e7e9862e342053b62004e1788b49e80defaa3186d0352cccf6e6b77c823ef2"
+  license "GPL-2.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "02b522baa2d0f38a85e3a2bee8adb79644e8c834c486737b81a62945b9ec73d4" => :catalina
-    sha256 "e38d2a42a2ad191847e423028580245f4b84829e5c781f6d58ce7da9981da280" => :mojave
-    sha256 "d9f7db3318279d7dac5a162de3a251e96c3810be2e70fe8926d93e63b9849045" => :high_sierra
+    sha256 cellar: :any,                 big_sur:      "bb1f926fad9495f329bf5c6145621cb03102588514955cb05e715fb9ac840dd6"
+    sha256 cellar: :any,                 catalina:     "1564bcd5a3bb302cfeea526eedf0c32659b1d53cbda0e5147255475aeffef5a3"
+    sha256 cellar: :any,                 mojave:       "02f3edcd52369a0b2aa5e209f600e686042c695a075161b94138c62207f04db2"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "04bbefb0600091760d31639ee7409e3d7a9b3f1d9e7e4ee267744f162c227439"
   end
 
   def install

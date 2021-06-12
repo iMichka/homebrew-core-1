@@ -1,18 +1,20 @@
 class Lfe < Formula
   desc "Concurrent Lisp for the Erlang VM"
-  homepage "http://lfe.io/"
-  url "https://github.com/rvirding/lfe/archive/v1.3.tar.gz"
-  sha256 "1946c0df595ae49ac33fe583f359812dec6349da6acf43c1458534de3267036b"
-  head "https://github.com/rvirding/lfe.git", :branch => "develop"
+  homepage "https://lfe.io/"
+  url "https://github.com/lfe/lfe/archive/v2.0.tar.gz"
+  sha256 "373ad033bb74679766ed7414bfd6d69fbf6dd0a2337019eb117840384b9fada0"
+  license "Apache-2.0"
+  revision 1
+  head "https://github.com/lfe/lfe.git", branch: "develop"
 
   bottle do
-    sha256 "3b141e0c7c6d6630883e0ed5a00590e4e5b868fc1817b99c62afaccc4cb361dd" => :mojave
-    sha256 "1a0f582845e8c0c87331c9e9148b06dde79483847cc1bb31674596fe2d3c3422" => :high_sierra
-    sha256 "a6f27b9dd837d866fb471db3556677112c4f8ca3df386596f975083a939c8a16" => :sierra
-    sha256 "47827019926bdbfb6b0fa0c7fe123b0007482670aa651408e736f00c4796ce01" => :el_capitan
-    sha256 "aab3e33761e9db3c4e5cceb8769edca70f2eb618e0bed5e3658ab2fdc3bae2ac" => :yosemite
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "7745910e18ebc4dd084e5c39a77e09d423ade2f9b89f84cdfccad58b9a80a22e"
+    sha256 cellar: :any_skip_relocation, big_sur:       "1cbcf0bc43a850e7f57ec9d9447a5bf4c1047aac0d7e2df89f51b169969ed599"
+    sha256 cellar: :any_skip_relocation, catalina:      "e2f25a22dc8d4f3feb6212222d19525779bf424a9e88ae15cfa9fb3cae3c5d1a"
+    sha256 cellar: :any_skip_relocation, mojave:        "d95f508c8a023d77e8e3f3b8f84434c0282b9279cca2fd478c172c2ee1214b2b"
   end
 
+  depends_on "emacs" => :build if MacOS.version >= :catalina
   depends_on "erlang"
 
   def install

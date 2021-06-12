@@ -1,27 +1,32 @@
 class Proj < Formula
   desc "Cartographic Projections Library"
-  homepage "https://proj4.org/"
-  url "https://download.osgeo.org/proj/proj-6.2.1.tar.gz"
-  sha256 "7f2e0fe63312f1e766057cceb53dc9585c4a335ff6641de45696dbd40d17c340"
+  homepage "https://proj.org/"
+  url "https://github.com/OSGeo/PROJ/releases/download/8.0.1/proj-8.0.1.tar.gz"
+  sha256 "e0463a8068898785ca75dd49a261d3d28b07d0a88f3b657e8e0089e16a0375fa"
+  license "MIT"
 
   bottle do
-    sha256 "afa15540ec072f6c577ad42fcf0cef6b0ea3d5fb25fe786c490cdbf1fcae918b" => :catalina
-    sha256 "47d58e22d2e01d1bbacd8abef95ccbe61935612c9a6b369c9065bd6a34cea26a" => :mojave
-    sha256 "f530ebfac70dc88a5fa1cab8094bf80000fc2e8229d87b60aeb4f424ad26f544" => :high_sierra
-    sha256 "14ed209570f48f9c5b731ce1fcc49e1820830aa77026b3ed480263d2b067a9f1" => :x86_64_linux
+    sha256 arm64_big_sur: "a4da85e7db113fc2286146cc9a250df2877c36fd766a373915e1b673b3c6ce82"
+    sha256 big_sur:       "2cdcd5418e147d57ec413c5977e05cd56291f138416033810aa075afe873cf1f"
+    sha256 catalina:      "cf990e76cb867cc5896631a6c3c813205676a4c9fbf096d82ec67b7aef764066"
+    sha256 mojave:        "78be51044cce3f368ef821f1adc3e0ae6e353ee67c28d498f32828fb56d46bf2"
+    sha256 x86_64_linux:  "c2ce1c4be7cbd90cebeaf08477469790d76649cae27b4785a1db5400de628543"
   end
 
   head do
-    url "https://github.com/OSGeo/proj.4.git"
+    url "https://github.com/OSGeo/proj.git"
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "libtool" => :build
   end
 
   depends_on "pkg-config" => :build
+  depends_on "libtiff"
+
+  uses_from_macos "curl"
   uses_from_macos "sqlite"
 
-  conflicts_with "blast", :because => "both install a `libproj.a` library"
+  conflicts_with "blast", because: "both install a `libproj.a` library"
 
   skip_clean :la
 
@@ -33,7 +38,6 @@ class Proj < Formula
 
   def install
     (buildpath/"nad").install resource("datumgrid")
-
     system "./autogen.sh" if build.head?
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"

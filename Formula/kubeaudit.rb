@@ -1,28 +1,33 @@
 class Kubeaudit < Formula
   desc "Helps audit your Kubernetes clusters against common security controls"
   homepage "https://github.com/Shopify/kubeaudit"
-  url "https://github.com/Shopify/kubeaudit/archive/v0.7.0.tar.gz"
-  sha256 "b8f97a42fe617ec9cf07931f4b74f02b31676e8b8e8930c0d5f8db380b27e670"
+  url "https://github.com/Shopify/kubeaudit/archive/v0.14.1.tar.gz"
+  sha256 "2041ced36128484aabfff200955d1eb86d1dca708eeb7778d1aa347b298f05fc"
+  license "MIT"
   head "https://github.com/Shopify/kubeaudit.git"
 
   bottle do
-    cellar :any_skip_relocation
-    rebuild 1
-    sha256 "759aa4ad288b11224b5d8b4594df793e4c625768bfae76e39b81c36f84983d82" => :catalina
-    sha256 "2339bb6cd8f87632ab29b7938507fb971e15ec30c5a297c2708f186a52ef2af6" => :mojave
-    sha256 "696663bd106d38390d12bbf41731ed7e3cf2b2b31d8e1515eb164ccce9381aab" => :high_sierra
-    sha256 "b71cea75e0dd406ac56a0e0b89430faf980f8b38d05b2f367ae9f58c7617a722" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "bf7fb97e40d33d5e55baae4d62632e7df55655113db9119be249d94e5a86c353"
+    sha256 cellar: :any_skip_relocation, big_sur:       "71b9458707cfea249b3b6fd7b18914fbbb6efd497f140f0133234ccecd1360fa"
+    sha256 cellar: :any_skip_relocation, catalina:      "21883f6590403eac8d826fdcc0fe160a580954fcf666afa6c29e2244c1334398"
+    sha256 cellar: :any_skip_relocation, mojave:        "fb90dc0cc651d0d9b86a5e294099cf8f98cc81df56e6bda3cdf6a39cf2765098"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "bd084f91577e765cde020f95b77fb5cbc1a704fa011afca506404922a05ed593"
   end
 
   depends_on "go" => :build
 
   def install
-    system "go", "build", "-ldflags", "-s -w", "-trimpath", "-o", bin/"kubeaudit"
-    prefix.install_metafiles
+    ldflags = %W[
+      -s -w
+      -X github.com/Shopify/kubeaudit/cmd.Version=#{version}
+      -X github.com/Shopify/kubeaudit/cmd.BuildDate=#{Date.today}
+    ]
+
+    system "go", "build", "-ldflags", ldflags.join(" "), *std_go_args, "./cmd"
   end
 
   test do
-    output = shell_output(bin/"kubeaudit -c /some-file-that-does-not-exist all 2>&1").chomp
-    assert_match "Unable to load kubeconfig. Could not open file /some-file-that-does-not-exist.", output
+    output = shell_output(bin/"kubeaudit -c /some-file-that-does-not-exist all 2>&1", 1).chomp
+    assert_match "failed to open kubeconfig file /some-file-that-does-not-exist", output
   end
 end

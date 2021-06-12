@@ -3,78 +3,79 @@ class Borgmatic < Formula
 
   desc "Simple wrapper script for the Borg backup software"
   homepage "https://torsion.org/borgmatic/"
-  url "https://github.com/witten/borgmatic/archive/1.4.16.tar.gz"
-  sha256 "d5bc7eabfd958aabb00371febb8b99d3bfefb4f28d8c4618a227b421086b8418"
+  url "https://files.pythonhosted.org/packages/8f/cd/89d3ab645bd7c20a06907bc4b91fe05f6f1f24cfc1ba030f32a47576f707/borgmatic-1.5.14.tar.gz"
+  sha256 "4c574f456a16481ef4c669b46cb93178efe0afc55bd999886d6843ab868e655e"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any
-    sha256 "d15ab01b907130ee526947e58700fb77beb5cb55e5082f7b4f6a5c8fb3aee64b" => :catalina
-    sha256 "023658e18dbbb0faf9498965cdea66fd219e67596787b74f251a87cfa4a21db2" => :mojave
-    sha256 "cab5889334cbb9d41e095403eebaa92cb58fcad706f74055cfdc788e65d2cb84" => :high_sierra
-    sha256 "3f68298283968bbdc8e0aade3ffcb8dcfc0aaaf5a837c94602e5c7b1291778e9" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a29956cf400d77ad6381da7d599bba960c11352794e1e03a2cbdf61c6857ff46"
+    sha256 cellar: :any_skip_relocation, big_sur:       "7bb1a14bb3ea3fbc14fa072e51ca52521fac5ff949faeab111af55ee33fc8201"
+    sha256 cellar: :any_skip_relocation, catalina:      "3e1e9652345ad5b66f466e10dedbeb65af617fc606cdab4a632763a947dae594"
+    sha256 cellar: :any_skip_relocation, mojave:        "2d17b29840168864e552838c28ec6b95a425529b4f0e05cd34c535e74644a317"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "cc388490df7e009e61093f3cc8a4b2d5bd4ccbb6f41b8cb0a06dec05446e325b"
   end
 
   depends_on "libyaml"
-  depends_on "python"
+  depends_on "python@3.9"
 
   resource "certifi" do
-    url "https://files.pythonhosted.org/packages/62/85/7585750fd65599e88df0fed59c74f5075d4ea2fe611deceb95dd1c2fb25b/certifi-2019.9.11.tar.gz"
-    sha256 "e4f3620cfea4f83eedc95b24abd9cd56f3c4b146dd0177e83a21b4eb49e21e50"
+    url "https://files.pythonhosted.org/packages/6d/78/f8db8d57f520a54f0b8a438319c342c61c22759d8f9a1cd2e2180b5e5ea9/certifi-2021.5.30.tar.gz"
+    sha256 "2bbf76fd432960138b3ef6dda3dde0544f27cbf8546c458e60baf371917ba9ee"
   end
 
   resource "chardet" do
-    url "https://files.pythonhosted.org/packages/fc/bb/a5768c230f9ddb03acc9ef3f0d4a3cf93462473795d18e9535498c8f929d/chardet-3.0.4.tar.gz"
-    sha256 "84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae"
+    url "https://files.pythonhosted.org/packages/ee/2d/9cdc2b527e127b4c9db64b86647d567985940ac3698eeabc7ffaccb4ea61/chardet-4.0.0.tar.gz"
+    sha256 "0d6f53a15db4120f2b08c94f11e7d93d2c911ee118b6b30a04ec3ee8310179fa"
   end
 
   resource "colorama" do
-    url "https://files.pythonhosted.org/packages/76/53/e785891dce0e2f2b9f4b4ff5bc6062a53332ed28833c7afede841f46a5db/colorama-0.4.1.tar.gz"
-    sha256 "05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d"
+    url "https://files.pythonhosted.org/packages/1f/bb/5d3246097ab77fa083a61bd8d3d527b7ae063c7d8e8671b1cf8c4ec10cbe/colorama-0.4.4.tar.gz"
+    sha256 "5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"
   end
 
   resource "docopt" do
-    url "https://files.pythonhosted.org/packages/source/d/docopt/docopt-0.6.2.tar.gz"
+    url "https://files.pythonhosted.org/packages/a2/55/8f8cab2afd404cf578136ef2cc5dfb50baa1761b68c9da1fb1e4eed343c9/docopt-0.6.2.tar.gz"
     sha256 "49b3a825280bd66b3aa83585ef59c4a8c82f2c8a522dbe754a8bc8d08c85c491"
   end
 
   resource "idna" do
-    url "https://files.pythonhosted.org/packages/ad/13/eb56951b6f7950cadb579ca166e448ba77f9d24efc03edd7e55fa57d04b7/idna-2.8.tar.gz"
-    sha256 "c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407"
-  end
-
-  resource "PyYAML" do
-    url "https://files.pythonhosted.org/packages/e3/e8/b3212641ee2718d556df0f23f78de8303f068fe29cdaa7a91018849582fe/PyYAML-5.1.2.tar.gz"
-    sha256 "01adf0b6c6f61bd11af6e10ca52b7d4057dd0be0343eb9283c878cf3af56aee4"
+    url "https://files.pythonhosted.org/packages/ea/b7/e0e3c1c467636186c39925827be42f16fee389dc404ac29e930e9136be70/idna-2.10.tar.gz"
+    sha256 "b307872f855b18632ce0c21c5e45be78c0ea7ae4c15c828c20788b26921eb3f6"
   end
 
   resource "pykwalify" do
-    url "https://files.pythonhosted.org/packages/53/6a/c7394df238816085de6a630f1817805639e844ea7980108f19261cd44c12/pykwalify-1.7.0.tar.gz"
-    sha256 "7e8b39c5a3a10bc176682b3bd9a7422c39ca247482df198b402e8015defcceb2"
+    url "https://files.pythonhosted.org/packages/d5/77/2d6849510dbfce5f74f1f69768763630ad0385ad7bb0a4f39b55de3920c7/pykwalify-1.8.0.tar.gz"
+    sha256 "796b2ad3ed4cb99b88308b533fb2f559c30fa6efb4fa9fda11347f483d245884"
   end
 
   resource "python-dateutil" do
-    url "https://files.pythonhosted.org/packages/ad/99/5b2e99737edeb28c71bcbec5b5dda19d0d9ef3ca3e92e3e925e7c0bb364c/python-dateutil-2.8.0.tar.gz"
-    sha256 "c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e"
+    url "https://files.pythonhosted.org/packages/be/ed/5bbc91f03fa4c839c4c7360375da77f9659af5f7086b7a7bdda65771c8e0/python-dateutil-2.8.1.tar.gz"
+    sha256 "73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"
   end
 
   resource "requests" do
-    url "https://files.pythonhosted.org/packages/01/62/ddcf76d1d19885e8579acb1b1df26a852b03472c0e46d2b959a714c90608/requests-2.22.0.tar.gz"
-    sha256 "11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4"
+    url "https://files.pythonhosted.org/packages/6b/47/c14abc08432ab22dc18b9892252efaf005ab44066de871e72a38d6af464b/requests-2.25.1.tar.gz"
+    sha256 "27973dd4a904a4f13b263a19c866c13b92a39ed1c964655f025f3f8d3d75b804"
   end
 
   resource "ruamel.yaml" do
-    url "https://files.pythonhosted.org/packages/de/76/cf97d739365eff258e2af0457a150bf2818f3eaa460328610eafeed0894a/ruamel.yaml-0.16.5.tar.gz"
-    sha256 "412a6f5cfdc0525dee6a27c08f5415c7fd832a7afcb7a0ed7319628aed23d408"
+    url "https://files.pythonhosted.org/packages/fd/6b/b83bdc8fb9aad62f6469117874e7c11b64d94ba9e8557f73ca1f28c2df7d/ruamel.yaml-0.17.7.tar.gz"
+    sha256 "5c3fa739bbedd2f23769656784e671c6335d17a5bf163c3c3901d8663c0af287"
+  end
+
+  resource "ruamel.yaml.clib" do
+    url "https://files.pythonhosted.org/packages/fa/a1/f9c009a633fce3609e314294c7963abe64934d972abea257dce16a15666f/ruamel.yaml.clib-0.2.2.tar.gz"
+    sha256 "2d24bd98af676f4990c4d715bcdc2a60b19c56a3fb3a763164d2d8ca0e806ba7"
   end
 
   resource "six" do
-    url "https://files.pythonhosted.org/packages/dd/bf/4138e7bfb757de47d1f4b6994648ec67a51efe58fa907c1e11e350cddfca/six-1.12.0.tar.gz"
-    sha256 "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+    url "https://files.pythonhosted.org/packages/71/39/171f1c67cd00715f190ba0b100d606d440a28c93c7714febeca8b79af85e/six-1.16.0.tar.gz"
+    sha256 "1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926"
   end
 
   resource "urllib3" do
-    url "https://files.pythonhosted.org/packages/ff/44/29655168da441dff66de03952880c6e2d17b252836ff1aa4421fba556424/urllib3-1.25.6.tar.gz"
-    sha256 "9a107b99a5393caf59c7aa3c1249c16e6879447533d0887f4336dde834c7be86"
+    url "https://files.pythonhosted.org/packages/94/40/c396b5b212533716949a4d295f91a4c100d51ba95ea9e2d96b6b0517e5a5/urllib3-1.26.5.tar.gz"
+    sha256 "a7acd0977125325f516bda9735fa7142b909a8d01e8b2e4c8108d0984e6e0098"
   end
 
   def install
@@ -106,6 +107,9 @@ class Borgmatic < Formula
     config_content = File.read(config_path)
                          .gsub(/# ?local_path: borg1/, "local_path: #{borg}")
                          .gsub(/user@backupserver:sourcehostname.borg/, repo_path)
+                         .gsub("- user@backupserver:{fqdn}", "")
+                         .gsub("- /var/log/syslog*", "")
+                         .gsub("- /home/user/path with spaces", "")
     File.open(config_path, "w") { |file| file.puts config_content }
 
     # Initialize Repo
@@ -122,10 +126,10 @@ class Borgmatic < Formula
 
     # Assert that the proper borg commands were executed
     assert_equal <<~EOS, log_content
-      info #{repo_path}
+      info --debug #{repo_path}
       init --encryption repokey --debug #{repo_path}
       prune --keep-daily 7 --prefix {hostname}- #{repo_path}
-      create #{repo_path}::{hostname}-{now:%Y-%m-%dT%H:%M:%S.%f} /home /etc /var/log/syslog*
+      create #{repo_path}::{hostname}-{now:%Y-%m-%dT%H:%M:%S.%f} /etc /home
       check --prefix {hostname}- #{repo_path}
       list --json #{repo_path}
     EOS

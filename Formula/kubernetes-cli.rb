@@ -2,51 +2,51 @@ class KubernetesCli < Formula
   desc "Kubernetes command-line interface"
   homepage "https://kubernetes.io/"
   url "https://github.com/kubernetes/kubernetes.git",
-      :tag      => "v1.17.0",
-      :revision => "70132b0f130acc0bed193d9ba59dd186f0e634cf"
+      tag:      "v1.21.1",
+      revision: "5e58841cce77d4bc13713ad2b91fa0d961e69192"
+  license "Apache-2.0"
   head "https://github.com/kubernetes/kubernetes.git"
 
-  bottle do
-    cellar :any_skip_relocation
-    sha256 "ae55e2c178b7ccd8dc7811060ee179c8117241dc0d548dee35e3471c7bd90acb" => :catalina
-    sha256 "1901ca30376d47345bcbd2362a96745975dce03120e98f4641081b704d220652" => :mojave
-    sha256 "b790e7db7e9b6a6ae50423d076d07e8366bf4fb988550f3a3272343173166ff7" => :high_sierra
-    sha256 "a53b7fbdbe5b6bcf0235b3561f48e1c4e4fc3b9c6dde03df74f76d1c0ae16f52" => :x86_64_linux
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d6d7f52dddb3c2e7bd357014e353941fe904c050405d5a131531a95606625d48"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ae61a1b396a5ee1b8559f21405acfd891ae7c33e08b42b5e04cc7d3ad5a8f4da"
+    sha256 cellar: :any_skip_relocation, catalina:      "88e926b2baf29ebee630b98f128b0bebac35dcbefabea4921fbf19b5ccf40602"
+    sha256 cellar: :any_skip_relocation, mojave:        "02989940e3a8622495e5a00c3c1f766e5563a899c5f5bcc36d10f23b2e08a79a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "81985a2216d1106300e4cc51b5fcd7dcc970867556fed55ac19a1e3ab687fa07"
+  end
+
+  depends_on "bash" => :build
+  depends_on "coreutils" => :build
   depends_on "go" => :build
-  depends_on "rsync" => :build unless OS.mac?
+
+  uses_from_macos "rsync" => :build
 
   def install
-    ENV["GOPATH"] = buildpath
-    os = OS.linux? ? "linux" : "darwin"
-    dir = buildpath/"src/k8s.io/kubernetes"
-    dir.install buildpath.children - [buildpath/".brew_home"]
+    # Don't dirty the git tree
+    rm_rf ".brew_home"
 
-    cd dir do
-      # Race condition still exists in OS X Yosemite
-      # Filed issue: https://github.com/kubernetes/kubernetes/issues/34635
-      ENV.deparallelize { system "make", "generated_files" }
+    # Make binary
+    ENV.prepend_path "PATH", Formula["coreutils"].libexec/"gnubin" # needs GNU date
+    system "make", "WHAT=cmd/kubectl"
+    bin.install "_output/bin/kubectl"
 
-      # Make binary
-      system "make", "kubectl"
-      bin.install "_output/local/bin/#{os}/amd64/kubectl"
+    # Install bash completion
+    output = Utils.safe_popen_read("#{bin}/kubectl", "completion", "bash")
+    (bash_completion/"kubectl").write output
 
-      # Install bash completion
-      output = Utils.popen_read("#{bin}/kubectl completion bash")
-      (bash_completion/"kubectl").write output
+    # Install zsh completion
+    output = Utils.safe_popen_read("#{bin}/kubectl", "completion", "zsh")
+    (zsh_completion/"_kubectl").write output
 
-      # Install zsh completion
-      output = Utils.popen_read("#{bin}/kubectl completion zsh")
-      (zsh_completion/"_kubectl").write output
-
-      prefix.install_metafiles
-
-      # Install man pages
-      # Leave this step for the end as this dirties the git tree
-      system "hack/generate-docs.sh"
-      man1.install Dir["docs/man/man1/*.1"]
-    end
+    # Install man pages
+    # Leave this step for the end as this dirties the git tree
+    system "hack/generate-docs.sh"
+    man1.install Dir["docs/man/man1/*.1"]
   end
 
   test do
@@ -54,7 +54,9 @@ class KubernetesCli < Formula
     assert_match "kubectl controls the Kubernetes cluster manager.", run_output
 
     version_output = shell_output("#{bin}/kubectl version --client 2>&1")
+
     assert_match "GitTreeState:\"clean\"", version_output
+
     if build.stable?
       assert_match stable.instance_variable_get(:@resource)
                          .instance_variable_get(:@specs)[:revision],

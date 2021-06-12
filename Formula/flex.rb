@@ -3,14 +3,15 @@ class Flex < Formula
   homepage "https://github.com/westes/flex"
   url "https://github.com/westes/flex/releases/download/v2.6.4/flex-2.6.4.tar.gz"
   sha256 "e87aae032bf07c26f85ac0ed3250998c37621d95f8bd748b31f15b33c45ee995"
-  revision 1
+  license "BSD-2-Clause"
+  revision 2
 
   bottle do
-    sha256 "902e2701bb4d8130fe3177211dda84b6ebc6a520467874a52bcd7ff043b949cc" => :catalina
-    sha256 "2051ed8f0de322732b111f2cc82069e82f6dfd4d839e6d098bbebcd7f92220e6" => :mojave
-    sha256 "9c224c27a3d40a53b6f778a6b825f8b4f14654080b144e50f1bec9cc608c757d" => :high_sierra
-    sha256 "a958106ee0895b21c7577478b847ecdbc601ce6a723543c5da455bfe0eee5f8f" => :sierra
-    sha256 "d96d0062e78529ae5a0ff049eeaf1216df4a5e47f2fbda680473b48b15f59d1a" => :x86_64_linux
+    sha256 arm64_big_sur: "ba78304da35f69526d386e1d1decca8818b155b4dda4f470d9393d23cf713e11"
+    sha256 big_sur:       "89ec2b04b1aab94297f490c60fe6ca2bcde7de9b7661482728b07931e635d21c"
+    sha256 catalina:      "e563a7a42aceff203cca4f420ebc6a8bbd5075a2b0007d46724f037ebc7b41a5"
+    sha256 mojave:        "687132db0837bdcb6e02b5715f6a07f658bdf109b5353908f260d46d354f7bdb"
+    sha256 x86_64_linux:  "eb465398252c2365bb899cc7cc42f1ca59dd47a7f6325d325c1362fd7a3b21b9"
   end
 
   head do
@@ -25,14 +26,13 @@ class Flex < Formula
     depends_on "libtool" => :build
   end
 
-  keg_only :provided_by_macos, "some formulae require a newer version of flex"
+  keg_only :provided_by_macos
 
   depends_on "help2man" => :build
   depends_on "gettext"
-  unless OS.mac?
-    depends_on "m4"
-    depends_on "bison" => :build
-  end
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "m4"
 
   def install
     if build.head?
@@ -46,7 +46,7 @@ class Flex < Formula
                           "--enable-shared",
                           "--prefix=#{prefix}"
     system "make", "install"
-    bin.install_symlink "flex" => "lex" unless OS.mac?
+    bin.install_symlink "flex" => "lex"
   end
 
   test do

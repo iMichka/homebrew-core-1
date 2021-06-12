@@ -1,15 +1,22 @@
 class Expat < Formula
   desc "XML 1.0 parser"
   homepage "https://libexpat.github.io/"
-  url "https://github.com/libexpat/libexpat/releases/download/R_2_2_9/expat-2.2.9.tar.xz"
-  sha256 "1ea6965b15c2106b6bbe883397271c80dfa0331cdf821b2c319591b55eadc0a4"
+  url "https://github.com/libexpat/libexpat/releases/download/R_2_4_1/expat-2.4.1.tar.xz"
+  sha256 "cf032d0dba9b928636548e32b327a2d66b1aab63c4f4a13dd132c2d1d2f2fb6a"
+  license "MIT"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+    regex(/href=.*?expat[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "202ebb6d7a1eb01066263128fe34ebbbc806e5ee35b283510fa1074b674c3739" => :catalina
-    sha256 "7440c3d35a2bd7d27bb6364a5d8c2f206509d6ebe09bd507039b701c133bb45d" => :mojave
-    sha256 "5c51e4a42af80a11bf3f2c697a36aedc6df21b03bed3b51c3127472660b042b3" => :high_sierra
-    sha256 "5d0281695b1febb80cb2dc3c64d61e586ebe1870202d4f763650ab127d2b9f01" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "fac282dc87d050030a34ad8b6fdae89dd5ecc1c08d03f0d9efc49c9396daaed8"
+    sha256 cellar: :any,                 big_sur:       "18ebdde1356dd48de8c575eb2479dbb6556f7bef7a2b48a64c0f018dd79af1dc"
+    sha256 cellar: :any,                 catalina:      "b679f0f8807216636b660b01b3b8f5506e245e4f6160450f408f6446d3017e48"
+    sha256 cellar: :any,                 mojave:        "45004cc0adb2a75d9d0f965a0fc3f087059907aeed9c5f8b36bbb3babce4a6df"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "6cb9d218fe6fbfb86d5aa69f6ac7087b6a082e9b6739a51a701c1a7f3d7d3642"
   end
 
   head do
@@ -22,15 +29,11 @@ class Expat < Formula
 
   keg_only :provided_by_macos
 
-  # On Ubuntu 14, fix the error: You do not have support for any sources of high quality entropy
-  uses_from_macos "libbsd"
-
   def install
     cd "expat" if build.head?
     system "autoreconf", "-fiv" if build.head?
     args = ["--prefix=#{prefix}", "--mandir=#{man}"]
     args << "--with-docbook" if build.head?
-    args << "--with-libbsd" unless OS.mac?
     system "./configure", *args
     system "make", "install"
   end

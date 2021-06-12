@@ -3,14 +3,15 @@ class Libbitcoin < Formula
   homepage "https://github.com/libbitcoin/libbitcoin-system"
   url "https://github.com/libbitcoin/libbitcoin-system/archive/v3.6.0.tar.gz"
   sha256 "5bcc4c31b53acbc9c0d151ace95d684909db4bf946f8d724f76c711934c6775c"
-  revision 2
+  license "AGPL-3.0"
+  revision 7
 
   bottle do
-    cellar :any
-    sha256 "75609ff2170d12c79c77bd09219218ca286539ed2e65fc3ff33785946236a33d" => :catalina
-    sha256 "b4d07453eea2f3a98468cd2fc1e7dc36337b3c8a4cc3fc677b21d60faf802cf4" => :mojave
-    sha256 "3ff7c0fea4e15397508bdf7c8b932538861182527d626e8c71759976fc4492b5" => :high_sierra
-    sha256 "07c6712043428e303e13216f59c3a4e576605d7ba03e39f24b92ddf1dfe4b73f" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "2599894cb2129c474077e7a76a0abf45a9eb328f6dbf8da16946c19781d1ee6b"
+    sha256 cellar: :any,                 big_sur:       "1244b027fc18f6dba8a0126a578165a09b1c01b1ebf87cba093f7a90b5083505"
+    sha256 cellar: :any,                 catalina:      "3229377e4e17745fff4d608d41397c786f6772574bc4957f999cb3bf693e4d4b"
+    sha256 cellar: :any,                 mojave:        "c17b574fa866c922c770dd70c9e08f5d55f2e24d5fabe5c366ffcf68f9bea946"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "9584040cd459dca7dc4e830b4f2b854f9e881dc57d5d8cba2da6df1c51a63dbe"
   end
 
   depends_on "autoconf" => :build
@@ -27,6 +28,7 @@ class Libbitcoin < Formula
   end
 
   def install
+    ENV.cxx11
     resource("secp256k1").stage do
       system "./autogen.sh"
       system "./configure", "--disable-dependency-tracking",
@@ -43,12 +45,14 @@ class Libbitcoin < Formula
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}",
                           "--with-png",
                           "--with-qrencode"
     system "make", "install"
   end
 
   test do
+    boost = Formula["boost"]
     (testpath/"test.cpp").write <<~EOS
       #include <bitcoin/bitcoin.hpp>
       int main() {
@@ -62,7 +66,7 @@ class Libbitcoin < Formula
       }
     EOS
     system ENV.cxx, "-std=c++11", "test.cpp", "-L#{lib}", "-lbitcoin",
-                    "-L#{Formula["boost"].opt_lib}", "-lboost_system",
+                    "-L#{boost.opt_lib}", "-lboost_system",
                     "-o", "test"
     system "./test"
   end

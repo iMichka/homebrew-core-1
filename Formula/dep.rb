@@ -2,26 +2,35 @@ class Dep < Formula
   desc "Go dependency management tool"
   homepage "https://github.com/golang/dep"
   url "https://github.com/golang/dep.git",
-      :tag      => "v0.5.4",
-      :revision => "1f7c19e5f52f49ffb9f956f64c010be14683468b"
+      tag:      "v0.5.4",
+      revision: "1f7c19e5f52f49ffb9f956f64c010be14683468b"
+  license "BSD-3-Clause"
   head "https://github.com/golang/dep.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "326ba98bcef16dc8823dd9fe76657e6ff0088a0669c0f857a05dd51867220bb7" => :catalina
-    sha256 "33200b5422fac00416ac44c7c28ad5aa627b845cd4d9aeb7002f7d41304deab0" => :mojave
-    sha256 "29cfe5b8c29bfbb09a93087dfbd30a9894ed596d3a4219072f022a001d2975cd" => :high_sierra
-    sha256 "ef9a0a978cbf2d4e537d21c4ff7b89a75b66228697b0aa348daa2284bc7362a9" => :sierra
-    sha256 "6810c65308b77a4a99a657fc8963221b9729b5f63ea2d7500932d38191063a87" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any_skip_relocation, big_sur:      "5bd49a3da392e08bef0ae821a534bd699c4c3f6d116d90b53007477fbad6a374"
+    sha256 cellar: :any_skip_relocation, catalina:     "be9871f4e01aa179f9f3b32931838f21c5e64d33840ac36c8b601adeebb5e95b"
+    sha256 cellar: :any_skip_relocation, mojave:       "a86103fd9d7349cde0906850b1adaaa4e9b6c787cb11b0a791127c9af16ede8a"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "30341cfd4d3ad08400ea2dcfea6971173382ef5418102c04631d941c71cc69c0"
   end
+
+  deprecate! date: "2020-11-25", because: :repo_archived
 
   depends_on "go"
 
-  conflicts_with "deployer", :because => "both install `dep` binaries"
+  conflicts_with "deployer", because: "both install `dep` binaries"
 
   def install
     ENV["GOPATH"] = buildpath
-    platform = OS.mac? ? "darwin" : "linux"
+
+    platform = nil
+    on_macos do
+      platform = "darwin"
+    end
+    on_linux do
+      platform = "linux"
+    end
     (buildpath/"src/github.com/golang/dep").install buildpath.children
     cd "src/github.com/golang/dep" do
       ENV["DEP_BUILD_PLATFORMS"] = platform

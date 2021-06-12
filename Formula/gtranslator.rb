@@ -1,20 +1,20 @@
 class Gtranslator < Formula
   desc "GNOME gettext PO file editor"
   homepage "https://wiki.gnome.org/Design/Apps/Translator"
-  url "https://download.gnome.org/sources/gtranslator/3.34/gtranslator-3.34.0.tar.xz"
-  sha256 "b2f25c02bdfd246896803756078c3006ef433c83eb802bc23a33413046bffb17"
-  revision 1
+  url "https://download.gnome.org/sources/gtranslator/40/gtranslator-40.0.tar.xz"
+  sha256 "ec3eba36dee1c549377d1475aef71748dbaebd295005e1990ea9821f02b38834"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "159e755282296b401507b791b4c4b7121b995a8055b75271aca6c4ff95c7fcf6" => :catalina
-    sha256 "4b5a43b5bd598eab15e66156b3491c43ad20dc7a226880ee9b720e4bb6b43188" => :mojave
-    sha256 "17ac4683c97685ceedbda84a6680124f04d6181e2397c373633dc8c99eb835b2" => :high_sierra
+    sha256 arm64_big_sur: "b90853dc169f42e8f9b1dddcc3af59a52c6809c07a011ec74676676e1aa34c61"
+    sha256 big_sur:       "3a1ea832e3c5b8be45917df36d6229fde96c22e3a8077101d40c00367872b8f6"
+    sha256 catalina:      "9ead77c72b7ee59d76a4c73c92cb93a29cee0cf7885bc8aab54eb672809baf0b"
+    sha256 mojave:        "e5c88ca5952d0958cb3f9bacf25e63ca41ade68c86cb8c55648820fa672ca0ab"
   end
 
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "adwaita-icon-theme"
   depends_on "glib"
   depends_on "gspell"
@@ -23,14 +23,16 @@ class Gtranslator < Formula
   depends_on "iso-codes"
   depends_on "itstool"
   depends_on "json-glib"
+  depends_on "libdazzle"
   depends_on "libgda"
+  depends_on "libhandy"
   depends_on "libsoup"
 
   def install
     # stop meson_post_install.py from doing what needs to be done in the post_install step
     ENV["DESTDIR"] = "/"
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
     end

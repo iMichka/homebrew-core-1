@@ -1,39 +1,59 @@
 class Broot < Formula
   desc "New way to see and navigate directory trees"
-  homepage "https://dystroy.org/broot"
-  url "https://github.com/Canop/broot/archive/v0.10.3.tar.gz"
-  sha256 "6e0ddb89d3b533bcbf7f8f0b874c480f3421f5fa7780a0487f26b44438fda0e5"
+  homepage "https://dystroy.org/broot/"
+  url "https://github.com/Canop/broot/archive/v1.5.1.tar.gz"
+  sha256 "af7467aa4331dab9a556ff1b6c265eaa6b526a85ebc1f499d091cb719e1db364"
+  license "MIT"
   head "https://github.com/Canop/broot.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "d6fa0d431eb939baf3260c436c37a273e68fc0ca26ae3a320f6d5df84171d50b" => :catalina
-    sha256 "86eea9278e02f9888e1bc5c80342579620a696cc50d1aebe54416b1f98cc0b94" => :mojave
-    sha256 "242b5c4c68e6db4ec8624f80b610607f69f17d729ec2b990f8af7caa1e86e6b1" => :high_sierra
-    sha256 "9889971daf6720889de51699c6259f2e1fddff2fdf7a8b6ae1ac2fe4ab6b71ca" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e90fb2484ba9bc08c8b498174d1c45f0a06b055529ba02bdf887ce5a3881e94b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "99611d7a69c70303626e745d02b2ddc83580393db3f8eb318656108a1868df89"
+    sha256 cellar: :any_skip_relocation, catalina:      "bb0b419627ff9d746fad37e98f1ad4b25d3da7d68009d9d985e6b6188d5e2e7d"
+    sha256 cellar: :any_skip_relocation, mojave:        "7da96ac53fa9c2ae7fa92a57e70f22f552759d469785b836cf8025c22c1229f7"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "694c022cdce7ab5b57dbcb0075184998f7176ae3b7d1b94d4ed1d56de99193f6"
   end
 
   depends_on "rust" => :build
 
+  uses_from_macos "zlib"
+
   def install
-    system "cargo", "install", "--locked", "--root", prefix, "--path", "."
+    system "cargo", "install", *std_cargo_args
+
+    # Replace man page "#version" and "#date" based on logic in release.sh
+    inreplace "man/page" do |s|
+      s.gsub! "#version", version
+      s.gsub! "#date", Time.now.utc.strftime("%Y/%m/%d")
+    end
+    man1.install "man/page" => "broot.1"
+
+    # Completion scripts are generated in the crate's build directory,
+    # which includes a fingerprint hash. Try to locate it first
+    out_dir = Dir["target/release/build/broot-*/out"].first
+    bash_completion.install "#{out_dir}/broot.bash"
+    bash_completion.install "#{out_dir}/br.bash"
+    fish_completion.install "#{out_dir}/broot.fish"
+    fish_completion.install "#{out_dir}/br.fish"
+    zsh_completion.install "#{out_dir}/_broot"
+    zsh_completion.install "#{out_dir}/_br"
   end
 
   test do
-    # Errno::EIO: Input/output error @ io_fread - /dev/pts/0
-    return if ENV["CI"]
+    on_linux do
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
+    assert_match "A tree explorer and a customizable launcher", shell_output("#{bin}/broot --help 2>&1")
 
     require "pty"
-
-    %w[a b c].each { |f| (testpath/"root"/f).write("") }
-    PTY.spawn("#{bin}/broot", "--cmd", ":pt", "--no-style", "--out", "#{testpath}/output.txt", testpath/"root") do |r, _w, _pid|
-      r.read
-
-      assert_match <<~EOS, (testpath/"output.txt").read.gsub(/\r\n?/, "\n")
-        ├──a
-        ├──b
-        └──c
-      EOS
+    require "io/console"
+    PTY.spawn(bin/"broot", "--cmd", ":pt", "--no-style", "--out", testpath/"output.txt", err: :out) do |r, w, pid|
+      r.winsize = [20, 80] # broot dependency termimad requires width > 2
+      w.write "n\r"
+      assert_match "New Configuration file written in", r.read
+      Process.wait(pid)
     end
+    assert_equal 0, $CHILD_STATUS.exitstatus
   end
 end

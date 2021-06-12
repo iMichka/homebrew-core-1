@@ -1,33 +1,33 @@
 class Libphonenumber < Formula
   desc "C++ Phone Number library by Google"
   homepage "https://github.com/google/libphonenumber"
-  url "https://github.com/google/libphonenumber/archive/v8.11.1.tar.gz"
-  sha256 "43d5b8bff0ae603a63fb7deb5cbb541556e50ac58f6447b55963923e20de6ff5"
+  url "https://github.com/google/libphonenumber/archive/v8.12.24.tar.gz"
+  sha256 "7622cb6d1096f2c90650084084ab8fa5e554319b63622af2a5b2ec0308e8db15"
+  license "Apache-2.0"
+  revision 1
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    cellar :any
-    sha256 "a92293f5052f4b02937cad2fbeececa63143b3c194d7cd41df8540c91a2fc67e" => :catalina
-    sha256 "a844543f549f4afab48a0ec064d47948839e43bdcd9b72cc3bf763ef758fb5ec" => :mojave
-    sha256 "6d175a0d4ff48d0fcbc5b1d1f51de7f41590bfa66e983189669243496fb16b5e" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "d303c4a5b36b3fa94cf392b58fdccdfc5816c1189205dad32f8018dd02db9578"
+    sha256 cellar: :any, big_sur:       "f6dc8f6f8c3ea1e13b674d00576cf74a03671a04e354cb3fb85a6b9b145c3e46"
+    sha256 cellar: :any, catalina:      "0d134787f468db28f20d44fec123df740e2c3e79ff25c9c308a9fa57d37e0ada"
+    sha256 cellar: :any, mojave:        "1e05b66ba4ff4c70f39f414ec2546876d197105669d7e57a9ef49cb6483b8af6"
   end
 
   depends_on "cmake" => :build
+  depends_on "googletest" => :build
   depends_on "boost"
   depends_on "icu4c"
-  depends_on :java => "1.7+"
   depends_on "protobuf"
   depends_on "re2"
 
-  resource "gtest" do
-    url "https://github.com/google/googletest/archive/release-1.8.1.tar.gz"
-    sha256 "9bf1fe5182a604b4135edc1a425ae356c9ad15e9b23f9f12a02e80184c3a249c"
-  end
-
   def install
     ENV.cxx11
-    (buildpath/"gtest").install resource("gtest")
-    system "cmake", "cpp", "-DGTEST_SOURCE_DIR=gtest/googletest",
-                           "-DGTEST_INCLUDE_DIR=gtest/googletest/include",
+    system "cmake", "cpp", "-DGTEST_INCLUDE_DIR=#{Formula["googletest"].include}",
                            *std_cmake_args
     system "make", "install"
   end

@@ -1,33 +1,33 @@
 class Protobuf < Formula
   desc "Protocol buffers (Google's data interchange format)"
   homepage "https://github.com/protocolbuffers/protobuf/"
-  url "https://github.com/protocolbuffers/protobuf.git",
-      :tag      => "v3.11.2",
-      :revision => "fe1790ca0df67173702f70d5646b82f48f412b99"
-  head "https://github.com/protocolbuffers/protobuf.git"
+  url "https://github.com/protocolbuffers/protobuf/releases/download/v3.17.3/protobuf-all-3.17.3.tar.gz"
+  sha256 "77ad26d3f65222fd96ccc18b055632b0bfedf295cb748b712a98ba1ac0b704b2"
+  license "BSD-3-Clause"
+
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
 
   bottle do
-    sha256 "3fdda0c68757e397a80cf6d87ffb1f6570f459c368a1288c316e932687c5a98f" => :catalina
-    sha256 "c2c8d923c866867eec44813a8264684bd6deb5fc98fc0ca257eaf1dea34ba183" => :mojave
-    sha256 "a772a6c0dc4a95ae6a2cc200664995ef2749d08da8e0965c9b18e932cd5ff19c" => :high_sierra
-    sha256 "a84b223cfd1fa2adc1336afb7a11a8bc22f42163766ae55905e04bdb095c81a8" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "ef7a56961e918e7626e099d18ad87d2ad5414ccc2086211d5dd4f6509d7f4de5"
+    sha256 cellar: :any,                 big_sur:       "d1060a6f73000c9c46a1954397a6375fb41c409d7b3cb7206fc69488313b4855"
+    sha256 cellar: :any,                 catalina:      "2f25a4051028d54de1b5527826f39815858b89040f39f14866472c8aa6bfb4e1"
+    sha256 cellar: :any,                 mojave:        "7e6d2eb1baee925d8a0776e9dc9fbcb267e1de5c45d2b648b6a60457f0519667"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "2aec8a5b472dac20baa064848901305e471422ed4b229964ca6989e0cee093c6"
   end
 
-  depends_on "autoconf" => :build
-  depends_on "automake" => :build
-  depends_on "libtool" => :build
-  depends_on "python" => [:build, :test]
+  head do
+    url "https://github.com/protocolbuffers/protobuf.git"
 
-  resource "six" do
-    url "https://files.pythonhosted.org/packages/94/3e/edcf6fef41d89187df7e38e868b2dd2182677922b600e880baad7749c865/six-1.13.0.tar.gz"
-    sha256 "30f610279e8b2578cab6db20741130331735c781b56053c59c4076da27f06b66"
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "libtool" => :build
   end
 
-  unless OS.mac?
-    fails_with :gcc => "4"
-    fails_with :gcc => "5"
-    depends_on "gcc@6"
-  end
+  depends_on "python@3.9" => [:build, :test]
+  depends_on "six"
 
   def install
     # Don't build in debug mode. See:
@@ -36,7 +36,7 @@ class Protobuf < Formula
     ENV.prepend "CXXFLAGS", "-DNDEBUG"
     ENV.cxx11
 
-    system "./autogen.sh"
+    system "./autogen.sh" if build.head?
     system "./configure", "--disable-debug", "--disable-dependency-tracking",
                           "--prefix=#{prefix}", "--with-zlib"
     system "make"
@@ -44,23 +44,16 @@ class Protobuf < Formula
     system "make", "install"
 
     # Install editor support and examples
-    doc.install "editors", "examples"
+    pkgshare.install "editors/proto.vim", "examples"
+    elisp.install "editors/protobuf-mode.el"
 
     ENV.append_to_cflags "-I#{include}"
     ENV.append_to_cflags "-L#{lib}"
 
-    resource("six").stage do
-      system "python3", *Language::Python.setup_install_args(libexec)
-    end
     chdir "python" do
-      system "python3", *Language::Python.setup_install_args(libexec),
+      system Formula["python@3.9"].opt_bin/"python3", *Language::Python.setup_install_args(prefix),
                         "--cpp_implementation"
     end
-
-    version = Language::Python.major_minor_version "python3"
-    site_packages = "lib/python#{version}/site-packages"
-    pth_contents = "import site; site.addsitedir('#{libexec/site_packages}')\n"
-    (prefix/site_packages/"homebrew-protobuf.pth").write pth_contents
   end
 
   test do
@@ -76,6 +69,6 @@ class Protobuf < Formula
     EOS
     (testpath/"test.proto").write testdata
     system bin/"protoc", "test.proto", "--cpp_out=."
-    system "python3", "-c", "import google.protobuf"
+    system Formula["python@3.9"].opt_bin/"python3", "-c", "import google.protobuf"
   end
 end

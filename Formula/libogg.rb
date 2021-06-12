@@ -1,29 +1,20 @@
 class Libogg < Formula
   desc "Ogg Bitstream Library"
   homepage "https://www.xiph.org/ogg/"
-
-  stable do
-    url "https://downloads.xiph.org/releases/ogg/libogg-1.3.4.tar.gz"
-    sha256 "fe5670640bd49e828d64d2879c31cb4dde9758681bb664f9bdbf159a01b0c76e"
-
-    # os_types: fix unsigned typedefs for MacOS. This is already merged upstream; remove on next version
-    patch do
-      url "https://github.com/xiph/ogg/commit/c8fca6b4a02d695b1ceea39b330d4406001c03ed.patch?full_index=1"
-      sha256 "0f4d289aecb3d5f7329d51f1a72ab10c04c336b25481a40d6d841120721be485"
-    end
-  end
+  url "https://ftp.osuosl.org/pub/xiph/releases/ogg/libogg-1.3.5.tar.gz"
+  sha256 "0eb4b4b9420a0f51db142ba3f9c64b333f826532dc0f48c6410ae51f4799b664"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any
-    sha256 "0a03b8a7307aeac70762fd4ee9837fff4ed523c34063a6aec52c5cf34c54695f" => :catalina
-    sha256 "57278622c3550ef4cfe1a14aa885daacaac50e3571d4e8f2d6a6e5e9416b8e88" => :mojave
-    sha256 "7883d41539869a4db165825e6f37c74dbd082fe0e839992aae8c2f9b09d55bea" => :high_sierra
-    sha256 "ba70b9105ecf35ebc6df91306eb62708c7557c2aafdb1799fd7e7424b133c237" => :sierra
-    sha256 "a18cf90fe84e58c36d00010862e59fca46374743edf6950d89292660d4b20ed5" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "86f7182a3e7ad1a6cbc0520424875fcad195c97ee62db95d7b5e863be95eee95"
+    sha256 cellar: :any,                 big_sur:       "b28fe3ad76ad6caafbedb2587deac3b4f03f79cb1466e6f76a06724eaae346ee"
+    sha256 cellar: :any,                 catalina:      "e6c116ef9fa7ebac93b5b22fb1208d1d1f4b000fdfdae4b0ae9ec18fe5a5412c"
+    sha256 cellar: :any,                 mojave:        "f416f50ef34e470f690e27f3c29f65d6fe5b1aec56f16a2a312ba6011e809720"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "db517cc6e922b1d3a7c845bad5dd4c78d48b170aa94187d6281f8577f228a180"
   end
 
   head do
-    url "https://git.xiph.org/ogg.git"
+    url "https://gitlab.xiph.org/xiph/ogg.git"
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build

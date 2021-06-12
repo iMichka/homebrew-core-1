@@ -1,18 +1,20 @@
 class Diamond < Formula
   desc "Accelerated BLAST compatible local sequence aligner"
-  homepage "https://ab.inf.uni-tuebingen.de/software/diamond/"
-  url "https://github.com/bbuchfink/diamond/archive/v0.9.29.tar.gz"
-  sha256 "9ccec6417b4a7bfcd616e3daee6b1d9e5f61340ae241e8c374b01176124ba635"
+  homepage "https://www.wsi.uni-tuebingen.de/lehrstuehle/algorithms-in-bioinformatics/software/diamond/"
+  url "https://github.com/bbuchfink/diamond/archive/v2.0.9.tar.gz"
+  sha256 "3019f1adb6411c6669a3a17351d0338ae02f6b3cab3c8a3bac91cf334dcda620"
+  license "GPL-3.0-or-later"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b0bf57ae646521f6911054c707222a979d384f426ba60186b631b6069bb006fb" => :catalina
-    sha256 "cebb87be2e7fa2a3de21a52b2e0e3a4a46701381646a81aeaaf56aa38558472a" => :mojave
-    sha256 "8c63422b3bf6b46b6fb6bf484f199f5b18d1c58fe7dc091e4d1feae116fd7da1" => :high_sierra
-    sha256 "b2099dd1c7b86c2e0a4399f66e13cfea8cf69d78f2f131df5a94c2ceed4acc46" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "e0772434a0d7d1d7e8dc59466468ec99c9b64a8b3f36a61cebbffcb8cc2a73cd"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ce54edf8bde4bd91cf0b6c0b696d68416af69d6f536dfcc5d7bf377e8f930466"
+    sha256 cellar: :any_skip_relocation, catalina:      "7f7620c3bd7e5a7961ed9948a2e69e52f9b194e59c4bb27ac27c558177536299"
+    sha256 cellar: :any_skip_relocation, mojave:        "9fa62c6f96c9a32324240bd8e311918e157cadd9b521818ab98eec3c701bab08"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "60de085fc704af1acdd0b44a7dab669b5d1c7d626c7ec269c7ed0850c07dfcaf"
   end
 
   depends_on "cmake" => :build
+
   uses_from_macos "zlib"
 
   def install
@@ -42,6 +44,6 @@ class Diamond < Formula
       vspcXpgwsrspdlvirpprppkvlglqaXatapg
     EOS
     output = shell_output("#{bin}/diamond makedb --in nr.faa -d nr 2>&1")
-    assert_match "Processed 6 sequences, 572 letters.", output
+    assert_match "Database sequences  6\n  Database letters  572", output
   end
 end

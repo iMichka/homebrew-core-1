@@ -1,25 +1,39 @@
 class Libarchive < Formula
   desc "Multi-format archive and compression library"
   homepage "https://www.libarchive.org"
-  url "https://www.libarchive.org/downloads/libarchive-3.4.0.tar.gz"
-  sha256 "8643d50ed40c759f5412a3af4e353cffbce4fdf3b5cf321cb72cacf06b2d825e"
+  url "https://www.libarchive.org/downloads/libarchive-3.5.1.tar.xz"
+  sha256 "0e17d3a8d0b206018693b27f08029b598f6ef03600c2b5d10c94ce58692e299b"
+  license "BSD-2-Clause"
+  revision OS.mac? ? 1 : 2
+
+  livecheck do
+    url "https://libarchive.org/downloads/"
+    regex(/href=.*?libarchive[._-]v?(\d+(?:\.\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "d3eb488c913723c85258a026d294af420fd6d502837ec340e0878ec5b7703c9a" => :catalina
-    sha256 "83f56d2bc1d70ab3b8fcf6bf32780368c0dbfdf6c4e16d324f39a5cbac4ca4c4" => :mojave
-    sha256 "62bb5281530d97f33a502a865d6178fe4d66d94323e468d8711d24cf834c7dd7" => :high_sierra
-    sha256 "4e41f900e82a342b90721e09831397684e98222213d02e78694574758f9ce393" => :sierra
-    sha256 "885c7982ea1c01ddab9c70867fa3d37d91c21e8cf50d80737c8ce62a2ca22dce" => :x86_64_linux
+    rebuild 1
+    sha256 cellar: :any,                 arm64_big_sur: "70d00c2b7edaa2e7e84d8831edddfc07490f19016f7899bcde581d5d71040d67"
+    sha256 cellar: :any,                 big_sur:       "88826e185e60eba60ad004889a76dae4354a15533a5ba8254ecf0323075b34cd"
+    sha256 cellar: :any,                 catalina:      "616792d4660cc153ce5868fd612980af9b8b9e18d54c4199eb11e08bc9bb45da"
+    sha256 cellar: :any,                 mojave:        "b231516d40d35180e1f61a50175324e4ce28f71aec27769ecc4661dbe6e883d0"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "7ebda0300824c3acf8f56c75c538c7c2d3bc7367013207e21c6af4ccd36bc674"
   end
 
   keg_only :provided_by_macos
 
+  depends_on "libb2"
+  depends_on "lz4"
   depends_on "xz"
-  unless OS.mac?
-    depends_on "bzip2"
-    depends_on "expat"
-    depends_on "zlib"
+  depends_on "zstd"
+
+  uses_from_macos "bzip2"
+  uses_from_macos "expat"
+  uses_from_macos "zlib"
+
+  on_linux do
+    conflicts_with "cpio", because: "both install `cpio` binaries"
+    conflicts_with "gnu-tar", because: "both install `tar` binaries"
   end
 
   def install
@@ -33,18 +47,16 @@ class Libarchive < Formula
 
     system "make", "install"
 
-    if OS.mac?
-      # Just as apple does it.
-      ln_s bin/"bsdtar", bin/"tar"
-      ln_s bin/"bsdcpio", bin/"cpio"
-      ln_s man1/"bsdtar.1", man1/"tar.1"
-      ln_s man1/"bsdcpio.1", man1/"cpio.1"
-    end
+    # Just as apple does it.
+    ln_s bin/"bsdtar", bin/"tar"
+    ln_s bin/"bsdcpio", bin/"cpio"
+    ln_s man1/"bsdtar.1", man1/"tar.1"
+    ln_s man1/"bsdcpio.1", man1/"cpio.1"
   end
 
   test do
     (testpath/"test").write("test")
     system bin/"bsdtar", "-czvf", "test.tar.gz", "test"
-    assert_match /test/, shell_output("#{bin}/bsdtar -xOzf test.tar.gz")
+    assert_match "test", shell_output("#{bin}/bsdtar -xOzf test.tar.gz")
   end
 end

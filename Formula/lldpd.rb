@@ -1,20 +1,26 @@
 class Lldpd < Formula
   desc "Implementation of IEEE 802.1ab (LLDP)"
   homepage "https://vincentbernat.github.io/lldpd/"
-  url "https://media.luffy.cx/files/lldpd/lldpd-1.0.4.tar.gz"
-  sha256 "5319bc032fabf1008d5d91e280276aa7f1bbfbb70129d8526cd4526d7c22724f"
-  revision 1
+  url "https://media.luffy.cx/files/lldpd/lldpd-1.0.11.tar.gz"
+  sha256 "b51d15700fbaefcb7fb85c3506b49d33173a0f15d700f933ef044067b42d46e4"
+  license "ISC"
+
+  livecheck do
+    url "https://github.com/vincentbernat/lldpd.git"
+  end
 
   bottle do
-    sha256 "650fa8e3eb7d9697d2d5386bcb63f89d45cb84b00268ebb8d244b1c860735598" => :catalina
-    sha256 "e9a056129cde2e89fafc05704cfdaf0b59b4b4e7a4a84fc342600f47a5a2d540" => :mojave
-    sha256 "a38c7dfd11897bb66d7e7ae648d6037221ca7c8055020bc8ca1b6630fc36e295" => :high_sierra
-    sha256 "7ae0166c4d523d1b8d31792d2b160b47048c0a1096c7246ce652effc97f9df0f" => :sierra
+    sha256 arm64_big_sur: "9aa7753ca04624756238d5067494d09d9bde797034dca7321f3f4868c6d05c48"
+    sha256 big_sur:       "ae966214024578b49cc642d8fbd141446d3321b3ce3a6ef360db2b9acda5509d"
+    sha256 catalina:      "e34ca3a997738dcf2e0d3fa8a549c6c503a9e8119c2173293c0de24c612c4873"
+    sha256 mojave:        "9e72bb2d06eb3035026d4c3731c1fc71e72e9fe18009ed89b1946eea7ac6c390"
   end
 
   depends_on "pkg-config" => :build
   depends_on "libevent"
   depends_on "readline"
+
+  uses_from_macos "libxml2"
 
   def install
     readline = Formula["readline"]
@@ -42,7 +48,7 @@ class Lldpd < Formula
     (var/"run").mkpath
   end
 
-  plist_options :startup => true
+  plist_options startup: true
 
   def plist
     <<~EOS

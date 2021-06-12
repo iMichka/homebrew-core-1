@@ -1,22 +1,34 @@
 class Groovy < Formula
   desc "Java-based scripting language"
   homepage "https://www.groovy-lang.org/"
-  url "https://dl.bintray.com/groovy/maven/apache-groovy-binary-2.5.8.zip"
-  sha256 "49fb14b98f9fed1744781e4383cf8bff76440032f58eb5fabdc9e67a5daa8742"
+  url "https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/apache-groovy-binary-3.0.8.zip"
+  sha256 "87cf2a61b77f6378ae1081cfda9d14bc651271b25ffac57fc936cd17662e3240"
+  license "Apache-2.0"
 
-  bottle :unneeded
+  livecheck do
+    url "https://groovy.jfrog.io/artifactory/dist-release-local/groovy-zips/"
+    regex(/href=.*?apache-groovy-binary[._-]v?(\d+(?:\.\d+)+)\.zip/i)
+  end
 
-  # Groovy 2.5 requires JDK8+ to build and JDK7 is the minimum version of the JRE that we support.
-  depends_on :java => "1.7+"
+  bottle do
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "a662b91af3884d93c8bc7a9d318eb82c749ab76750100ba2ff2c4e1be87852f3"
+    sha256 cellar: :any_skip_relocation, big_sur:       "b6e30d0087bd573350b73cef007f45dcf7f0652dbfab3b976150c7b9f5ff53ad"
+    sha256 cellar: :any_skip_relocation, catalina:      "b6e30d0087bd573350b73cef007f45dcf7f0652dbfab3b976150c7b9f5ff53ad"
+    sha256 cellar: :any_skip_relocation, mojave:        "b6e30d0087bd573350b73cef007f45dcf7f0652dbfab3b976150c7b9f5ff53ad"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "795fe539fa026a6179478aa6b1ae641ef1767bda3acf3f837397cda00d7c081c"
+  end
 
-  conflicts_with "groovysdk", :because => "both install the same binaries"
+  depends_on "openjdk"
+
+  conflicts_with "groovysdk", because: "both install the same binaries"
 
   def install
     # Don't need Windows files.
     rm_f Dir["bin/*.bat"]
 
     libexec.install "bin", "conf", "lib"
-    bin.install_symlink Dir["#{libexec}/bin/*"] - ["#{libexec}/bin/groovy.ico"]
+    bin.install Dir["#{libexec}/bin/*"] - ["#{libexec}/bin/groovy.ico"]
+    bin.env_script_all_files libexec/"bin", Language::Java.overridable_java_home_env
   end
 
   def caveats

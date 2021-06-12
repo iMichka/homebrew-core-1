@@ -2,47 +2,50 @@ class ErlangAT21 < Formula
   desc "Programming language for highly scalable real-time systems"
   homepage "https://www.erlang.org/"
   # Download tarball from GitHub; it is served faster than the official tarball.
-  url "https://github.com/erlang/otp/archive/OTP-21.3.8.10.tar.gz"
-  sha256 "68c4d1026992e61a9cf2db4db9a970e27c9d8c1b44366873e74b1fa8371ac3ea"
-  revision 1 unless OS.mac?
+  url "https://github.com/erlang/otp/releases/download/OTP-21.3.8.24/otp_src_21.3.8.24.tar.gz"
+  sha256 "a82de871d7ba40fd256558b23a3b4c1539e6c7ece7507d6eb2b00330c6135012"
+  license "Apache-2.0"
+
+  livecheck do
+    url :stable
+    regex(/^OTP[._-]v?(21(?:\.\d+)+)$/i)
+  end
 
   bottle do
-    cellar :any
-    sha256 "0a9e26c3ff531bd814fe59447877905e22aa0f825c40c196d106b5a23aa7064d" => :catalina
-    sha256 "e493545d294d2ad6ce423322ac10910c4945eb10366b42d3086a60396f50226a" => :mojave
-    sha256 "877f7545eac82764c02459c7308204022cb3c951f279832545f65e0f5da70572" => :high_sierra
-    sha256 "2f0b4d31f096d9f98a7357387955bcf76407d2243258dd5023e4ea56429f9501" => :x86_64_linux
+    sha256 cellar: :any,                 big_sur:      "7f0e28c3d5df61614dbb3d4309b28889fb1944a888dc21e63bf9d4f084e63c7c"
+    sha256 cellar: :any,                 catalina:     "e2dae570da5fe6c5b020d82630b96b5455db810ddcca28355b5868a910a36a26"
+    sha256 cellar: :any,                 mojave:       "6d3947327c537fd7f39c368edc94a7328dcd7deaa945e425bd52c5681cb932e9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "0a738096d78a98ed23c5a4306694c14ed8b2ba5fd93da25fddb0d50801eac26e"
   end
 
   keg_only :versioned_formula
 
-  depends_on "autoconf" => :build
+  depends_on "autoconf@2.69" => :build
   depends_on "automake" => :build
   depends_on "libtool" => :build
+  depends_on arch: :x86_64
   depends_on "openssl@1.1"
   depends_on "wxmac" # for GUI apps like observer
 
-  depends_on "m4" => :build unless OS.mac?
-
   resource "man" do
     url "https://www.erlang.org/download/otp_doc_man_21.3.tar.gz"
-    mirror "https://fossies.org/linux/misc/otp_doc_man_21.3.tar.gz"
     sha256 "f5464b5c8368aa40c175a5908b44b6d9670dbd01ba7a1eef1b366c7dc36ba172"
   end
 
   resource "html" do
     url "https://www.erlang.org/download/otp_doc_html_21.3.tar.gz"
-    mirror "https://fossies.org/linux/misc/otp_doc_html_21.3.tar.gz"
     sha256 "258b1e0ed1d07abbf08938f62c845450e90a32ec542e94455e5d5b7c333da362"
   end
 
-  def install
-    # Work around Xcode 11 clang bug
-    # https://bitbucket.org/multicoreware/x265/issues/514/wrong-code-generated-on-macos-1015
-    ENV.append_to_cflags "-fno-stack-check" if DevelopmentTools.clang_build_version >= 1010
+  # Fix build on Xcode 11.4+ (https://bugs.erlang.org/browse/ERL-1205)
+  patch do
+    url "https://github.com/erlang/otp/commit/3edba0dad391431cbadad44a8bd15c75254fc239.patch?full_index=1"
+    sha256 "0c82d9f3bdb668ba78025988c9447bebe91a2f6bb00daa7f0ae7bd1916cd9bfd"
+  end
 
+  def install
     # Unset these so that building wx, kernel, compiler and
-    # other modules doesn't fail with an unintelligable error.
+    # other modules doesn't fail with an unintelligible error.
     %w[LIBS FLAGS AFLAGS ZFLAGS].each { |k| ENV.delete("ERL_#{k}") }
 
     # Do this if building from a checkout to generate configure
@@ -54,7 +57,6 @@ class ErlangAT21 < Formula
       --prefix=#{prefix}
       --enable-dynamic-ssl-lib
       --enable-hipe
-      --enable-sctp
       --enable-shared-zlib
       --enable-smp-support
       --enable-threads
@@ -63,7 +65,7 @@ class ErlangAT21 < Formula
       --without-javac
     ]
 
-    if OS.mac?
+    on_macos do
       args << "--enable-darwin-64bit"
       args << "--enable-kernel-poll" if MacOS.version > :el_capitan
       args << "--with-dynamic-trace=dtrace" if MacOS::CLT.installed?
@@ -77,15 +79,41 @@ class ErlangAT21 < Formula
     doc.install resource("html")
   end
 
-  def caveats; <<~EOS
-    Man pages can be found in:
-      #{opt_lib}/erlang/man
+  def caveats
+    <<~EOS
+      Man pages can be found in:
+        #{opt_lib}/erlang/man
 
-    Access them with `erl -man`, or add this directory to MANPATH.
-  EOS
+      Access them with `erl -man`, or add this directory to MANPATH.
+    EOS
   end
 
   test do
     system "#{bin}/erl", "-noshell", "-eval", "crypto:start().", "-s", "init", "stop"
+    (testpath/"factorial").write <<~EOS
+      #!#{bin}/escript
+      %% -*- erlang -*-
+      %%! -smp enable -sname factorial -mnesia debug verbose
+      main([String]) ->
+          try
+              N = list_to_integer(String),
+              F = fac(N),
+              io:format("factorial ~w = ~w\n", [N,F])
+          catch
+              _:_ ->
+                  usage()
+          end;
+      main(_) ->
+          usage().
+
+      usage() ->
+          io:format("usage: factorial integer\n").
+
+      fac(0) -> 1;
+      fac(N) -> N * fac(N-1).
+    EOS
+    chmod 0755, "factorial"
+    assert_match "usage: factorial integer", shell_output("./factorial")
+    assert_match "factorial 42 = 1405006117752879898543142606244511569936384000000000", shell_output("./factorial 42")
   end
 end

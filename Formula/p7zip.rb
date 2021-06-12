@@ -1,35 +1,26 @@
 class P7zip < Formula
   desc "7-Zip (high compression file archiver) implementation"
-  homepage "https://p7zip.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/p7zip/p7zip/16.02/p7zip_16.02_src_all.tar.bz2"
-  sha256 "5eb20ac0e2944f6cb9c2d51dd6c4518941c185347d4089ea89087ffdd6e2341f"
-  revision 2
+  homepage "https://github.com/jinfeihan57/p7zip"
+  url "https://github.com/jinfeihan57/p7zip/archive/v17.04.tar.gz"
+  sha256 "ea029a2e21d2d6ad0a156f6679bd66836204aa78148a4c5e498fe682e77127ef"
+  license all_of: ["LGPL-2.1-or-later", "GPL-2.0-or-later"]
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b9f5fb1321ce5738d0129b3c48f51fc36a947bd84450f95ce9caa90e767fbd1b" => :catalina
-    sha256 "0de20c4bd05dc5652ca5f188895bf74e52eb701aaed502a0d1271eb58236f898" => :mojave
-    sha256 "5951a42bd864da7dba5ef5781a2efba206daba8b6f75c60c0cfd910dae218482" => :high_sierra
-    sha256 "73fe6276e906f67cd28adc0f5a22c914d57fd3cfdd54134ad64e5330f710235a" => :sierra
-    sha256 "fc22088a7e64d75874c4f0b69981e1b56ca62d3a2f1fb170275cbf0985be9e95" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "d1e2497a5256b9211572534456bb7271c9d04d10fc2e12599b95e0ddf4f1991b"
+    sha256 cellar: :any_skip_relocation, big_sur:       "c4d62f05f0cba984aa6b5712debc4f7d3b2c3bece0c503633a588cb209c911c2"
+    sha256 cellar: :any_skip_relocation, catalina:      "bea86999db7dee5f0cb78d3a72d875d822ec73ebb2a6e7d46cf27ae66243c645"
+    sha256 cellar: :any_skip_relocation, mojave:        "1484f0f3a0a4812dccb5f388c6671a7e524b001872b0df6d7cabc160c2f03989"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "107f64aa150dd06d246a04e5415eeac8c36988a04f6dfedbae78b669cbec46fd"
   end
 
-  patch do
-    url "https://deb.debian.org/debian/pool/main/p/p7zip/p7zip_16.02+dfsg-6.debian.tar.xz"
-    sha256 "fab0be1764efdbde1804072f1daa833de4e11ea65f718ad141a592404162643c"
-    apply "patches/12-CVE-2016-9296.patch",
-          "patches/13-CVE-2017-17969.patch"
-  end
-
-  patch :p4 do
-    url "https://github.com/aonez/Keka/files/2940620/15-Enhanced-encryption-strength.patch.zip"
-    sha256 "838dd2175c3112dc34193e99b8414d1dc1b2b20b861bdde0df2b32dbf59d1ce4"
-  end
+  # Remove non-free RAR sources
+  patch :DATA
 
   def install
-    if OS.mac?
+    on_macos do
       mv "makefile.macosx_llvm_64bits", "makefile.machine"
-    else
+    end
+    on_linux do
       mv "makefile.linux_any_cpu", "makefile.machine"
     end
     system "make", "all3",
@@ -47,3 +38,32 @@ class P7zip < Formula
     assert_equal "hello world!\n", File.read(testpath/"out/foo.txt")
   end
 end
+
+__END__
+diff -u -r a/makefile b/makefile
+--- a/makefile	2021-02-21 14:27:14.000000000 +0800
++++ b/makefile	2021-02-21 14:27:31.000000000 +0800
+@@ -31,7 +31,6 @@
+ 	$(MAKE) -C CPP/7zip/UI/Client7z           depend
+ 	$(MAKE) -C CPP/7zip/UI/Console            depend
+ 	$(MAKE) -C CPP/7zip/Bundles/Format7zFree  depend
+-	$(MAKE) -C CPP/7zip/Compress/Rar          depend
+ 	$(MAKE) -C CPP/7zip/UI/GUI                depend
+ 	$(MAKE) -C CPP/7zip/UI/FileManager        depend
+ 
+@@ -42,7 +41,6 @@
+ common7z:common
+ 	$(MKDIR) bin/Codecs
+ 	$(MAKE) -C CPP/7zip/Bundles/Format7zFree all
+-	$(MAKE) -C CPP/7zip/Compress/Rar         all
+ 
+ lzham:common
+ 	$(MKDIR) bin/Codecs
+@@ -67,7 +65,6 @@
+ 	$(MAKE) -C CPP/7zip/UI/FileManager       clean
+ 	$(MAKE) -C CPP/7zip/UI/GUI               clean
+ 	$(MAKE) -C CPP/7zip/Bundles/Format7zFree clean
+-	$(MAKE) -C CPP/7zip/Compress/Rar         clean
+ 	$(MAKE) -C CPP/7zip/Compress/Lzham       clean
+ 	$(MAKE) -C CPP/7zip/Bundles/LzmaCon      clean2
+ 	$(MAKE) -C CPP/7zip/Bundles/AloneGCOV    clean

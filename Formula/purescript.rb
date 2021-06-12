@@ -1,37 +1,34 @@
-require "language/haskell"
-
 class Purescript < Formula
-  include Language::Haskell::Cabal
-
   desc "Strongly typed programming language that compiles to JavaScript"
-  homepage "http://www.purescript.org"
-  url "https://hackage.haskell.org/package/purescript-0.13.5/purescript-0.13.5.tar.gz"
-  sha256 "44260d0cf86d35eb95e2fc348c986508f9b082f708ab53a3985170e518fd985e"
+  homepage "https://www.purescript.org/"
+  url "https://hackage.haskell.org/package/purescript-0.14.2/purescript-0.14.2.tar.gz"
+  sha256 "b538dc52b30712d6efd211da3bffa72f77a1e23b49973b017c69ec100623f389"
+  license "BSD-3-Clause"
   head "https://github.com/purescript/purescript.git"
 
   bottle do
-    sha256 "36b113b7dc29c020c148863f3b8e3bbc9ac8b63b4809e2ccdb5910da8711612c" => :catalina
-    sha256 "de1dcd768432cd253dc048490823950491cb1de88156104f2091bd32e56a4867" => :mojave
-    sha256 "bff633714541dfb63d270a3e3189f56e7e10cdfa46d43d5b89dc9eed7955204a" => :high_sierra
-    sha256 "c3c02b2da88a9e873a98d06f877b44bfa1fff7d9782d5efa9d55821fdf668014" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "1396d1c16143ed7e3c362ae15637826bbe9300aa66e977b453cb30a743aa3b59"
+    sha256 cellar: :any_skip_relocation, big_sur:       "6852d9fbbebd8cc8511cb2c97b0f77606cda026f397e1790cf216a6bcacedc6b"
+    sha256 cellar: :any_skip_relocation, catalina:      "a79c6ce5756e2e67a158746d00eccc20e2b219f83d6a11beb4dcb53f84d99dd3"
+    sha256 cellar: :any_skip_relocation, mojave:        "6e3bf108982f98270f201e4ef67e3533e3c57b932656f4b8ee187d756efd2541"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "43a8e004e9b98804a54078403bcc840d6bcd56ec7ce661773089b6058c1655a7"
   end
 
-  depends_on "cabal-install" => :build
-  depends_on "ghc@8.6" => :build
-  unless OS.mac?
-    depends_on "ncurses"
-    depends_on "zlib"
+  depends_on "ghc" => :build
+  depends_on "haskell-stack" => :build
+  depends_on "llvm" => :build if Hardware::CPU.arm?
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
+
+  resource "purescript-cst" do
+    url "https://hackage.haskell.org/package/purescript-cst-0.2.0.0/purescript-cst-0.2.0.0.tar.gz"
+    sha256 "7a1cacee4d951b5bbbfd57b8aad2baff7a94dbcb5172aef0bce2c18355a2fa6a"
   end
 
   def install
-    cabal_sandbox do
-      if build.head?
-        cabal_install "hpack"
-        system "./.cabal-sandbox/bin/hpack"
-      end
-
-      install_cabal_package "-f", "release", :using => ["alex", "happy-1.19.9"]
-    end
+    (buildpath/"lib"/"purescript-cst").install resource("purescript-cst")
+    system "stack", "install", "--system-ghc", "--no-install-ghc", "--skip-ghc-check", "--local-bin-path=#{bin}"
   end
 
   test do

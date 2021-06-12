@@ -1,49 +1,20 @@
 class Cloc < Formula
   desc "Statistics utility to count lines of code"
   homepage "https://github.com/AlDanial/cloc/"
-  url "https://github.com/AlDanial/cloc/archive/1.84.tar.gz"
-  sha256 "b88a3adc669c15a9a32975095090708ba4eee5a73b8498369fae14be5b8a37d4"
+  url "https://github.com/AlDanial/cloc/archive/v1.90.tar.gz"
+  sha256 "60b429dd2aa5cd65707b359dcbcbeb710c8e4db880886528ced0962c67e52548"
+  license "GPL-2.0-or-later"
   head "https://github.com/AlDanial/cloc.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "133bacc497cb73a958e823f12e09e91b97d43ac188e4b002e7f939c5625fcacd" => :catalina
-    sha256 "faa85a918f0517f35a41fb60550c0d990ed58aed325c50efca95634b014edbd8" => :mojave
-    sha256 "0407f6ec4d2378659b63bb33598f9b5f49756325322fe3fc0f339ec16b5edc5f" => :high_sierra
-    sha256 "c997ea844a4a87ecb44fd4345adad2f34cc3dd855c7c34c3f416eed50a3e1cd2" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "83f761b258052b7cc8ef375d5b7affa4d17afc372833b09b20695a9168ac6b9f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "bcc059446f6a3c112e4eecf2d5da94531124ca7572cd953138bd9bb636dbd760"
+    sha256 cellar: :any_skip_relocation, catalina:      "62e4eba4fd24d200fea078702f429acd303edfd8211a534362081c9d32283272"
+    sha256 cellar: :any_skip_relocation, mojave:        "31d38191d5377740453d8eee73aaf287df8026bae490297179126a4016665d31"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "736c4d0648df9beb6b7e1cf004cee6e5145f13888c8a739fc988b79c9a73c8ec"
   end
 
-  unless OS.mac?
-    resource "Moo::Role" do
-      url "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Moo-2.003004.tar.gz"
-      sha256 "f8bbb625f8e963eabe05cff9048fdd72bdd26777404ff2c40bc690f558be91e1"
-    end
-
-    resource "Module::Runtime" do
-      url "https://cpan.metacpan.org/authors/id/Z/ZE/ZEFRAM/Module-Runtime-0.016.tar.gz"
-      sha256 "68302ec646833547d410be28e09676db75006f4aa58a11f3bdb44ffe99f0f024"
-    end
-
-    resource "Devel::GlobalDestruction" do
-      url "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Devel-GlobalDestruction-0.14.tar.gz"
-      sha256 "34b8a5f29991311468fe6913cadaba75fd5d2b0b3ee3bb41fe5b53efab9154ab"
-    end
-
-    resource "Sub::Exporter::Progressive" do
-      url "https://cpan.metacpan.org/authors/id/F/FR/FREW/Sub-Exporter-Progressive-0.001013.tar.gz"
-      sha256 "d535b7954d64da1ac1305b1fadf98202769e3599376854b2ced90c382beac056"
-    end
-
-    resource "Role::Tiny" do
-      url "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Role-Tiny-2.000008.tar.gz"
-      sha256 "b1541fc5e3e0eb2dbd55b25c432293c197e0153c2c9f7747deba4df72c27146a"
-    end
-
-    resource "Sub::Quote" do
-      url "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Sub-Quote-2.006003.tar.gz"
-      sha256 "be1f3a6f773f351f203cdc8f614803ac492b77d15fd68d5b1f0cd3884be18176"
-    end
-  end
+  uses_from_macos "perl"
 
   resource "Regexp::Common" do
     url "https://cpan.metacpan.org/authors/id/A/AB/ABIGAIL/Regexp-Common-2017060201.tar.gz"
@@ -51,13 +22,47 @@ class Cloc < Formula
   end
 
   resource "Algorithm::Diff" do
-    url "https://cpan.metacpan.org/authors/id/T/TY/TYEMQ/Algorithm-Diff-1.1903.tar.gz"
-    sha256 "30e84ac4b31d40b66293f7b1221331c5a50561a39d580d85004d9c1fff991751"
+    url "https://cpan.metacpan.org/authors/id/R/RJ/RJBS/Algorithm-Diff-1.201.tar.gz"
+    sha256 "0022da5982645d9ef0207f3eb9ef63e70e9713ed2340ed7b3850779b0d842a7d"
   end
 
   resource "Parallel::ForkManager" do
     url "https://cpan.metacpan.org/authors/id/Y/YA/YANICK/Parallel-ForkManager-2.02.tar.gz"
     sha256 "c1b2970a8bb666c3de7caac4a8f4dbcc043ab819bbc337692ec7bf27adae4404"
+  end
+
+  resource "Sub::Quote" do
+    url "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Sub-Quote-2.006006.tar.gz"
+    sha256 "6e4e2af42388fa6d2609e0e82417de7cc6be47223f576592c656c73c7524d89d"
+  end
+
+  resource "Moo::Role" do
+    url "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Moo-2.005004.tar.gz"
+    sha256 "e3030b80bd554a66f6b3c27fd53b1b5909d12af05c4c11ece9a58f8d1e478928"
+  end
+
+  resource "Module::Runtime" do
+    url "https://cpan.metacpan.org/authors/id/Z/ZE/ZEFRAM/Module-Runtime-0.016.tar.gz"
+    sha256 "68302ec646833547d410be28e09676db75006f4aa58a11f3bdb44ffe99f0f024"
+  end
+
+  resource "Role::Tiny" do
+    url "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Role-Tiny-2.002004.tar.gz"
+    sha256 "d7bdee9e138a4f83aa52d0a981625644bda87ff16642dfa845dcb44d9a242b45"
+  end
+
+  resource "Devel::GlobalDestruction" do
+    on_linux do
+      url "https://cpan.metacpan.org/authors/id/H/HA/HAARG/Devel-GlobalDestruction-0.14.tar.gz"
+      sha256 "34b8a5f29991311468fe6913cadaba75fd5d2b0b3ee3bb41fe5b53efab9154ab"
+    end
+  end
+
+  resource "Sub::Exporter::Progressive" do
+    on_linux do
+      url "https://cpan.metacpan.org/authors/id/F/FR/FREW/Sub-Exporter-Progressive-0.001013.tar.gz"
+      sha256 "d535b7954d64da1ac1305b1fadf98202769e3599376854b2ced90c382beac056"
+    end
   end
 
   def install
@@ -76,7 +81,7 @@ class Cloc < Formula
 
     system "make", "-C", "Unix", "prefix=#{libexec}", "install"
     bin.install libexec/"bin/cloc"
-    bin.env_script_all_files(libexec/"bin", :PERL5LIB => ENV["PERL5LIB"])
+    bin.env_script_all_files(libexec/"bin", PERL5LIB: ENV["PERL5LIB"])
     man1.install libexec/"share/man/man1/cloc.1"
   end
 

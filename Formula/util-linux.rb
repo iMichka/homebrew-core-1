@@ -1,37 +1,48 @@
 class UtilLinux < Formula
   desc "Collection of Linux utilities"
   homepage "https://github.com/karelzak/util-linux"
-  url "https://www.kernel.org/pub/linux/utils/util-linux/v2.34/util-linux-2.34.tar.xz"
-  sha256 "743f9d0c7252b6db246b659c1e1ce0bd45d8d4508b4dfa427bbb4a3e9b9f62b5"
+  url "https://mirrors.edge.kernel.org/pub/linux/utils/util-linux/v2.37/util-linux-2.37.tar.xz"
+  sha256 "bd07b7e98839e0359842110525a3032fdb8eaf3a90bedde3dd1652d32d15cce5"
+  license all_of: [
+    "BSD-3-Clause",
+    "BSD-4-Clause-UC",
+    "GPL-2.0-only",
+    "GPL-2.0-or-later",
+    "GPL-3.0-or-later",
+    "LGPL-2.1-or-later",
+    :public_domain,
+  ]
 
   bottle do
-    rebuild 1
-    sha256 "ad4962d8ce56d784085cf53e2f3add3432a3905285acf05a23fcc2e5e40cf5a8" => :catalina
-    sha256 "483548a881703f1e4645c40a9779758ff2da0db1dc521b4ce7321d86c723669d" => :mojave
-    sha256 "f02d33204d3ff42112ab972d1fa93f84a7676bcc28f208eac41172db4f7416e7" => :high_sierra
-    sha256 "48800b1a960621b6fb92b551174cb040d4c2408d37f3d8ca171dbb612a4f2833" => :x86_64_linux
+    sha256 arm64_big_sur: "922d09f5174a8987fdd7de56103eb6415a561c7490ab149e86bd8959c5832044"
+    sha256 big_sur:       "cfca1e4ceeccb7b27f043b6e63d29cd5a2d64908d995530b37f270d751baa208"
+    sha256 catalina:      "8edf1edb90bab5bfd76c11dacfd8f8e9a212d154284113d56089ac225944f05d"
+    sha256 mojave:        "4d7d5e3771db846dd2f1c6b74c867ad1119983a5fb96ac503d40860cf2fc37f4"
+    sha256 x86_64_linux:  "24bd0096b100a3734db440f45689524f7f9dbb2896ae77cf2089e91269d11307"
   end
 
-  keg_only "macOS provides the uuid.h header" if OS.mac?
+  keg_only :shadowed_by_macos, "macOS provides the uuid.h header"
 
-  unless OS.mac?
-    depends_on "ncurses"
-    depends_on "zlib"
-  end
+  depends_on "asciidoctor" => :build
+  depends_on "gettext"
+
+  uses_from_macos "ncurses"
+  uses_from_macos "zlib"
 
   def install
-    args = [
-      "--disable-dependency-tracking",
-      "--disable-silent-rules",
-      "--prefix=#{prefix}",
+    args = std_configure_args + %w[
+      --disable-silent-rules
     ]
 
-    if OS.mac?
+    on_macos do
+      args << "--disable-hardlink" # does not build on macOS
       args << "--disable-ipcs" # does not build on macOS
       args << "--disable-ipcrm" # does not build on macOS
       args << "--disable-wall" # already comes with macOS
+      args << "--disable-libmount" # does not build on macOS
       args << "--enable-libuuid" # conflicts with ossp-uuid
-    else
+    end
+    on_linux do
       args << "--disable-use-tty-group" # Fix chgrp: changing group of 'wall': Operation not permitted
       args << "--disable-kill" # Conflicts with coreutils.
       args << "--disable-cal" # Conflicts with bsdmainutils
@@ -49,29 +60,39 @@ class UtilLinux < Formula
     system "./configure", *args
     system "make", "install"
 
-    if OS.mac?
-      # Remove binaries already shipped by macOS
-      %w[cal col colcrt colrm getopt hexdump logger nologin look mesg more renice rev ul whereis].each do |prog|
-        rm_f bin/prog
-        rm_f sbin/prog
-        rm_f man1/"#{prog}.1"
-        rm_f man8/"#{prog}.8"
-      end
-    else
-      # these conflict with bash-completion-1.3
-      %w[chsh mount rfkill rtcwake].each do |prog|
-        rm_f bash_completion/prog
-      end
-    end
-
     # install completions only for installed programs
     Pathname.glob("bash-completion/*") do |prog|
-      if (bin/prog.basename).exist? || (sbin/prog.basename).exist?
-        # these conflict with bash-completion on Linux
-        next if !OS.mac? && %w[chsh mount rfkill rtcwake].include?(prog.basename.to_s)
+      bash_completion.install prog if (bin/prog.basename).exist? || (sbin/prog.basename).exist?
+    end
+  end
 
-        bash_completion.install prog
-      end
+  def caveats
+    linux_only_bins = %w[
+      addpart agetty
+      blkdiscard blkzone blockdev
+      chcpu chmem choom chrt ctrlaltdel
+      delpart dmesg
+      eject
+      fallocate fdformat fincore findmnt fsck fsfreeze fstrim
+      hardlink hwclock
+      ionice ipcrm ipcs
+      kill
+      last ldattach losetup lsblk lscpu lsipc lslocks lslogins lsmem lsns
+      mount mountpoint
+      nsenter
+      partx pivot_root prlimit
+      raw readprofile resizepart rfkill rtcwake
+      script scriptlive setarch setterm sulogin swapoff swapon switch_root
+      taskset
+      umount unshare utmpdump uuidd
+      wall wdctl
+      zramctl
+    ]
+    on_macos do
+      <<~EOS
+        The following tools are not supported for macOS, and are therefore not included:
+        #{Formatter.columns(linux_only_bins)}
+      EOS
     end
   end
 
@@ -85,7 +106,7 @@ class UtilLinux < Formula
       sum.insert 0, ((stat.mode & (2 ** index)).zero? ? "-" : flag)
     end
 
-    out = shell_output("#{bin}/namei -lx /usr").split("\n").last.split(" ")
+    out = shell_output("#{bin}/namei -lx /usr").split("\n").last.split
     assert_equal ["d#{perms}", owner, group, "usr"], out
   end
 end

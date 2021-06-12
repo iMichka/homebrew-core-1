@@ -3,9 +3,12 @@ class GradleCompletion < Formula
   homepage "https://gradle.org/"
   url "https://github.com/gradle/gradle-completion/archive/v1.4.1.tar.gz"
   sha256 "5d77f0c739fe983cfa86078a615f43be9be0e3ce05a3a7b70cb813a1ebd1ceef"
+  license "MIT"
   head "https://github.com/gradle/gradle-completion.git"
 
-  bottle :unneeded
+  bottle do
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "082fd6d30ecf3beee82a945947b31691ec655ed9ba7150ac52dcf1bb483f57e9"
+  end
 
   depends_on "bash-completion"
 

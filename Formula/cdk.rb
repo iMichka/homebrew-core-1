@@ -1,17 +1,21 @@
 class Cdk < Formula
   desc "Curses development kit provides predefined curses widget for apps"
   homepage "https://invisible-island.net/cdk/"
-  url "https://invisible-mirror.net/archives/cdk/cdk-5.0-20190303.tgz"
-  version "5.0.20190303"
-  sha256 "adad7870988d44b95df57722ab8dffc587d035183eb6b12a9500ebed4d8dba25"
+  url "https://invisible-mirror.net/archives/cdk/cdk-5.0-20210324.tgz"
+  sha256 "f62eb256bbcbca53ed549de03a3db257bd38e2965726b1cbeef7df2ed1aa781b"
+  license "BSD-4-Clause-UC"
+
+  livecheck do
+    url "https://invisible-mirror.net/archives/cdk/"
+    regex(/href=.*?cdk[._-]v?(\d+(?:[.-]\d+)+)\.t/i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "9879425ef2b659213d6063a84ec37eeb93acb86134218f0439587b88cd879856" => :catalina
-    sha256 "c786783f05f2aa98019d5142c7c8a019cf9caee471fa41aa7ba360d0b8cb6b6e" => :mojave
-    sha256 "706723393e31a2969cb8686726426e72eaee75e848d60082c67da7daa1929ac5" => :high_sierra
-    sha256 "fc9f42aad5f855408583a604ab54f8241c85464f5a7e44492452904aab55dfb4" => :sierra
-    sha256 "ef6bbf2aa9ef13b15b14f3a8038ba769aef6ca45582800b970a6a01d89f1c4c2" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "418408498d8bac3d93334a17e443bf3e184d9d75f4f5004b5f061ae2414d7076"
+    sha256 cellar: :any_skip_relocation, big_sur:       "ef4d022fd2b85806ca3f5d39974ebfec3a15840adc2ec8afac23fe3591d24626"
+    sha256 cellar: :any_skip_relocation, catalina:      "da1e033bf75a24554fd51c1c255434d8b25759ec728f9371b9fe65651ef65db7"
+    sha256 cellar: :any_skip_relocation, mojave:        "ae5301085365b01984a54f22ed421ed6c249afb2d7ba8426aed2d4c54111fbe5"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "01c855d36f70269c31b67c68a9d672916d7a71dfad2c6495329d08a7ea2c79ef"
   end
 
   uses_from_macos "ncurses"

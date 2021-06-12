@@ -1,31 +1,32 @@
 class Jose < Formula
   desc "C-language implementation of Javascript Object Signing and Encryption"
   homepage "https://github.com/latchset/jose"
-  url "https://github.com/latchset/jose/releases/download/v10/jose-10.tar.bz2"
-  sha256 "5c9cdcfb535c4d9f781393d7530521c72b1dd81caa9934cab6dd752cc7efcd72"
-  revision 1
+  url "https://github.com/latchset/jose/releases/download/v11/jose-11.tar.xz"
+  sha256 "e272afe7717e22790c383f3164480627a567c714ccb80c1ee96f62c9929d8225"
+  license "Apache-2.0"
 
   bottle do
-    cellar :any
-    sha256 "359c58b36bb631623273a77d13431f29ff467e9602f1500f9e4fa761ed0719be" => :catalina
-    sha256 "358a06afd49f1390ca917969dbb434a75a91bd0de3d8ac981d3eab969670cfe2" => :mojave
-    sha256 "7a84bdaece281b98dc4a7b0a7fbf05976297126966d14ee2862e007521cdd4ea" => :high_sierra
-    sha256 "1669bf780ac07ee9a7d216185139aaa6e5c44add352e6da25f02c079694e7ad1" => :sierra
-    sha256 "c25d394204f9e85075ca1e92d9bbf0fe3c619797f548233ea6b58ddd95045238" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "a3a76d8b25def2f572513ddf580cd35f575a45c1b505c0ac781ea47d0bac4cab"
+    sha256 cellar: :any,                 big_sur:       "7b5124a9d57f6a8ad4dfb85e706a4061cf52bfd423280198b7dcc0035158a9a8"
+    sha256 cellar: :any,                 catalina:      "4fd0e6dc8ea1c333814995ba8cb855a6ee49d0db5cfd78272a418e981a4beb20"
+    sha256 cellar: :any,                 mojave:        "6a6b10dbb8a8f3c6418bc35da20c5847befebcc71e1f96af00a047ccdcaa1752"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "e091a0517d325bb732b082977f78b8cfe30f423dd29a8389665d900848a22b92"
   end
 
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "jansson"
   depends_on "openssl@1.1"
+
   uses_from_macos "zlib"
 
   def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--disable-silent-rules",
-                          "--prefix=#{prefix}"
-    system "make"
-    system "make", "check"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja", "-v"
+      system "ninja", "install", "-v"
+    end
   end
 
   test do

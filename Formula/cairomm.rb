@@ -1,29 +1,44 @@
 class Cairomm < Formula
   desc "Vector graphics library with cross-device output support"
   homepage "https://cairographics.org/cairomm/"
-  url "https://cairographics.org/releases/cairomm-1.12.2.tar.gz"
-  sha256 "45c47fd4d0aa77464a75cdca011143fea3ef795c4753f6e860057da5fb8bd599"
-  revision 1
+  url "https://cairographics.org/releases/cairomm-1.16.1.tar.xz"
+  sha256 "6f6060d8e98dd4b8acfee2295fddbdd38cf487c07c26aad8d1a83bb9bff4a2c6"
+  license "LGPL-2.0-or-later"
 
-  bottle do
-    cellar :any
-    sha256 "58ce00547bc4f0210b0236b3e3df344b372e801bc129ba32091a5396334af7f8" => :catalina
-    sha256 "2a77a830256c2da441f636fddbdc2bd4ad390e920fc223b4ea33821ec1265195" => :mojave
-    sha256 "08a29b621ee8173cb17452f2e7a62adb83a60a65f0758cab545ddc0c53ecf681" => :high_sierra
-    sha256 "1845ba3e5dd9364551980e16b446620e4088f1fe90517b5af7cd81435b60cc08" => :sierra
-    sha256 "008e269d93b7195ae23ad74ba46c4ade2370e758c2adf06b01ae1bcc6ef5c8b3" => :x86_64_linux
+  livecheck do
+    url "https://cairographics.org/releases/?C=M&O=D"
+    regex(/href=.*?cairomm[._-]v?(\d+\.\d*[02468](?:\.\d+)*)\.t/i)
   end
 
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "70e65e43376e9f2159955ee6ec8db9f4c440c24df8dfebdc06fa10953604eba9"
+    sha256 cellar: :any, big_sur:       "6b0e30e7ed71aed6bf7dfb862eba5d2c62dd0abc7a6d13684448ac6f5430f045"
+    sha256 cellar: :any, catalina:      "e02d87fa8a812686d9a2bf9ccfbe56e2937156e75488ee0795fb061d087cc171"
+    sha256 cellar: :any, mojave:        "53433da3d97a46f2878505f42882162eda2b145e7fbc3380034c79c9626120af"
+    sha256               x86_64_linux:  "bf4c17d96221cd9629fc81437f170ee42af24670de186861da6f95c6dadd13b3"
+  end
+
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "cairo"
   depends_on "libpng"
-  depends_on "libsigc++@2"
+  depends_on "libsigc++"
+
+  on_linux do
+    depends_on "gcc"
+  end
+
+  fails_with gcc: "5"
 
   def install
     ENV.cxx11
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
-    system "make", "install"
+
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja"
+      system "ninja", "install"
+    end
   end
 
   test do
@@ -32,7 +47,7 @@ class Cairomm < Formula
 
       int main(int argc, char *argv[])
       {
-         Cairo::RefPtr<Cairo::ImageSurface> surface = Cairo::ImageSurface::create(Cairo::FORMAT_ARGB32, 600, 400);
+         Cairo::RefPtr<Cairo::ImageSurface> surface = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, 600, 400);
          Cairo::RefPtr<Cairo::Context> cr = Cairo::Context::create(surface);
          return 0;
       }
@@ -43,7 +58,7 @@ class Cairomm < Formula
     gettext = Formula["gettext"]
     glib = Formula["glib"]
     libpng = Formula["libpng"]
-    libsigcxx = Formula["libsigc++@2"]
+    libsigcxx = Formula["libsigc++"]
     pixman = Formula["pixman"]
     flags = %W[
       -I#{cairo.opt_include}/cairo
@@ -52,20 +67,20 @@ class Cairomm < Formula
       -I#{gettext.opt_include}
       -I#{glib.opt_include}/glib-2.0
       -I#{glib.opt_lib}/glib-2.0/include
-      -I#{include}/cairomm-1.0
+      -I#{include}/cairomm-1.16
       -I#{libpng.opt_include}/libpng16
-      -I#{libsigcxx.opt_include}/sigc++-2.0
-      -I#{libsigcxx.opt_lib}/sigc++-2.0/include
-      -I#{lib}/cairomm-1.0/include
+      -I#{libsigcxx.opt_include}/sigc++-3.0
+      -I#{libsigcxx.opt_lib}/sigc++-3.0/include
+      -I#{lib}/cairomm-1.16/include
       -I#{pixman.opt_include}/pixman-1
       -L#{cairo.opt_lib}
       -L#{libsigcxx.opt_lib}
       -L#{lib}
       -lcairo
-      -lcairomm-1.0
-      -lsigc-2.0
+      -lcairomm-1.16
+      -lsigc-3.0
     ]
-    system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test", *flags
+    system ENV.cxx, "-std=c++17", "test.cpp", "-o", "test", *flags
     system "./test"
   end
 end

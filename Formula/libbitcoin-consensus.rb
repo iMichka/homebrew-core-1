@@ -3,14 +3,15 @@ class LibbitcoinConsensus < Formula
   homepage "https://github.com/libbitcoin/libbitcoin-consensus"
   url "https://github.com/libbitcoin/libbitcoin-consensus/archive/v3.6.0.tar.gz"
   sha256 "a4252f40910fcb61da14cf8028bf3824125bacb0fc251491c9bb4e2818065fca"
-  revision 1
+  license "AGPL-3.0"
+  revision 2
 
   bottle do
-    cellar :any
-    sha256 "640bcb7886f6a844ac2de43be86646d4732fb9e77f0a260a58086b990bc821ae" => :catalina
-    sha256 "fdc8742a5540f9503709a7f1e271b11551e297e915b081ad34f3f6a4290061bb" => :mojave
-    sha256 "a186bf54816ed738b5f491df36f781728a84b1dd7fdf8aedd101231e7f03c20b" => :high_sierra
-    sha256 "3d7714fde2d05817a98a42dc42da248fac643a9e645b2251d597b4155d7dd28b" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "b2a70f871df4a376246e9882383751a65d04e7f30ff1b0c7abab507cf3d80e49"
+    sha256 cellar: :any,                 big_sur:       "31b62a85a41d440a6f2772c348288c89b8ff0de5c6eaaf911b4891a3796c6c60"
+    sha256 cellar: :any,                 catalina:      "c45b5944cedcd5ad9733ea30e49a644851264abf40f8d38cbc8b67ddf33ce21c"
+    sha256 cellar: :any,                 mojave:        "b6d7bed977f2e337a0fd2da7f56035323ba8c1d59503ccdb3fef5f6033cf7eef"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "5ccf6f4e46745f168dbf5c77f36d30041138b8c0a9a7c3de27060fd5627b7270"
   end
 
   depends_on "autoconf" => :build
@@ -25,6 +26,7 @@ class LibbitcoinConsensus < Formula
   end
 
   def install
+    ENV.cxx11
     resource("secp256k1").stage do
       system "./autogen.sh"
       system "./configure", "--disable-dependency-tracking",
@@ -40,7 +42,8 @@ class LibbitcoinConsensus < Formula
     system "./autogen.sh"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
-                          "--prefix=#{prefix}"
+                          "--prefix=#{prefix}",
+                          "--with-boost-libdir=#{Formula["boost"].opt_lib}"
     system "make", "install"
   end
 

@@ -1,18 +1,23 @@
 class DeviceMapper < Formula
-  desc "Device mapper userspace library and tools"
+  desc "Userspace library and tools for logical volume management"
   homepage "https://sourceware.org/dm"
   url "https://sourceware.org/git/lvm2.git",
-    :tag      => "v2_02_186",
-    :revision => "4e5761487efcb33a47f8913f5302e36307604832"
-  version "2.02.186"
-  # tag "linux"
+      tag:      "v2_03_12",
+      revision: "01b05cf51dd547354b4ad70e7f8f4ff7ff0bb152"
+  license "LGPL-2.1-only"
+
+  livecheck do
+    url :stable
+    strategy :page_match
+    regex(/href=.*?;a=tag;.*?>Release (\d+(?:\.\d+)+)</i)
+  end
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "b9a0ecca9c06b7f9ac4483406452aa241f1429667a1ee41948426b8a5347eb74" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, x86_64_linux: "b5e8d1a5564c6d711122788d9ea760a2ef787e54215501e6362995ac820a78d6"
   end
 
   depends_on "libaio"
+  depends_on :linux
 
   def install
     # https://github.com/NixOS/nixpkgs/pull/52597
@@ -27,6 +32,15 @@ class DeviceMapper < Formula
   end
 
   test do
-    # TODO
+    (testpath/"test.c").write <<~EOS
+      #include <libdevmapper.h>
+
+      int main() {
+        if (DM_STATS_REGIONS_ALL != UINT64_MAX)
+          exit(1);
+      }
+    EOS
+    system ENV.cc, "-I#{include}", "-L#{lib}", "-ldevmapper", "test.c", "-o", "test"
+    system testpath/"test"
   end
 end

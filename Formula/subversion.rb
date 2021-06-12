@@ -1,93 +1,139 @@
 class Subversion < Formula
   desc "Version control system designed to be a better CVS"
   homepage "https://subversion.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=subversion/subversion-1.13.0.tar.bz2"
-  mirror "https://archive.apache.org/dist/subversion/subversion-1.13.0.tar.bz2"
-  sha256 "bc50ce2c3faa7b1ae9103c432017df98dfd989c4239f9f8270bb3a314ed9e5bd"
+  url "https://www.apache.org/dyn/closer.lua?path=subversion/subversion-1.14.1.tar.bz2"
+  mirror "https://archive.apache.org/dist/subversion/subversion-1.14.1.tar.bz2"
+  sha256 "2c5da93c255d2e5569fa91d92457fdb65396b0666fad4fd59b22e154d986e1a9"
+  license "Apache-2.0"
+  revision 2
 
   bottle do
-    sha256 "a1d9bd57c76fdc4bbecf5b830727b5aff9b3b73a3374e0ee0671b77ecd7e613d" => :catalina
-    sha256 "e6c30e79ad6c5137f390008e7634bc11e4c83e4767e4171a00c3b35245845d24" => :mojave
-    sha256 "27ca7ad325fc3454944c8371034fe9643c2e2f7630b2a0a6c51c3efa319b6f7a" => :high_sierra
-    sha256 "7991c2ff045c1728a91b56dd60fef2b3f99b607e681e876fa00de9cb7c369cd9" => :x86_64_linux
+    rebuild 1
+    sha256 x86_64_linux: "4e3a790a714ff384eab404ff230a02c08e1df7dda9f321759cbf64b929fee968"
   end
 
   head do
-    url "https://github.com/apache/subversion.git", :branch => "trunk"
+    url "https://github.com/apache/subversion.git", branch: "trunk"
 
     depends_on "autoconf" => :build
     depends_on "automake" => :build
     depends_on "gettext" => :build
   end
 
-  depends_on :java => ["1.8+", :build]
+  depends_on "openjdk" => :build
   depends_on "pkg-config" => :build
+  depends_on "python@3.9" => :build
   depends_on "scons" => :build # For Serf
-  depends_on "swig@3" => :build # https://issues.apache.org/jira/browse/SVN-4818
+  depends_on "swig" => :build
   depends_on "apr"
   depends_on "apr-util"
 
   # build against Homebrew versions of
-  # gettext, lz4, perl, sqlite and utf8proc for consistency
+  # gettext, lz4 and utf8proc for consistency
   depends_on "gettext"
   depends_on "lz4"
   depends_on "openssl@1.1" # For Serf
-  depends_on "perl"
-  depends_on "sqlite"
   depends_on "utf8proc"
 
-  unless OS.mac?
-    depends_on "libtool" => :build
-    depends_on "expat"
-    depends_on "krb5"
-    depends_on "libmagic"
-    depends_on "adoptopenjdk"
-    depends_on "python@2"
-    depends_on "ruby"
-    depends_on "util-linux" # for libuuid
-    depends_on "zlib"
+  uses_from_macos "expat"
+  uses_from_macos "krb5"
+  uses_from_macos "perl"
+  uses_from_macos "ruby"
+  uses_from_macos "sqlite"
+  uses_from_macos "zlib"
+
+  on_macos do
+    # Prevent "-arch ppc" from being pulled in from Perl's $Config{ccflags}
+    patch :DATA
+  end
+
+  on_linux do
+    depends_on "libtool"
+  end
+
+  resource "py3c" do
+    url "https://github.com/encukou/py3c/archive/v1.1.tar.gz"
+    sha256 "c7ffc22bc92dded0ca859db53ef3a0b466f89a9f8aad29359c9fe4ff18ebdd20"
   end
 
   resource "serf" do
-    url "https://www.apache.org/dyn/closer.cgi?path=serf/serf-1.3.9.tar.bz2"
+    url "https://www.apache.org/dyn/closer.lua?path=serf/serf-1.3.9.tar.bz2"
     mirror "https://archive.apache.org/dist/serf/serf-1.3.9.tar.bz2"
     sha256 "549c2d21c577a8a9c0450facb5cca809f26591f048e466552240947bdf7a87cc"
   end
 
-  # Fix #23993 by stripping flags swig can't handle from SWIG_CPPFLAGS
-  # Prevent "-arch ppc" from being pulled in from Perl's $Config{ccflags}
-  # Prevent linking into a Python Framework
-  patch :DATA if OS.mac?
-
   def install
-    ENV.prepend_path "PATH", "/System/Library/Frameworks/Python.framework/Versions/2.7/bin" if OS.mac?
+    py3c_prefix = buildpath/"py3c"
+    serf_prefix = libexec/"serf"
 
-    serf_prefix = OS.mac? ? libexec/"serf" : prefix
+    resource("py3c").unpack py3c_prefix
     resource("serf").stage do
-      unless OS.mac?
+      on_linux do
         inreplace "SConstruct" do |s|
           s.gsub! "env.Append(LIBPATH=['$OPENSSL\/lib'])",
           "\\1\nenv.Append(CPPPATH=['$ZLIB\/include'])\nenv.Append(LIBPATH=['$ZLIB/lib'])"
         end
       end
+
+      inreplace "SConstruct" do |s|
+        s.gsub! "print 'Warning: Used unknown variables:', ', '.join(unknown.keys())",
+        "print('Warning: Used unknown variables:', ', '.join(unknown.keys()))"
+        s.gsub! "match = re.search('SERF_MAJOR_VERSION ([0-9]+).*'",
+        "match = re.search(b'SERF_MAJOR_VERSION ([0-9]+).*'"
+        s.gsub! "'SERF_MINOR_VERSION ([0-9]+).*'",
+        "b'SERF_MINOR_VERSION ([0-9]+).*'"
+        s.gsub! "'SERF_PATCH_VERSION ([0-9]+)'",
+        "b'SERF_PATCH_VERSION ([0-9]+)'"
+      end
+
       # scons ignores our compiler and flags unless explicitly passed
+      krb5 = "/usr"
+      on_linux do
+        krb5 = Formula["krb5"].opt_prefix
+      end
+
       args = %W[
-        PREFIX=#{serf_prefix} GSSAPI=#{Formula["krb5"].opt_prefix} CC=#{ENV.cc}
+        PREFIX=#{serf_prefix} GSSAPI=#{krb5} CC=#{ENV.cc}
         CFLAGS=#{ENV.cflags} LINKFLAGS=#{ENV.ldflags}
         OPENSSL=#{Formula["openssl@1.1"].opt_prefix}
         APR=#{Formula["apr"].opt_prefix}
         APU=#{Formula["apr-util"].opt_prefix}
-        ZLIB=#{Formula["zlib"].opt_prefix}
       ]
+
+      on_linux do
+        args << "ZLIB=#{Formula["zlib"].opt_prefix}"
+      end
+
       system "scons", *args
       system "scons", "install"
     end
 
-    # Use existing system zlib
+    # svn can't find libserf-1.so.1 at runtime without this
+    ENV.append "LDFLAGS", "-Wl,-rpath=#{serf_prefix}/lib" unless OS.mac?
+
+    # Use existing system zlib and sqlite
+    on_linux do
+      # svn can't find libserf-1.so.1 at runtime without this
+      ENV.append "LDFLAGS", "-Wl,-rpath=#{serf_prefix}/lib"
+    end
+
     # Use dep-provided other libraries
     # Don't mess with Apache modules (since we're not sudo)
-    zlib = OS.mac? ? "#{MacOS.sdk_path_if_needed}/usr" : Formula["zlib"].opt_prefix
-    ruby = OS.mac? ? "/usr/bin/ruby" : "#{Formula["ruby"].opt_bin}/ruby"
+    zlib = "#{MacOS.sdk_path_if_needed}/usr"
+    on_linux do
+      zlib = Formula["zlib"].opt_prefix
+    end
+
+    ruby = "/usr/bin/ruby"
+    on_linux do
+      ruby = "#{Formula["ruby"].opt_bin}/ruby"
+    end
+
+    sqlite = "#{MacOS.sdk_path_if_needed}/usr"
+    on_linux do
+      sqlite = Formula["sqlite"].opt_prefix
+    end
+
     args = %W[
       --prefix=#{prefix}
       --disable-debug
@@ -97,23 +143,21 @@ class Subversion < Formula
       --with-apr-util=#{Formula["apr-util"].opt_prefix}
       --with-apr=#{Formula["apr"].opt_prefix}
       --with-apxs=no
+      --with-jdk=#{Formula["openjdk"].opt_prefix}
       --with-ruby-sitedir=#{lib}/ruby
+      --with-py3c=#{py3c_prefix}
       --with-serf=#{serf_prefix}
-      --with-sqlite=#{Formula["sqlite"].opt_prefix}
+      --with-sqlite=#{sqlite}
+      --with-swig=#{Formula["swig"].opt_prefix}
       --with-zlib=#{zlib}
       --without-apache-libexecdir
       --without-berkeley-db
       --without-gpg-agent
       --enable-javahl
       --without-jikes
+      PYTHON=#{Formula["python@3.9"].opt_bin}/python3
       RUBY=#{ruby}
     ]
-
-    args << "--with-jdk=#{Formula["adoptopenjdk"].opt_prefix}"
-
-    # The system Python is built with llvm-gcc, so we override this
-    # variable to prevent failures due to incompatible CFLAGS
-    ENV["ac_cv_python_compile"] = ENV.cc
 
     inreplace "Makefile.in",
               "toolsdir = @bindir@/svn-tools",
@@ -123,7 +167,6 @@ class Subversion < Formula
     system "./autogen.sh" if build.head?
     system "./configure", *args
     system "make"
-    # Fix ld: cannot find -lsvn_delta-1
     ENV.deparallelize { system "make", "install" }
     bash_completion.install "tools/client-side/bash_completion" => "subversion"
 
@@ -132,7 +175,7 @@ class Subversion < Formula
 
     system "make", "swig-py"
     system "make", "install-swig-py"
-    (lib/"python2.7/site-packages").install_symlink Dir["#{lib}/svn-python/*"]
+    (lib/"python3.9/site-packages").install_symlink Dir["#{lib}/svn-python/*"]
 
     # Java and Perl support don't build correctly in parallel:
     # https://github.com/Homebrew/homebrew/issues/20415
@@ -140,24 +183,36 @@ class Subversion < Formula
     system "make", "javahl"
     system "make", "install-javahl"
 
-    archlib = Utils.popen_read("perl -MConfig -e 'print $Config{archlib}'")
-    perl_core = Pathname.new(archlib)/"CORE"
-    onoe "'#{perl_core}' does not exist" unless perl_core.exist?
+    if Hardware::CPU.intel?
+      perl_archlib = Utils.safe_popen_read("perl", "-MConfig", "-e", "print $Config{archlib}")
+      perl_core = Pathname.new(perl_archlib)/"CORE"
+      perl_extern_h = perl_core/"EXTERN.h"
 
-    if OS.mac?
-      inreplace "Makefile" do |s|
-        s.change_make_var! "SWIG_PL_INCLUDES",
-          "$(SWIG_INCLUDES) -arch #{MacOS.preferred_arch} -g -pipe -fno-common -DPERL_DARWIN -fno-strict-aliasing -I#{HOMEBREW_PREFIX}/include -I#{perl_core}"
+      unless perl_extern_h.exist?
+        # No EXTERN.h, maybe it's system perl
+        perl_version = Utils.safe_popen_read("perl", "--version")[/v(\d+\.\d+)(?:\.\d+)?/, 1]
+        perl_core = MacOS.sdk_path/"System/Library/Perl"/perl_version/"darwin-thread-multi-2level/CORE"
+        perl_extern_h = perl_core/"EXTERN.h"
       end
-    end
-    system "make", "swig-pl"
-    system "make", "install-swig-pl"
 
-    # This is only created when building against system Perl, but it isn't
-    # purged by Homebrew's post-install cleaner because that doesn't check
-    # "Library" directories. It is however pointless to keep around as it
-    # only contains the perllocal.pod installation file.
-    rm_rf prefix/"Library/Perl"
+      onoe "'#{perl_extern_h}' does not exist" unless perl_extern_h.exist?
+
+      on_macos do
+        inreplace "Makefile" do |s|
+          s.change_make_var! "SWIG_PL_INCLUDES",
+            "$(SWIG_INCLUDES) -arch x86_64 -g -pipe -fno-common " \
+            "-DPERL_DARWIN -fno-strict-aliasing -I#{HOMEBREW_PREFIX}/include -I#{perl_core}"
+        end
+      end
+      system "make", "swig-pl"
+      system "make", "install-swig-pl"
+
+      # This is only created when building against system Perl, but it isn't
+      # purged by Homebrew's post-install cleaner because that doesn't check
+      # "Library" directories. It is however pointless to keep around as it
+      # only contains the perllocal.pod installation file.
+      rm_rf prefix/"Library/Perl"
+    end
   end
 
   def caveats
@@ -177,7 +232,22 @@ class Subversion < Formula
   test do
     system "#{bin}/svnadmin", "create", "test"
     system "#{bin}/svnadmin", "verify", "test"
-    system "perl", "-e", "use SVN::Client; new SVN::Client()"
+
+    if Hardware::CPU.intel?
+      platform = "darwin-thread-multi-2level"
+      on_linux do
+        platform = "x86_64-linux-thread-multi"
+      end
+
+      perl = "/usr/bin/perl"
+      on_linux do
+        perl = "#{Formula["perl"].opt_bin}/perl"
+      end
+
+      perl_version = Utils.safe_popen_read(perl.to_s, "--version")[/v(\d+\.\d+(?:\.\d+)?)/, 1]
+      ENV["PERL5LIB"] = "#{lib}/perl5/site_perl/#{perl_version}/#{platform}"
+      system perl, "-e", "use SVN::Client; new SVN::Client()"
+    end
   end
 end
 
@@ -201,17 +271,3 @@ index a60430b..bd9b017 100644
      INC  => join(' ', $includes, $cppflags,
                   " -I$swig_srcdir/perl/libsvn_swig_perl",
                   " -I$svnlib_srcdir/include",
-
-diff --git a/build/get-py-info.py b/build/get-py-info.py
-index 29a6c0a..dd1a5a8 100644
---- a/build/get-py-info.py
-+++ b/build/get-py-info.py
-@@ -83,7 +83,7 @@ def link_options():
-   options = sysconfig.get_config_var('LDSHARED').split()
-   fwdir = sysconfig.get_config_var('PYTHONFRAMEWORKDIR')
-
--  if fwdir and fwdir != "no-framework":
-+  if fwdir and fwdir != "no-framework" and sys.platform != 'darwin':
-
-     # Setup the framework prefix
-     fwprefix = sysconfig.get_config_var('PYTHONFRAMEWORKPREFIX')

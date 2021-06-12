@@ -1,16 +1,17 @@
 class Srt < Formula
   desc "Secure Reliable Transport"
   homepage "https://www.srtalliance.org/"
-  url "https://github.com/Haivision/srt/archive/v1.4.1.tar.gz"
-  sha256 "e80ca1cd0711b9c70882c12ec365cda1ba852e1ce8acd43161a21a04de0cbf14"
+  url "https://github.com/Haivision/srt/archive/v1.4.3.tar.gz"
+  sha256 "c06e05664c71d635c37207a2b5a444f2c4a95950a3548402b3e0c524f735b33d"
+  license "MPL-2.0"
   head "https://github.com/Haivision/srt.git"
 
   bottle do
-    cellar :any
-    sha256 "bbadac0b96337c84604feba7fc654cf1c1bb8040a616e0ee2603e580da5e5df5" => :catalina
-    sha256 "5a689897fa108ad3976d609fba6b9233e1cdab7eab5e90a45ec6b52e899718c0" => :mojave
-    sha256 "01039fd82d968be00949e93af2e1eb5ad16152099975e1e00d355641b7eacd01" => :high_sierra
-    sha256 "c1f9d89b4c1fb21f5a99e63b8438ecb364e232a39c1299e66f63010dddb153bf" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "5030a6897c290fe9c26bcd06b1033ca4e11b25709057f39060b2f3ad37235bf5"
+    sha256 cellar: :any,                 big_sur:       "5f8231fcfa94e640638c5a6b38e75630d48338118a578308dea0fa7e0deaadfd"
+    sha256 cellar: :any,                 catalina:      "1f1cdf82af07c72eeeee3a1ea96f87123f45fff74f6f4615fd491fe15e77f37b"
+    sha256 cellar: :any,                 mojave:        "37b8bb756634847c6ea8f53a32a61c3228f960e168953f0da646ae462396ca12"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "f38b65414d1f81912969e88daa7ee22ef7ebc5f1bb4236fe9d94dc5426eb94e8"
   end
 
   depends_on "cmake" => :build
@@ -21,6 +22,9 @@ class Srt < Formula
     openssl = Formula["openssl@1.1"]
     system "cmake", ".", "-DWITH_OPENSSL_INCLUDEDIR=#{openssl.opt_include}",
                          "-DWITH_OPENSSL_LIBDIR=#{openssl.opt_lib}",
+                         "-DCMAKE_INSTALL_BINDIR=bin",
+                         "-DCMAKE_INSTALL_LIBDIR=lib",
+                         "-DCMAKE_INSTALL_INCLUDEDIR=include",
                          *std_cmake_args
     system "make", "install"
   end

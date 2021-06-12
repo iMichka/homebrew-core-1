@@ -1,48 +1,51 @@
+require "language/node"
+
 class Emscripten < Formula
   desc "LLVM bytecode to JavaScript compiler"
-  homepage "https://kripken.github.io/emscripten-site/"
+  homepage "https://emscripten.org/"
+  url "https://github.com/emscripten-core/emscripten/archive/2.0.22.tar.gz"
+  sha256 "ce5ad2c9d00fdce714b4e6ee87bb8dd07c1a72a02b65fcb0496faad6ca4a9fcb"
+  license all_of: [
+    "Apache-2.0", # binaryen
+    "Apache-2.0" => { with: "LLVM-exception" }, # llvm
+    any_of: ["MIT", "NCSA"], # emscripten
+  ]
+  head "https://github.com/emscripten-core/emscripten.git"
 
-  stable do
-    url "https://github.com/emscripten-core/emscripten/archive/1.38.44.tar.gz"
-    sha256 "e6bf63595ca28beb4c0385062cd686f1b442d7faa8b3c717fb4cb872478b4660"
-
-    resource "fastcomp" do
-      url "https://github.com/emscripten-core/emscripten-fastcomp/archive/1.38.44.tar.gz"
-      sha256 "d066f36d1083e5d62e2a9fb24e162e506a6b359fc101c43aec22ba8b1a836a01"
-    end
-
-    resource "fastcomp-clang" do
-      url "https://github.com/emscripten-core/emscripten-fastcomp-clang/archive/1.38.44.tar.gz"
-      sha256 "13aca52d91aba756f8e0610e4a4ebd8147369f4708c7542efdf8a4f96e52f2a1"
-    end
+  livecheck do
+    url :stable
+    regex(/^v?(\d+(?:\.\d+)+)$/i)
   end
 
   bottle do
-    cellar :any
-    sha256 "66c05f38b32954c464edecce8f6e2c9dfb22b843f871272ef1d6d884bc135615" => :catalina
-    sha256 "4f8be86a67d0f1fc87c01c92dd0fe8112f1cd6c5b1ae210ac0528ce02ad36b8a" => :mojave
-    sha256 "3abedeaff354db116142227d55d93232210b073549ab26c33b7f8c97fe8e897b" => :high_sierra
-    sha256 "36d6ea5dd8eaff5b9f8adf9388bfc9bcab2d22b8b738a164378601e174cc9bca" => :sierra
-    sha256 "711e0eaf9ea7928bc846d9d5eb236728329aafc25d6eb2239b8a58da862a3bd3" => :x86_64_linux
-  end
-
-  head do
-    url "https://github.com/emscripten-core/emscripten.git", :branch => "incoming"
-
-    resource "fastcomp" do
-      url "https://github.com/emscripten-core/emscripten-fastcomp.git", :branch => "incoming"
-    end
-
-    resource "fastcomp-clang" do
-      url "https://github.com/emscripten-core/emscripten-fastcomp-clang.git", :branch => "incoming"
-    end
+    sha256 cellar: :any, arm64_big_sur: "17f812b8df7cf7c292a96d72df436c95513b4c2874ab2d9a588201f1b329cb30"
+    sha256 cellar: :any, big_sur:       "29547d05ff66c0b91c77df47fd0d7bf4cbdfdcd31d73a8e973f2970f48ccc6d5"
+    sha256 cellar: :any, catalina:      "66429fbd358780d9fa205a0771a059bfc73dbcd9639d51f86d4647d708afa89d"
+    sha256 cellar: :any, mojave:        "153dea1770705e85760825e49cd470f6b89455db5a4057738f5f764b547f24ae"
   end
 
   depends_on "cmake" => :build
   depends_on "node"
-  depends_on "python"
+  depends_on "python@3.9"
   depends_on "yuicompressor"
-  depends_on "python@2" => :test unless OS.mac?
+
+  # Use emscripten's recommended binaryen revision to avoid build failures.
+  # See llvm resource below for instructions on how to update this.
+  resource "binaryen" do
+    url "https://github.com/WebAssembly/binaryen.git",
+        revision: "994757a6747793effc8e4bdda13c47ab7337afb8"
+  end
+
+  # emscripten needs argument '-fignore-exceptions', which is only available in llvm >= 12
+  # To find the correct llvm revision, find a corresponding commit at:
+  # https://github.com/emscripten-core/emsdk/blob/main/emscripten-releases-tags.txt
+  # Then take this commit and go to:
+  # https://chromium.googlesource.com/emscripten-releases/+/<commit>/DEPS
+  # Then use the listed llvm_project_revision for the resource below.
+  resource "llvm" do
+    url "https://github.com/llvm/llvm-project.git",
+        revision: "e5b66a373414036db22d19647d913c2571df2701"
+  end
 
   def install
     ENV.cxx11
@@ -52,43 +55,105 @@ class Emscripten < Formula
     # repository.
     libexec.install Dir["*"]
 
-    (buildpath/"fastcomp").install resource("fastcomp")
-    (buildpath/"fastcomp/tools/clang").install resource("fastcomp-clang")
+    # emscripten needs an llvm build with the following executables:
+    # https://github.com/emscripten-core/emscripten/blob/#{version}/docs/packaging.md#dependencies
+    resource("llvm").stage do
+      projects = %w[
+        clang
+        lld
+      ]
 
-    cmake_args = std_cmake_args.reject { |s| s["CMAKE_INSTALL_PREFIX"] }
-    cmake_args = [
-      "-DCMAKE_BUILD_TYPE=Release",
-      "-DCMAKE_INSTALL_PREFIX=#{libexec}/llvm",
-      "-DLLVM_TARGETS_TO_BUILD='X86;JSBackend'",
-      "-DLLVM_INCLUDE_EXAMPLES=OFF",
-      "-DLLVM_INCLUDE_TESTS=OFF",
-      "-DCLANG_INCLUDE_TESTS=OFF",
-      "-DOCAMLFIND=/usr/bin/false",
-      "-DGO_EXECUTABLE=/usr/bin/false",
-    ]
+      targets = %w[
+        host
+        WebAssembly
+      ]
 
-    mkdir "fastcomp/build" do
-      system "cmake", "..", *cmake_args
-      system "make"
+      llvmpath = Pathname.pwd/"llvm"
+
+      # Apple's libstdc++ is too old to build LLVM
+      ENV.libcxx if ENV.compiler == :clang
+
+      # compiler-rt has some iOS simulator features that require i386 symbols
+      # I'm assuming the rest of clang needs support too for 32-bit compilation
+      # to work correctly, but if not, perhaps universal binaries could be
+      # limited to compiler-rt. llvm makes this somewhat easier because compiler-rt
+      # can almost be treated as an entirely different build from llvm.
+      ENV.permit_arch_flags
+
+      args = std_cmake_args.reject { |s| s["CMAKE_INSTALL_PREFIX"] } + %W[
+        -DCMAKE_INSTALL_PREFIX=#{libexec}/llvm
+        -DLLVM_ENABLE_PROJECTS=#{projects.join(";")}
+        -DLLVM_TARGETS_TO_BUILD=#{targets.join(";")}
+        -DLLVM_LINK_LLVM_DYLIB=ON
+        -DLLVM_BUILD_LLVM_DYLIB=ON
+        -DLLVM_INCLUDE_EXAMPLES=OFF
+        -DLLVM_INCLUDE_TESTS=OFF
+        -DLLVM_INSTALL_UTILS=OFF
+      ]
+
+      sdk = MacOS.sdk_path_if_needed
+      args << "-DDEFAULT_SYSROOT=#{sdk}" if sdk
+
+      if MacOS.version == :mojave && MacOS::CLT.installed?
+        # Mojave CLT linker via software update is older than Xcode.
+        # Use it to retain compatibility.
+        args << "-DCMAKE_LINKER=/Library/Developer/CommandLineTools/usr/bin/ld"
+      end
+
+      mkdir llvmpath/"build" do
+        # We can use `make` and `make install` here, but prefer these commands
+        # for consistency with the llvm formula.
+        system "cmake", "-G", "Unix Makefiles", "..", *args
+        system "cmake", "--build", "."
+        system "cmake", "--build", ".", "--target", "install"
+      end
+    end
+
+    resource("binaryen").stage do
+      args = std_cmake_args.reject { |s| s["CMAKE_INSTALL_PREFIX"] } + %W[
+        -DCMAKE_INSTALL_PREFIX=#{libexec}/binaryen
+      ]
+
+      system "cmake", ".", *args
       system "make", "install"
+    end
+
+    cd libexec do
+      system "npm", "install", *Language::Node.local_npm_install_args
+      rm_f "node_modules/ws/builderror.log" # Avoid references to Homebrew shims
     end
 
     %w[em++ em-config emar emcc emcmake emconfigure emlink.py emmake
        emranlib emrun emscons].each do |emscript|
-      bin.install_symlink libexec/emscript
+      (bin/emscript).write_env_script libexec/emscript, PYTHON: Formula["python@3.9"].opt_bin/"python3"
     end
   end
 
-  def caveats; <<~EOS
-    Manually set LLVM_ROOT to
-      #{opt_libexec}/llvm/bin
-    and comment out BINARYEN_ROOT
-    in ~/.emscripten after running `emcc` for the first time.
-  EOS
+  def post_install
+    system bin/"emcc", "--check"
+    if File.exist?(libexec/".emscripten") && !File.exist?(libexec/".homebrew")
+      touch libexec/".homebrew"
+      inreplace "#{libexec}/.emscripten" do |s|
+        s.gsub!(/^(LLVM_ROOT.*)/, "#\\1\nLLVM_ROOT = \"#{opt_libexec}/llvm/bin\"\\2")
+        s.gsub!(/^(BINARYEN_ROOT.*)/, "#\\1\nBINARYEN_ROOT = \"#{opt_libexec}/binaryen\"\\2")
+      end
+    end
   end
 
   test do
-    system bin/"emcc"
-    assert_predicate testpath/".emscripten", :exist?, "Failed to create sample config"
+    # Fixes "Unsupported architecture" Xcode prepocessor error
+    ENV.delete "CPATH"
+
+    (testpath/"test.c").write <<~EOS
+      #include <stdio.h>
+      int main()
+      {
+        printf("Hello World!");
+        return 0;
+      }
+    EOS
+
+    system bin/"emcc", "test.c", "-o", "test.js", "-s", "NO_EXIT_RUNTIME=0"
+    assert_equal "Hello World!", shell_output("node test.js").chomp
   end
 end

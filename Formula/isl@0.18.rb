@@ -1,39 +1,33 @@
 class IslAT018 < Formula
   desc "Integer Set Library for the polyhedral model"
   homepage "http://isl.gforge.inria.fr"
-  # Note: Always use tarball instead of git tag for stable version.
+  # NOTE: Always use tarball instead of git tag for stable version.
   #
   # Currently isl detects its version using source code directory name
   # and update isl_version() function accordingly.  All other names will
   # result in isl_version() function returning "UNKNOWN" and hence break
   # package detection.
   url "http://isl.gforge.inria.fr/isl-0.18.tar.xz"
-  mirror "https://mirrors.ocf.berkeley.edu/debian/pool/main/i/isl/isl_0.18.orig.tar.xz"
+  mirror "https://deb.debian.org/debian/pool/main/i/isl/isl_0.18.orig.tar.xz"
   sha256 "0f35051cc030b87c673ac1f187de40e386a1482a0cfdf2c552dd6031b307ddc4"
-  # tag "linux"
+  license "MIT"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "e286024c142af0e968d8562e83745a05dd059dbe226c41fe6053c8fd481815fe" => :high_sierra
-    sha256 "23c7305a7f227e1749a15584eb203ec9f1f49f1f4312753a9ee360f89b71d304" => :sierra
-    sha256 "c00c85da652a572356e54cad1a6ff986f136f6088c142dfcdbfc166bd7144d1e" => :el_capitan
-    sha256 "3ef95686496676a3c73c57db6eee32a9f039e9c2b7ccf173c3b1941124ef6f78" => :x86_64_linux
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "44fe4a7f5ed00ff3b3ba06a37d3b6d4633e7532c841d4e02fa1cb2678afc018c"
+    sha256 cellar: :any_skip_relocation, big_sur:       "4d22193093ee43ec29988ecadd20b01359291475c78a43d9053e00b78991fc7f"
+    sha256 cellar: :any_skip_relocation, catalina:      "728e3b1ab4e7c7cf6298e80c398dfdb8012c1b5c77fb54261d618d094bd9a1bb"
+    sha256 cellar: :any_skip_relocation, mojave:        "efcde3c18baf1ee3e76312758ab5a95cb4df68267d7273003d519abce2ad6c87"
+    sha256 cellar: :any_skip_relocation, high_sierra:   "0525751dc4fd778bf8be05f743d798d9229e9955999d06a1cfbecee33d737a38"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "3ef95686496676a3c73c57db6eee32a9f039e9c2b7ccf173c3b1941124ef6f78"
   end
 
   keg_only :versioned_formula
 
-  head do
-    url "http://repo.or.cz/r/isl.git"
-
-    depends_on "autoconf" => :build
-    depends_on "automake" => :build
-    depends_on "libtool" => :build
-  end
+  deprecate! date: "2020-11-05", because: :versioned_formula
 
   depends_on "gmp"
 
   def install
-    system "./autogen.sh" if build.head?
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}",

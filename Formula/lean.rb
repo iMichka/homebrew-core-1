@@ -1,21 +1,33 @@
 class Lean < Formula
   desc "Theorem prover"
-  homepage "https://leanprover.github.io/"
-  url "https://github.com/leanprover/lean/archive/v3.4.2.tar.gz"
-  sha256 "ec4488be8473577666f38dec81123d0f7b26476139d3caa2e175a571f6c00d87"
-  head "https://github.com/leanprover/lean.git"
+  homepage "https://leanprover-community.github.io/"
+  url "https://github.com/leanprover-community/lean/archive/v3.30.0.tar.gz"
+  sha256 "402b89ff4d368fd6597dd87c521fd2fe456c6b2b90c99d85f57523661bdd94be"
+  license "Apache-2.0"
+  head "https://github.com/leanprover-community/lean.git"
+
+  # The Lean 3 repository (https://github.com/leanprover/lean/) is archived
+  # and there won't be any new releases. Lean 4 is being developed but is still
+  # a work in progress: https://github.com/leanprover/lean4
+  livecheck do
+    skip "Lean 3 is archived; add a new check once Lean 4 is stable"
+  end
 
   bottle do
-    cellar :any
-    sha256 "93067a139b696eec75222a9f14209b1221576281f52238dec585d11f7a39a1c0" => :catalina
-    sha256 "a4e42293767b2c39d46ededd68ccdbae0deddc8280a8d5a0004390091e91acd4" => :mojave
-    sha256 "31506dc58b1108625510415a551fea963739898ad675d8cb3023af6e3922e109" => :high_sierra
-    sha256 "a5df8afdccd0db40f4a9c8184d9197a8a66a47b2c2bbf7451e05976b13274025" => :sierra
+    sha256 cellar: :any,                 arm64_big_sur: "dce6ff86967540c830fa6aecb39e1dcb3dd54beaa0a524ef373e405dbb6f514a"
+    sha256 cellar: :any,                 big_sur:       "a10756134d6e97923dc0425d02a8b1ee0a49b4758f49f27e03282887071cde6f"
+    sha256 cellar: :any,                 catalina:      "014297ad90fee979d9e726fc08d13edd2adab94986541cd67172f62f845aaea5"
+    sha256 cellar: :any,                 mojave:        "386b72209c9b4fdea4f1ee0a5cded5560bd276e4b9e297c4e4586efbb03c4e74"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "482be2f2171c2056afaaf24b060239778721fcfe38a351baa8eddf6f7f472a43"
   end
 
   depends_on "cmake" => :build
+  depends_on "coreutils"
   depends_on "gmp"
   depends_on "jemalloc"
+  depends_on macos: :mojave
+
+  conflicts_with "elan-init", because: "`lean` and `elan-init` install the same binaries"
 
   def install
     mkdir "src/build" do
@@ -37,6 +49,7 @@ class Lean < Formula
           split, repeat { assumption }
       end
     EOS
-    system "#{bin}/lean", testpath/"hello.lean"
+    system bin/"lean", testpath/"hello.lean"
+    system bin/"leanpkg", "help"
   end
 end

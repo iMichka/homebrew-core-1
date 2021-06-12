@@ -1,30 +1,31 @@
 class Libpqxx < Formula
   desc "C++ connector for PostgreSQL"
   homepage "http://pqxx.org/development/libpqxx/"
-  url "https://github.com/jtv/libpqxx/archive/6.4.5.tar.gz"
-  sha256 "86921fdb0fe54495a79d5af2c96f2c771098c31e9b352d0834230fd2799ad362"
-  revision 4
+  url "https://github.com/jtv/libpqxx/archive/7.5.2.tar.gz"
+  sha256 "62e140667fb1bc9b61fa01cbf46f8ff73236eba6f3f7fbcf98108ce6bbc18dcd"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any
-    sha256 "02873d7d669665be207e947889c00e0faf872039fe9050cf4b9c31af5b04135b" => :catalina
-    sha256 "c0466edc81a9d95e971b56716b51657e3177b52997e38bd6061ef508a8c6614b" => :mojave
-    sha256 "2320ffbda4afd621b159cee98ae4595375ce8b052d5fbdf8fa06ab525bae59a2" => :high_sierra
-    sha256 "90d39bb938222590aea161d88440969cc7fe286f967b7242eb2b0b415894d29c" => :x86_64_linux
+    sha256 cellar: :any, arm64_big_sur: "8233c21f3363d037f6f79cf7754ac6bf515a307a1c090a3182e5a064859d526c"
+    sha256 cellar: :any, big_sur:       "df129caeb02ff03f2b146f6558471f105ff3ba67868e186d011f98444d40ee8a"
+    sha256 cellar: :any, catalina:      "b442129051871681bbb6205dcee1730baf1a8ed2f07ff6119700b3376c23c069"
+    sha256 cellar: :any, mojave:        "caa8680e0f0ef430fc9c31e4212054f2d6aca355bf68164637deac6d307c1c3b"
   end
 
   depends_on "pkg-config" => :build
+  depends_on "python@3.9" => :build
   depends_on "xmlto" => :build
   depends_on "libpq"
   depends_on "postgresql"
-  unless OS.mac?
-    depends_on "doxygen" => :build
-    depends_on "python@2" => :build
-    depends_on "xmlto" => :build
-  end
+
+  depends_on "gcc" unless OS.mac?
+
+  fails_with gcc: "5"
 
   def install
+    ENV.prepend_path "PATH", Formula["python@3.9"].opt_libexec/"bin"
     ENV["PG_CONFIG"] = Formula["libpq"].opt_bin/"pg_config"
+
     system "./configure", "--prefix=#{prefix}", "--enable-shared"
     system "make", "install"
   end
@@ -37,9 +38,9 @@ class Libpqxx < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "-std=c++11", "test.cpp", "-L#{lib}", "-lpqxx",
+    system ENV.cxx, "-std=c++17", "test.cpp", "-L#{lib}", "-lpqxx",
            "-I#{include}", "-o", "test"
-    # Running ./test will fail because there is no runnning postgresql server
+    # Running ./test will fail because there is no running postgresql server
     # system "./test"
   end
 end

@@ -1,24 +1,24 @@
 class GrpcSwift < Formula
-  desc "The Swift language implementation of gRPC"
+  desc "Swift language implementation of gRPC"
   homepage "https://github.com/grpc/grpc-swift"
-  url "https://github.com/grpc/grpc-swift/archive/0.9.1.tar.gz"
-  sha256 "6b3a2ed13c805c6b8f339f558f2a1372bdcf84c079c104a6d0b54fd7650b8fbf"
+  url "https://github.com/grpc/grpc-swift/archive/1.1.0.tar.gz"
+  sha256 "e4e83b9a9b9ca88f7c14bd424acb56c10e4f212f31bb2533a7f07fa524fcb780"
+  license "Apache-2.0"
   head "https://github.com/grpc/grpc-swift.git"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "40d3fbbc0193fbc46f029c6c5795ea8bc0faaabe7ea14073a4dc9cb0c98f1c54" => :catalina
-    sha256 "f8d66abf01b8b8573b58718a8999ab905619a2b677aa24050dab78e1cd1323de" => :mojave
-    sha256 "a8abd068afd441640955a8399ebb07c63228716e6ecd7198258f9e4b92a22e4f" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "79ace37e7a57b0d8b475bd4d151950ede41c44bd8ed5def7f6ec2fa3872ab66f"
+    sha256 cellar: :any_skip_relocation, big_sur:       "fc0cad5b1c3caff003eb838b7cc37032f9f7416c823941f304a09705f5bab174"
+    sha256 cellar: :any_skip_relocation, catalina:      "8a1ee1b56aae8427016a3f9a5b0c62ad2e7808ed5104f71e735b4bdb54f6221d"
   end
 
-  depends_on :xcode => ["10.0", :build]
+  depends_on xcode: ["12.0", :build]
   depends_on "protobuf"
   depends_on "swift-protobuf"
 
   def install
-    system "swift", "build", "--disable-sandbox", "-c", "release", "--product", "protoc-gen-swiftgrpc"
-    bin.install ".build/release/protoc-gen-swiftgrpc"
+    system "swift", "build", "--disable-sandbox", "-c", "release", "--product", "protoc-gen-grpc-swift"
+    bin.install ".build/release/protoc-gen-grpc-swift"
   end
 
   test do
@@ -37,7 +37,7 @@ class GrpcSwift < Formula
         string text = 1;
       }
     EOS
-    system Formula["protobuf"].opt_bin/"protoc", "echo.proto", "--swiftgrpc_out=."
+    system Formula["protobuf"].opt_bin/"protoc", "echo.proto", "--grpc-swift_out=."
     assert_predicate testpath/"echo.grpc.swift", :exist?
   end
 end

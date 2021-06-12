@@ -1,25 +1,35 @@
 class Libgosu < Formula
   desc "2D game development library"
   homepage "https://libgosu.org"
-  url "https://github.com/gosu/gosu/archive/v0.14.5.tar.gz"
-  sha256 "4dbc4998e2c630ee7758544de4286c70c68e639524b6088ccdc7b5487c928695"
+  url "https://github.com/gosu/gosu/archive/v1.2.0.tar.gz"
+  sha256 "89e3d175c7a7c27ae9722a719e7307a77aefac0d28c9c9e2b531ca84e080aab6"
+  license "MIT"
   head "https://github.com/gosu/gosu.git"
 
   bottle do
-    cellar :any
-    sha256 "6c58505f2ae9d4cd75d5248bbbf8c5b89d7c98b7fa2dc57f96e460cec7a0e9db" => :catalina
-    sha256 "d2b121b69379f97ef3fc413970b1bd4355c049703342b66fb661ebce4cc6aa75" => :mojave
-    sha256 "9aade349ed7409b4a8409f69d8a21b9b3c994095c4762e347783d9fd92b287ff" => :high_sierra
-    sha256 "6e3ceaff76704fa5095d2d6a9f4306a566909da22d52bf2a0d49bd847d638f5e" => :sierra
+    sha256 cellar: :any, arm64_big_sur: "2fdd60050495a39676631ff20b6adce12f08509dfafc07d5544922d6bbc07ea2"
+    sha256 cellar: :any, big_sur:       "81fcf49b8dcd3c32e765c1c160fde1587fd7fc72dc69a02e0369a2f6933b2c7d"
+    sha256 cellar: :any, catalina:      "260af0d8a2ec9e279c80748fab5824583bf452c92ae1fd2ad974effc7e79c946"
+    sha256 cellar: :any, mojave:        "681e8df033559e1f7af28bd4d9da638be31e56261ddaca28338f6a2a91cfc569"
   end
 
   depends_on "cmake" => :build
   depends_on "pkg-config" => :build
   depends_on "sdl2"
 
+  on_linux do
+    depends_on "fontconfig"
+    depends_on "gcc"
+    depends_on "mesa"
+    depends_on "mesa-glu"
+    depends_on "openal-soft"
+  end
+
+  fails_with gcc: "5"
+
   def install
     mkdir "build" do
-      system "cmake", "../cmake", *std_cmake_args
+      system "cmake", "..", *std_cmake_args
       system "make", "install"
     end
   end
@@ -51,7 +61,13 @@ class Libgosu < Formula
       }
     EOS
 
-    system ENV.cxx, "test.cpp", "-o", "test", "-L#{lib}", "-lgosu", "-I#{include}", "-std=c++11"
+    system ENV.cxx, "test.cpp", "-o", "test", "-L#{lib}", "-lgosu", "-I#{include}", "-std=c++17"
+
+    on_linux do
+      # Fails in Linux CI with "Could not initialize SDL Video: No available video device"
+      return if ENV["HOMEBREW_GITHUB_ACTIONS"]
+    end
+
     system "./test"
   end
 end

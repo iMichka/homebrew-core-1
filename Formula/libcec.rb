@@ -1,19 +1,21 @@
 class Libcec < Formula
   desc "Control devices with TV remote control and HDMI cabling"
   homepage "http://libcec.pulse-eight.com/"
-  url "https://github.com/Pulse-Eight/libcec/archive/libcec-4.0.4.tar.gz"
-  sha256 "4382a964bf8c511c22c03cdab5ba2d81c241536e6479072a61516966804f400a"
+  url "https://github.com/Pulse-Eight/libcec/archive/libcec-6.0.2.tar.gz"
+  sha256 "090696d7a4fb772d7acebbb06f91ab92e025531c7c91824046b9e4e71ecb3377"
+  license "GPL-2.0"
 
   bottle do
-    cellar :any
-    sha256 "a763a8c370aa73928eb9dd06fd5f4ce6693cfa6449916ef27ab4f349d48b8cb7" => :catalina
-    sha256 "54f45924069082bbd051daa04161954afb6fb1f0a5f664601ce2e4a70bb12c39" => :mojave
-    sha256 "ea99237d0eb6e166b9fdde19b756066a826f49f68f1f6994d5f1a09843b2db61" => :high_sierra
-    sha256 "a450148702479250d2677a418fc33e8ff2d70820b989d30b716b2c39a8090273" => :sierra
-    sha256 "2ea908310c33d93f0e06340ef0547d1994f1433626d4e0b91e6b41cec937bffe" => :x86_64_linux
+    sha256 cellar: :any, big_sur:      "1a9bd5bc7213eef94c4bb9c1c3cfeffeb6dba606f0cbd227de515c04968bbc8f"
+    sha256 cellar: :any, catalina:     "eef61bc6c5647a5b26f8949b53973e02ec44640d82ceff633183da7b20eac212"
+    sha256 cellar: :any, mojave:       "c64dda68a5e5d00d6867aff92b576a71b8550d7250bbe7f86d0c1a9b1b861613"
+    sha256 cellar: :any, high_sierra:  "2d7d295151c68aeaea3a269d66156b2d29f08a619d60079e79386d100c0adc1c"
+    sha256 cellar: :any, x86_64_linux: "835284584ef9fbb13a5576cffd132fca2ed77c23efcb980f5d0f2cfe7b1e0466"
   end
 
   depends_on "cmake" => :build
+
+  uses_from_macos "ncurses"
 
   resource "p8-platform" do
     url "https://github.com/Pulse-Eight/platform/archive/p8-platform-2.1.0.1.tar.gz"

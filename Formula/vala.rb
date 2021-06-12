@@ -1,23 +1,28 @@
 class Vala < Formula
   desc "Compiler for the GObject type system"
   homepage "https://wiki.gnome.org/Projects/Vala"
-  url "https://download.gnome.org/sources/vala/0.46/vala-0.46.5.tar.xz"
-  sha256 "1a7847d2599d902c805a58b95b72b69e64c0223c2f6220163998a7ab4b42db1d"
+  url "https://download.gnome.org/sources/vala/0.52/vala-0.52.4.tar.xz"
+  sha256 "ecde520e5160e659ee699f8b1cdc96065edbd44bbd08eb48ef5f2506751fdf31"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    sha256 "97a86568e1012c18509f10066f596d94dc4bd7731b189b25807e977046dfd519" => :catalina
-    sha256 "9109b8dac9ee72c2edc7fb4379ef14e4c06d1054e59ef595800b4d4816727f98" => :mojave
-    sha256 "209aae2d0d9c4d03456a287f4f61939cfd9554791f33f1e239eb9dcf06a3dd57" => :high_sierra
-    sha256 "c71a9cbd57fead606c80742d0a18db6ea0e59e71f1cb858e0fe05598736f3ab2" => :x86_64_linux
+    sha256 arm64_big_sur: "980295e63a373da1594e5148ee9e5c24b58e43438ca56d3adf6fdf17706d79bc"
+    sha256 big_sur:       "41790eff047d0c56c7ffd9c77d3023e932de790418b0035ee7012acb5445586e"
+    sha256 catalina:      "ce7947b5fc4ba26282a5866dcc5ccd74f944826b630070cfbc1ebffc1577a5cd"
+    sha256 mojave:        "371a985d1f55593678aa4bfa96209e33bba5f8ffd476af12368d702a5d2e1ee9"
+    sha256 x86_64_linux:  "9efc9137eb6211fe4a8c5f3dfeaa25db1e2c9593412f7dd45b5e00414aa83893"
   end
 
   depends_on "gettext"
   depends_on "glib"
   depends_on "graphviz"
   depends_on "pkg-config"
-  unless OS.mac?
-    depends_on "bison" => :build
-    depends_on "flex" => :build
+
+  uses_from_macos "bison" => :build
+  uses_from_macos "flex" => :build
+
+  on_linux do
+    depends_on "libx11"
   end
 
   def install

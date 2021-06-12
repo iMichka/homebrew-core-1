@@ -1,27 +1,37 @@
 class Atkmm < Formula
   desc "Official C++ interface for the ATK accessibility toolkit library"
   homepage "https://www.gtkmm.org/"
-  url "https://download.gnome.org/sources/atkmm/2.28/atkmm-2.28.0.tar.xz"
-  sha256 "4c4cfc917fd42d3879ce997b463428d6982affa0fb660cafcc0bc2d9afcedd3a"
-  revision 2
+  url "https://download.gnome.org/sources/atkmm/2.36/atkmm-2.36.1.tar.xz"
+  sha256 "e11324bfed1b6e330a02db25cecc145dca03fb0dff47f0710c85e317687da458"
+  license "LGPL-2.1-or-later"
 
   bottle do
-    cellar :any
-    sha256 "65dca5000702ffcabc191ed84c33cef365056f4c853c8630a094c6e917b5e6c7" => :catalina
-    sha256 "41fa55c1a359635acac27990de9ef7d4c84c6e45f43b54b4fecd0c85010d5ed0" => :mojave
-    sha256 "cc4325eb5abdb8248ea4d4ec36f5ab37abfce03459034c700b92cfaa757392e8" => :high_sierra
-    sha256 "918691593ee2144c7aae041f3f83a3f961af0408329b69907a893669f267f5b1" => :sierra
-    sha256 "453213dac2df1c2b58aed305208049d674e649753c78c72955e0467ba9f64275" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "82e89f908e2a3cc349c8478eef60d7b755f968d3523f037b8b78ea4edc4031ba"
+    sha256 cellar: :any,                 big_sur:       "4b147e97566fe8f13c6e72e1d350da5c8bbabe3abb6f4966eec44f227c9fa807"
+    sha256 cellar: :any,                 catalina:      "09b0e72f5d9fd8e2a3328202d8c2b8fc7f896cdd208ab51fa75bb87c79eee53d"
+    sha256 cellar: :any,                 mojave:        "a3ed94c51be9ae22f3a3c1d6650ade4037748f2c8602db9b647effd71b4d5108"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "32cb805d8dbd853c3a3e5d795b86f370c0e590b324dfb0c2e270cdfe3610c487"
   end
 
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
   depends_on "atk"
   depends_on "glibmm"
 
+  on_linux do
+    depends_on "gcc" => :build
+  end
+
+  fails_with gcc: "5"
+
   def install
     ENV.cxx11
-    system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja"
+      system "ninja", "install"
+    end
   end
 
   test do
@@ -38,17 +48,20 @@ class Atkmm < Formula
     gettext = Formula["gettext"]
     glib = Formula["glib"]
     glibmm = Formula["glibmm"]
-    libsigcxx = Formula["libsigc++@2"]
+    libsigcxx = Formula["libsigc++"]
     flags = %W[
       -I#{atk.opt_include}/atk-1.0
       -I#{gettext.opt_include}
       -I#{glib.opt_include}/glib-2.0
       -I#{glib.opt_lib}/glib-2.0/include
-      -I#{glibmm.opt_include}/glibmm-2.4
-      -I#{glibmm.opt_lib}/glibmm-2.4/include
-      -I#{include}/atkmm-1.6
-      -I#{libsigcxx.opt_include}/sigc++-2.0
-      -I#{libsigcxx.opt_lib}/sigc++-2.0/include
+      -I#{glibmm.opt_include}/giomm-2.68
+      -I#{glibmm.opt_include}/glibmm-2.68
+      -I#{glibmm.opt_lib}/giomm-2.68/include
+      -I#{glibmm.opt_lib}/glibmm-2.68/include
+      -I#{include}/atkmm-2.36
+      -I#{lib}/atkmm-2.36/include
+      -I#{libsigcxx.opt_include}/sigc++-3.0
+      -I#{libsigcxx.opt_lib}/sigc++-3.0/include
       -L#{atk.opt_lib}
       -L#{gettext.opt_lib}
       -L#{glib.opt_lib}
@@ -56,14 +69,16 @@ class Atkmm < Formula
       -L#{libsigcxx.opt_lib}
       -L#{lib}
       -latk-1.0
-      -latkmm-1.6
+      -latkmm-2.36
       -lglib-2.0
-      -lglibmm-2.4
+      -lglibmm-2.68
       -lgobject-2.0
-      -lsigc-2.0
+      -lsigc-3.0
     ]
-    flags << "-lintl" if OS.mac?
-    system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test", *flags
+    on_macos do
+      flags << "-lintl"
+    end
+    system ENV.cxx, "-std=c++17", "test.cpp", "-o", "test", *flags
     system "./test"
   end
 end

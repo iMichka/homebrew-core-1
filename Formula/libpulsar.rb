@@ -1,15 +1,17 @@
 class Libpulsar < Formula
   desc "Apache Pulsar C++ library"
   homepage "https://pulsar.apache.org/"
-  url "https://www.apache.org/dyn/closer.cgi?path=pulsar/pulsar-2.4.1/apache-pulsar-2.4.1-src.tar.gz"
-  sha256 "6fb764b0d15506884905b781cfd2f678ad6a819f2c8d60cc34f78966b4676d40"
+  url "https://www.apache.org/dyn/closer.lua?path=pulsar/pulsar-2.7.2/apache-pulsar-2.7.2-src.tar.gz"
+  mirror "https://archive.apache.org/dist/pulsar/pulsar-2.7.2/apache-pulsar-2.7.2-src.tar.gz"
+  sha256 "2e125df2ccf374e237676fb036ca00cb4d076d1683b86c672161888f5a5ef32f"
+  license "Apache-2.0"
   revision 2
 
   bottle do
-    cellar :any
-    sha256 "758c5a7f3e535f2d1b090e0ebc7ea2cfe897610eb0e5f8c65f6c2347edea681e" => :catalina
-    sha256 "829dc72cdc0ef1061f3ce318daade47dd081b207343a6624701bf2a018c37648" => :mojave
-    sha256 "fe4d957fb5fdce6880fddc04d5da05ef044865e038845934f2a03c0493e56dbe" => :high_sierra
+    sha256 cellar: :any, arm64_big_sur: "2e3dffc6ac480c7acfd625c6e3a382c7316f6bbd467ac1c3d12bd3a4a7ddf22b"
+    sha256 cellar: :any, big_sur:       "f5f55678e946fe389898923eba165006ca93e7574518cc52270d1d89960d858a"
+    sha256 cellar: :any, catalina:      "0600145b0af61c4893aa54ad41ca3d6b92ee7fd6906c202f6b9ec405ef4dadcc"
+    sha256 cellar: :any, mojave:        "bc82229be13f8025dfbb39edee256d0771953fea4cd12430ba10b12cbcdc7a4a"
   end
 
   depends_on "cmake" => :build
@@ -17,16 +19,13 @@ class Libpulsar < Formula
   depends_on "boost"
   depends_on "openssl@1.1"
   depends_on "protobuf"
+  depends_on "snappy"
   depends_on "zstd"
+
+  uses_from_macos "curl"
 
   def install
     cd "pulsar-client-cpp" do
-      # Stop opportunistic linking to snappy
-      # (Snappy was broken in 2.4.0 - could be added now)
-      inreplace "CMakeLists.txt",
-                "HAS_SNAPPY 1",
-                "HAS_SNAPPY 0"
-
       system "cmake", ".", *std_cmake_args,
                       "-DBUILD_TESTS=OFF",
                       "-DBUILD_PYTHON_WRAPPER=OFF",
@@ -47,7 +46,8 @@ class Libpulsar < Formula
         return 0;
       }
     EOS
-    system ENV.cxx, "test.cc", "-L#{lib}", "-lpulsar", "-o", "test"
+
+    system ENV.cxx, "-std=gnu++11", "test.cc", "-L#{lib}", "-lpulsar", "-o", "test"
     system "./test"
   end
 end

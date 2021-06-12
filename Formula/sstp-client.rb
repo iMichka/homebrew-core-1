@@ -1,15 +1,22 @@
 class SstpClient < Formula
   desc "SSTP (Microsofts Remote Access Solution for PPP over SSL) client"
   homepage "https://sstp-client.sourceforge.io/"
-  url "https://downloads.sourceforge.net/project/sstp-client/sstp-client/sstp-client-1.0.12.tar.gz"
-  sha256 "487eb406579689803ce0397f6102b18641e4572ac7bc9b9e5f3027c84dcf67ff"
-  revision 2
+  url "https://downloads.sourceforge.net/project/sstp-client/sstp-client/sstp-client-1.0.15.tar.gz"
+  sha256 "8484aa51fbfbe418a0ebad58ad20a8ee1c46ed71f800be18bcd23b42e6baad64"
+  license "GPL-2.0-or-later"
+  version_scheme 1
+
+  livecheck do
+    url :stable
+    regex(%r{url=.*?/sstp-client[._-]v?(\d+(?:\.\d+)+)\.t}i)
+  end
 
   bottle do
-    sha256 "49bffeb675814b187dd9237be82ef24e45d92f99b162d86dbbc07191f3817094" => :catalina
-    sha256 "ae3fd0084d4a41d7e61cdd50c63049e401aa2d6a29f17c1d5b60b2693c3f42cd" => :mojave
-    sha256 "a01dc2761f3a46199b4499650fda972c98f91ec4f4a4f91273a354e73592ca8e" => :high_sierra
-    sha256 "bee90ce7dd97505c82ec1e159134a3ac73065dbe8257c839f9ec0b5d33271640" => :sierra
+    sha256 arm64_big_sur: "b4d5f320170ae3d03b27ee6aad79fedcc69dc74adcb7775dd284625515bf6d7b"
+    sha256 big_sur:       "4456c0d7626d757558f3e5916fa2ec6dc5d0e16bd70dffbf1d9856c88f9f57ed"
+    sha256 catalina:      "9d745ca078013a4a01009fd2e5d713d9c26e26097f3ca00878068ae8137cc516"
+    sha256 mojave:        "1bc3a7e3a40676213301589608312b18298ce0f430c4d49fc0cc0ff18297d54c"
+    sha256 x86_64_linux:  "0ab9094ef5d0a3c0e1b8936eef9d07d8e2adc460ff5a97e028402a944a4cf219"
   end
 
   depends_on "pkg-config" => :build
@@ -28,12 +35,13 @@ class SstpClient < Formula
     (var/"run/sstpc").mkpath
   end
 
-  def caveats; <<~EOS
-    sstpc reads PPP configuration options from /etc/ppp/options. If this file
-    does not exist yet, type the following command to create it:
+  def caveats
+    <<~EOS
+      sstpc reads PPP configuration options from /etc/ppp/options. If this file
+      does not exist yet, type the following command to create it:
 
-    sudo touch /etc/ppp/options
-  EOS
+      sudo touch /etc/ppp/options
+    EOS
   end
 
   test do

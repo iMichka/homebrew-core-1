@@ -1,31 +1,33 @@
 class SimpleScan < Formula
   desc "GNOME document scanning application"
   homepage "https://gitlab.gnome.org/GNOME/simple-scan"
-  url "https://download.gnome.org/sources/simple-scan/3.34/simple-scan-3.34.2.tar.xz"
-  sha256 "57f709d6870b1f6d0170ed3fda0087118716b0ccd29c52b9c393519d1c7963ba"
+  url "https://download.gnome.org/sources/simple-scan/40/simple-scan-40.1.tar.xz"
+  sha256 "ebee39ab1fe4ca053c4ed2bd3a3ca76742ff109436dd0645d3415622132ba0b4"
+  license "GPL-3.0-or-later"
 
   bottle do
-    sha256 "376fcef4fa82352bcf2d56bd0fb1501a77b2236a30264e326233d0fffbc8703a" => :catalina
-    sha256 "28b87e73a9b0e360785cb10093526440669f8c7404072c15c4be349e22efd1fd" => :mojave
-    sha256 "fc0cfa2b6133bdb9679a7d5d85cb261dcefcc18b4e711f8fa89532443bac82e7" => :high_sierra
+    sha256 arm64_big_sur: "a3682dd1d9b1f0c33f523469d8971286c6cb4300ae82eb31825bcbc0d2fd21c0"
+    sha256 big_sur:       "73592584299577d4567501ff336cb23ce39b1a7d74bfc05cbb22e74326a2cec8"
+    sha256 catalina:      "7a0a0234992e2dcb3e650d492456fc17bf0400c2bc36a99f4d8d3b011e0096f6"
+    sha256 mojave:        "47d31029f77ad42d17899786c4159201a5536227ffe52942b1ea490dcd9a8c7c"
   end
 
   depends_on "itstool" => :build
   depends_on "meson" => :build
   depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "python" => :build
   depends_on "vala" => :build
   depends_on "glib"
   depends_on "gtk+3"
   depends_on "libgusb"
+  depends_on "libhandy"
   depends_on "sane-backends"
   depends_on "webp"
 
   def install
     ENV["DESTDIR"] = "/"
     mkdir "build" do
-      system "meson", "--prefix=#{prefix}", ".."
+      system "meson", *std_meson_args, ".."
       system "ninja", "-v"
       system "ninja", "install", "-v"
     end

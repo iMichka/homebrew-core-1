@@ -1,15 +1,16 @@
 class Samtools < Formula
   desc "Tools for manipulating next-generation sequencing data"
   homepage "https://www.htslib.org/"
-  url "https://github.com/samtools/samtools/releases/download/1.10/samtools-1.10.tar.bz2"
-  sha256 "7b9ec5f05d61ec17bd9a82927e45d8ef37f813f79eb03fe06c88377f1bd03585"
+  url "https://github.com/samtools/samtools/releases/download/1.12/samtools-1.12.tar.bz2"
+  sha256 "6da3770563b1c545ca8bdf78cf535e6d1753d6383983c7929245d5dba2902dcb"
+  license "MIT"
 
   bottle do
-    cellar :any
-    sha256 "53c31e536e1f0a98e2dba30eddb61a782bf14b45ebf12e56973788f3427c1bac" => :catalina
-    sha256 "18abf7b1a130579066fa055116589cfc7ca4d20842408d7038470ebd612e8a85" => :mojave
-    sha256 "b9be0c12847087c47e0a1d9776d77795d35f98ed3373963564453de15c40437a" => :high_sierra
-    sha256 "3ec896e125abfc5ab5bc0b4fe1fbd0952e56fb358773682b4749d1b06382b13a" => :x86_64_linux
+    sha256 cellar: :any,                 arm64_big_sur: "90bb0238ac2b339a77305494d4be5413a446cc3f74276215834b4464c5c1e13f"
+    sha256 cellar: :any,                 big_sur:       "91e903cb284e1ea536117a1c583ab66d40691251dc23fe2904c43548b0759c9b"
+    sha256 cellar: :any,                 catalina:      "1ba9234ba9de00494f56515347be7027161fddd0ae7f44e88db9809cfa9440a2"
+    sha256 cellar: :any,                 mojave:        "441bf778fce091ac24cfca18b967b1693e54bea5cd44e217f7427597c8a38271"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "63963e3dba0a80e05c4d7c1bc6994dba9e30d72957dd0158ce7f9d8760168db4"
   end
 
   depends_on "htslib"

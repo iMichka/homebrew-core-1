@@ -1,27 +1,37 @@
 class Libxmlxx < Formula
   desc "C++ wrapper for libxml"
   homepage "https://libxmlplusplus.sourceforge.io/"
-  url "https://download.gnome.org/sources/libxml++/2.40/libxml++-2.40.1.tar.xz"
-  sha256 "4ad4abdd3258874f61c2e2a41d08e9930677976d303653cd1670d3e9f35463e9"
-  revision OS.mac? ? 2: 4
+  url "https://download.gnome.org/sources/libxml++/2.42/libxml++-2.42.1.tar.xz"
+  sha256 "9b59059abe5545d28ceb388a55e341095f197bd219c73e6623aeb6d801e00be8"
+  license "LGPL-2.1-or-later"
 
-  bottle do
-    cellar :any
-    sha256 "a4db0095b32a8f25e953f5cab64447d721ad9ff51c9b968a311519a04fe1068c" => :catalina
-    sha256 "720d42ff48194360d192e9166697a8e299268ac2722c5c8b599fc2898cbd1def" => :mojave
-    sha256 "9f25cf8395b3a06dbfe5d7dc2ddc320e2491211bedbe95ddac53b748eca9a31e" => :high_sierra
-    sha256 "074c4e2583789fd71bb88abbb230cee7a55d17bece2ff8630feeb895b0c5fddf" => :sierra
-    sha256 "df9a28ad52aa81b36ed20f1e2a860fc4661c486b0cbf779da80771f5494dff42" => :x86_64_linux
+  livecheck do
+    url :stable
+    regex(/libxml\+\+[._-]v?(2\.([0-8]\d*?)?[02468](?:\.\d+)*?)\.t/i)
   end
 
+  bottle do
+    sha256 cellar: :any, arm64_big_sur: "e2aba0455833404cb02800c272d4b1c8e4f8216da5bc15798f8e64c0d784ecb2"
+    sha256 cellar: :any, big_sur:       "2b16a17ecc1683587eb672acc18ba98ee88795c54cb7edac974ed4e3459bfc3a"
+    sha256 cellar: :any, catalina:      "d6e621d8511f48b17f1e33a87efb04fcc9b65a1afe6ca6d442f4d9e7ce98b3e4"
+    sha256 cellar: :any, mojave:        "f76bb4f5672bd0d2c50ba19efdc192e6eb31166043ace553a33fc9e7d4604cfb"
+    sha256               x86_64_linux:  "dc1b0fe9971c2cd23cc9dfc94b72e8052e4ab76f5e2fab39fe382bfd44e1f21f"
+  end
+
+  depends_on "meson" => :build
+  depends_on "ninja" => :build
   depends_on "pkg-config" => :build
-  depends_on "glibmm"
+  depends_on "glibmm@2.66"
+
   uses_from_macos "libxml2"
 
   def install
     ENV.cxx11
-    system "./configure", "--disable-dependency-tracking", "--prefix=#{prefix}"
-    system "make", "install"
+    mkdir "build" do
+      system "meson", *std_meson_args, ".."
+      system "ninja"
+      system "ninja", "install"
+    end
   end
 
   test do
@@ -39,7 +49,7 @@ class Libxmlxx < Formula
     ENV.libxml2
     gettext = Formula["gettext"]
     glib = Formula["glib"]
-    glibmm = Formula["glibmm"]
+    glibmm = Formula["glibmm@2.66"]
     libsigcxx = Formula["libsigc++@2"]
     flags = %W[
       -I#{gettext.opt_include}
@@ -63,7 +73,9 @@ class Libxmlxx < Formula
       -lxml++-2.6
       -lxml2
     ]
-    args << "-lintl" if OS.mac?
+    on_macos do
+      flags << "-lintl"
+    end
     system ENV.cxx, "-std=c++11", "test.cpp", "-o", "test", *flags
     system "./test"
   end

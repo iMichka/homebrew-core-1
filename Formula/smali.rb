@@ -1,19 +1,20 @@
 class Smali < Formula
   desc "Assembler/disassembler for Android's Java VM implementation"
   homepage "https://github.com/JesusFreke/smali"
-  url "https://github.com/JesusFreke/smali/archive/v2.3.4.tar.gz"
-  sha256 "d364ebb60ac954cac7c974d72def897a373430fcd4e3349816743147fbaba375"
-  revision 1
+  url "https://github.com/JesusFreke/smali/archive/v2.5.2.tar.gz"
+  sha256 "2c42f0b1768a5ca0f9e7fe2241962e6ab54940964d60e2560c67b0029dac7bf1"
+  license "BSD-3-Clause"
 
   bottle do
-    cellar :any_skip_relocation
-    sha256 "0e9ddb33964040e89a7f044064b21ccdb30d47ed4901ac6d00ee963352ee48d4" => :catalina
-    sha256 "9883912d849479221c68ba6cba6a25f4fd89c20e80b44ac67e5e7341265cdf49" => :mojave
-    sha256 "7989f3aadb1f980d2c40addf62418ff03a0abd1e1e55262d3d2b96ad4e366cb6" => :high_sierra
+    sha256 cellar: :any_skip_relocation, arm64_big_sur: "fa384e0623d92232575207c1d393204e05254206e9309b9160be038f698bcb11"
+    sha256 cellar: :any_skip_relocation, big_sur:       "508115afcebb6b4fe2b6491652cc386633144cb48669fd4624eb60542fa43fd8"
+    sha256 cellar: :any_skip_relocation, catalina:      "95c45f88283b8e8e7a4563440bb9e3ed10f93dfe43eac5e927ae1ebae65dac0b"
+    sha256 cellar: :any_skip_relocation, mojave:        "44fc500be24c9cc38b5c7031cf600019083c5385e18bd067eeacb1424061d0c9"
+    sha256 cellar: :any_skip_relocation, x86_64_linux:  "41fb14151dc458174a19df39eeca82463b926e298bacbaf0c3f74df910044fbb"
   end
 
   depends_on "gradle" => :build
-  depends_on :java => "1.8+"
+  depends_on "openjdk"
 
   def install
     system "gradle", "build", "--no-daemon"
@@ -22,7 +23,7 @@ class Smali < Formula
       jarfile = "#{name}-#{version}-dev-fat.jar"
 
       libexec.install "#{name}/build/libs/#{jarfile}"
-      bin.write_jar_script libexec/jarfile, name, :java_version => "1.8+"
+      bin.write_jar_script libexec/jarfile, name
     end
   end
 
